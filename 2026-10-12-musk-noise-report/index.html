@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>The Musk Noise Report: week of October 12, 2026</title>
+<style>
+  :root {
+    --paper: #f3eee2;
+    --ink: #1b1a17;
+    --muted: #5a554b;
+    --rule: #1b1a17;
+    --hair: #b9b09c;
+    --stamp-happened: #8a1c12;
+    --stamp-posted: #1d4f7a;
+    --tint: #e9e2d0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #191815;
+      --ink: #ebe5d6;
+      --muted: #a8a08e;
+      --rule: #ebe5d6;
+      --hair: #4a463d;
+      --stamp-happened: #e2735f;
+      --stamp-posted: #79aee0;
+      --tint: #24221d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 17px/1.55 Georgia, "Times New Roman", serif;
+  }
+  .page { max-width: 1040px; margin: 0 auto; padding: 20px 16px 48px; }
+  .back { font: 13px/1 ui-sans-serif, system-ui, sans-serif; color: var(--muted); text-decoration: none; }
+  .back:hover { text-decoration: underline; }
+  header { text-align: center; border-bottom: 4px double var(--rule); padding-bottom: 10px; margin-top: 12px; }
+  .ears {
+    display: flex; justify-content: space-between; gap: 12px;
+    font: 12px/1.3 ui-sans-serif, system-ui, sans-serif; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted);
+    border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 6px 0;
+  }
+  h1 {
+    font: 900 clamp(2.2rem, 7vw, 4.6rem)/0.95 "Playfair Display", Georgia, serif;
+    letter-spacing: -0.02em; margin: 14px 0 6px;
+  }
+  .deck { font-style: italic; color: var(--muted); margin: 0 auto; max-width: 640px; }
+  .controls {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+    margin: 18px 0 6px; font: 14px/1 ui-sans-serif, system-ui, sans-serif;
+  }
+  .controls span { color: var(--muted); align-self: center; margin-right: 4px; }
+  .controls button {
+    font: inherit; padding: 7px 12px; border: 1px solid var(--rule);
+    background: transparent; color: var(--ink); cursor: pointer; border-radius: 0;
+  }
+  .controls button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .tally { text-align: center; font: 13px/1.4 ui-sans-serif, system-ui, sans-serif; color: var(--muted); margin: 0 0 18px; }
+  .stories {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid var(--rule);
+  }
+  article {
+    padding: 16px 18px 18px; border-bottom: 1px solid var(--hair);
+  }
+  article:nth-child(odd) { border-right: 1px solid var(--hair); }
+  article[hidden] { display: none; }
+  .stamps { display: flex; gap: 6px; margin-bottom: 8px; }
+  .stamp {
+    font: 700 11px/1 ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 4px 6px; border: 1.5px solid currentColor;
+  }
+  .stamp.happened { color: var(--stamp-happened); }
+  .stamp.posted { color: var(--stamp-posted); }
+  h2 { font: 800 1.45rem/1.15 Georgia, serif; margin: 0 0 8px; }
+  article p { margin: 0 0 10px; }
+  article p.lead::first-letter {
+    float: left; font-size: 3.1em; line-height: 0.85; padding: 4px 6px 0 0; font-weight: 700;
+  }
+  .source {
+    font: 13px/1.4 ui-sans-serif, system-ui, sans-serif; color: var(--muted);
+    border-top: 1px dotted var(--hair); padding-top: 8px;
+  }
+  .source a { color: inherit; }
+  .why { background: var(--tint); padding: 10px 12px; font-size: 0.95rem; }
+  .why b { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  aside.method {
+    margin-top: 26px; border: 1px solid var(--rule); padding: 14px 18px;
+    font-size: 0.95rem;
+  }
+  aside.method h3 { font: 700 0.8rem/1 ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 8px; }
+  aside.method p { margin: 0 0 8px; }
+  @media (max-width: 720px) {
+    .stories { grid-template-columns: 1fr; }
+    article:nth-child(odd) { border-right: 0; }
+    .ears { flex-direction: column; align-items: center; gap: 2px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <a class="back" href="../">← tidepool</a>
+  <header>
+    <div class="ears">
+      <span>Snapshot as of Oct. 12, 2026</span>
+      <span>Four threads · one week</span>
+      <span>Shelf life: about seven days</span>
+    </div>
+    <h1>The Musk Noise Report</h1>
+    <p class="deck">There is always noise around Elon Musk. This sorts one week of it into
+      threads, and separates things that happened from things he posted.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Filter stories">
+    <span>Show:</span>
+    <button type="button" data-filter="all" aria-pressed="true">Everything</button>
+    <button type="button" data-filter="happened" aria-pressed="false">What happened</button>
+    <button type="button" data-filter="posted" aria-pressed="false">What he posted</button>
+  </div>
+  <p class="tally" id="tally" aria-live="polite"></p>
+
+  <section class="stories" id="stories">
+    <article data-tags="happened">
+      <div class="stamps"><span class="stamp happened">Happened</span></div>
+      <h2>A Musk-backed PAC texted Colorado voters about ballots they didn't need to request</h2>
+      <p class="lead">Election officials say America PAC, Musk's super PAC, texted voters in Weld and
+        Adams counties telling them their ballot request was in and asking them to confirm where and
+        when they would return it. Every active registered voter in Colorado already gets a mail ballot
+        automatically, so the texts set off calls from confused residents.</p>
+      <p>Colorado's Secretary of State called the messaging "misleading." A PAC spokesman did not respond
+        to questions about the Colorado texts; one Republican strategist called the activity standard
+        get-out-the-vote tactics.</p>
+      <p class="why"><b>Why it matters</b> Wrong instructions about how to vote are the one kind of
+        campaign noise that can cost someone their vote.</p>
+      <p class="source">As reported by <a href="https://www.cnn.com/2026/10/10/politics/elon-musk-pac-inaccurate-voting-information">CNN</a>, Oct. 10, 2026.</p>
+    </article>
+
+    <article data-tags="happened posted">
+      <div class="stamps"><span class="stamp happened">Happened</span><span class="stamp posted">Posted</span></div>
+      <h2>A documentary called <i>Musk</i> goes nationwide, and its subject is not a fan</h2>
+      <p class="lead">Alex Gibney's documentary <i>Musk</i> opens nationwide this week. Over the past few
+        weeks Musk has attacked Gibney on X, calling him an "idiot" and a "horrible human."</p>
+      <p>The film's distributor says it has not been able to run paid advertisements on several major
+        social media platforms.</p>
+      <p class="why"><b>Why it matters</b> The posts are noise; whether a film about a platform owner can
+        buy ads on platforms is the part worth watching.</p>
+      <p class="source">As reported by <a href="https://www.clickondetroit.com/entertainment/2026/10/12/alex-gibneys-musk-has-already-gotten-under-elon-musks-skin-it-goes-nationwide-this-week/">the Associated Press</a>, Oct. 12, 2026.</p>
+    </article>
+
+    <article data-tags="posted">
+      <div class="stamps"><span class="stamp posted">Posted</span></div>
+      <h2>He told three Canadian provinces to leave Canada</h2>
+      <p class="lead">Musk posted that Quebec, Alberta, and Saskatchewan should separate from Canada.
+        Alberta Premier Danielle Smith, Saskatchewan Premier Scott Moe, and Prime Minister Mark Carney
+        quickly rejected the remarks.</p>
+      <p class="why"><b>Why it matters</b> Mostly noise: a post, swiftly rebuffed. The open question,
+        which the coverage asks too, is whether it was trolling or part of something larger.</p>
+      <p class="source">As reported by <a href="https://cbc.ca/news/politics/elon-musk-quebec-alberta-saskatchewan-separatism-9.7375364">CBC News</a>.</p>
+    </article>
+
+    <article data-tags="happened posted">
+      <div class="stamps"><span class="stamp happened">Happened</span><span class="stamp posted">Posted</span></div>
+      <h2>Starlink and Tesla stall in India</h2>
+      <p class="lead">Plans for Starlink and Tesla in India have faltered amid persistent regulatory
+        hurdles. This week Musk posted that powerful corporate interests in India were blocking Starlink,
+        calling it "a crime against the people of India."</p>
+      <p class="why"><b>Why it matters</b> The business story is the stall; the post is the reaction to it.</p>
+      <p class="source">As reported by <a href="https://www.bloomberg.com/news/articles/2026-10-09/musk-s-india-romance-ends-in-acrimony-as-starlink-tesla-stall">Bloomberg</a>, Oct. 9, 2026.</p>
+    </article>
+  </section>
+
+  <aside class="method">
+    <h3>How this was made</h3>
+    <p><b>Happened</b> means a news outlet reported an event involving other people or institutions.
+      <b>Posted</b> means the story is, at least in part, something Musk wrote online. Many stories are
+      both: the post is the reaction, the event is the news.</p>
+    <p>Every claim here is attributed to the outlet that reported it and links to that report. Nothing
+      was added beyond what those reports say. This is a snapshot from one week; by the time you read
+      it, the noise has moved on.</p>
+  </aside>
+</div>
+<script>
+  const buttons = document.querySelectorAll(".controls button");
+  const stories = [...document.querySelectorAll("#stories article")];
+  const tally = document.getElementById("tally");
+
+  function apply(filter) {
+    let shown = 0;
+    for (const s of stories) {
+      const tags = s.dataset.tags.split(" ");
+      const show = filter === "all" || tags.includes(filter);
+      s.hidden = !show;
+      if (show) shown++;
+    }
+    for (const b of buttons) b.setAttribute("aria-pressed", String(b.dataset.filter === filter));
+    const happened = stories.filter(s => s.dataset.tags.includes("happened")).length;
+    const posted = stories.filter(s => s.dataset.tags.includes("posted")).length;
+    tally.textContent = filter === "all"
+      ? `${stories.length} threads: ${happened} involve events, ${posted} involve his posts.`
+      : `${shown} of ${stories.length} threads.`;
+  }
+
+  for (const b of buttons) b.addEventListener("click", () => apply(b.dataset.filter));
+  apply("all");
+</script>
+</body>
+</html>

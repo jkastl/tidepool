@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "slug": "2026-10-12-musk-noise-report",
+    "title": "The Musk Noise Report",
+    "date": "2026-10-12",
+    "kind": "question",
+    "form": "explainer",
+    "style": "newspaper front page",
+    "summary": "One week of noise around Elon Musk, sorted into what happened and what he posted, with sources.",
+    "source": "idea-tank#16"
+  }
+]
