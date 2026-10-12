@@ -117,6 +117,16 @@ for something bigger.
 - Text and source only. No dependency folders, build output, or file over
   1 MB. No screenshots committed.
 
+### Real people and current events
+
+A build about a real person or recent news makes public claims, so:
+
+- Put the snapshot date at the top ("as of Oct. 12, 2026").
+- Attribute every factual claim to the named outlet that reported it, with a
+  link, and add nothing beyond what those reports say.
+- Separate what happened from what someone said or posted.
+- No speculation about motives, health, or private life.
+
 ## Test before publishing
 
 Serve the repo root with `python3 -m http.server` and drive the build with
