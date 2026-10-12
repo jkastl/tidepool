@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>A Field Guide to Slop</title>
+<style>
+:root{--paper:#f4eedf;--plate:#fbf7ec;--ink:#2b2a22;--faint:#857c62;--wash:#c9b98f;--red:#9c3a2a;--green:#4c6a3c}
+@media (prefers-color-scheme:dark){:root{--paper:#1a1915;--plate:#23211b;--ink:#ebe3cc;--faint:#a39a7e;--wash:#5c5440;--red:#e08a72;--green:#9cc085}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 "Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+ background-image:radial-gradient(color-mix(in srgb,var(--wash) 22%,transparent) 1px,transparent 1.2px);background-size:5px 5px}
+main{max-width:52rem;margin:0 auto;padding:1.2rem 16px 4rem}
+a{color:var(--red)}
+.back{font-size:13px;font-variant:small-caps;letter-spacing:.08em}.back a{color:var(--faint);text-decoration:none}
+header{text-align:center;margin:1.5rem 0 2.5rem}
+header .over{font-variant:small-caps;letter-spacing:.25em;font-size:14px;color:var(--faint)}
+h1{font-weight:400;font-size:clamp(2rem,6vw,3.2rem);margin:.2rem 0;letter-spacing:.04em}
+h1 i{font-size:.55em;display:block;letter-spacing:.02em}
+header .rule{width:12rem;margin:.8rem auto;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);height:4px}
+h2{font-weight:400;font-variant:small-caps;letter-spacing:.15em;font-size:1.35rem;text-align:center;margin:3rem 0 1rem}
+h2::before,h2::after{content:"\2766";font-size:.8em;color:var(--faint);margin:0 .6em}
+p.lede{font-size:1.08rem}
+.plates{display:grid;grid-template-columns:repeat(auto-fill,minmax(15.5rem,1fr));gap:1.2rem}
+.plate{background:var(--plate);border:1px solid var(--ink);outline:1px solid var(--ink);outline-offset:-6px;padding:1rem 1rem 1.1rem;position:relative}
+.plate .no{position:absolute;top:10px;right:14px;font-size:12px;font-variant:small-caps;letter-spacing:.1em;color:var(--faint)}
+.plate svg{width:100%;height:150px;display:block;margin:.6rem 0 .3rem;color:var(--ink)}
+.plate h3{margin:.2rem 0 0;font-weight:400;font-style:italic;font-size:1.15rem;text-align:center}
+.plate .common{text-align:center;font-variant:small-caps;letter-spacing:.1em;font-size:13px;color:var(--faint);margin-bottom:.5rem}
+.plate dl{margin:0;font-size:14.5px;line-height:1.45}
+.plate dt{font-variant:small-caps;letter-spacing:.08em;color:var(--faint);font-size:12.5px;margin-top:.45rem}
+.plate dd{margin:0}
+.seen{display:flex;align-items:center;gap:.4rem;margin-top:.7rem;font-size:13px;font-variant:small-caps;letter-spacing:.06em;cursor:pointer}
+.seen input{accent-color:var(--green);width:16px;height:16px}
+.seen time{font-variant:normal;color:var(--faint);font-style:italic}
+svg .ln{fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
+svg .hatch{fill:none;stroke:currentColor;stroke-width:.6;opacity:.55}
+svg .wash{fill:var(--wash);opacity:.45;stroke:none}
+svg .red{stroke:var(--red)}
+svg text{font-family:inherit;font-size:11px;fill:currentColor;font-style:italic}
+.key{background:var(--plate);border:1px solid var(--ink);padding:1.2rem}
+.key .step{font-variant:small-caps;letter-spacing:.1em;color:var(--faint);font-size:13px}
+.key .q{font-size:1.15rem;margin:.3rem 0 .9rem}
+.key .opts{display:grid;gap:.5rem}
+.key button,.tools button,.tools label.btn{font:inherit;font-size:15px;text-align:left;background:transparent;color:var(--ink);border:1px solid var(--ink);padding:.5rem .8rem;cursor:pointer}
+.key button:hover,.tools button:hover,.tools label.btn:hover{background:color-mix(in srgb,var(--wash) 35%,transparent)}
+.key button b{font-weight:400;color:var(--faint);margin-right:.4rem}
+.key .result h3{font-weight:400;font-style:italic;font-size:1.3rem;margin:.2rem 0}
+.key .trail{font-size:13px;color:var(--faint);font-style:italic;margin-top:.8rem}
+.key .ctl{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
+.key .ctl button{font-size:13px;padding:.3rem .7rem}
+.core{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+@media (max-width:640px){.core{grid-template-columns:1fr}}
+.core div{border-top:1px solid var(--ink);padding-top:.5rem}
+.core h3{font-weight:400;font-variant:small-caps;letter-spacing:.1em;margin:0 0 .3rem;font-size:1.05rem}
+table.lineage{width:100%;border-collapse:collapse;font-size:15px;margin:1rem 0}
+table.lineage td,table.lineage th{border-bottom:1px solid color-mix(in srgb,var(--ink) 30%,transparent);padding:.35rem .4rem;text-align:left;vertical-align:top}
+table.lineage th{font-weight:400;font-variant:small-caps;letter-spacing:.08em;color:var(--faint)}
+.tools{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;justify-content:center;margin:1rem 0}
+.tools label.btn input{display:none}
+.tally{text-align:center;font-style:italic}
+.note{font-size:14.5px;border-left:2px solid var(--red);padding-left:.8rem;color:color-mix(in srgb,var(--ink) 85%,var(--paper))}
+footer{margin-top:3rem;font-size:13.5px;color:var(--faint);border-top:1px solid var(--ink);padding-top:.8rem}
+footer ol{padding-left:1.2rem}
+</style>
+</head>
+<body>
+<main>
+<p class="back"><a href="../">&larr; tidepool</a></p>
+
+<header>
+<div class="over">Plates &amp; key to the common species</div>
+<h1>A Field Guide to Slop<i>with a note on the genus Slopcore</i></h1>
+<div class="rule"></div>
+</header>
+
+<p class="lede"><b>Slop</b> is the name that stuck for the low-grade, mass-produced content generative AI pours into feeds. Merriam-Webster made &ldquo;slop&rdquo; its 2025 Word of the Year, defining it as &ldquo;digital content of low quality that is produced usually in quantity by means of artificial intelligence&rdquo; <a href="#s1">[1]</a>. <b>Slopcore</b> adds the internet's favourite suffix, &ldquo;-core&rdquo;, which turns anything into an aesthetic. The word has no settled definition yet; one documented use is the title of a Danish electronic album, which a reviewer read as a nod, perhaps ironic, to the AI-slop critique <a href="#s2">[2]</a>.</p>
+<p>So the short answer: <b>slopcore is the look of AI slop treated as a style</b>, either a label for slop's recognisable vibe or a knowing, deliberate embrace of it. The plates below describe the species; the key at the end helps you place a specimen; the last section explains what the suffix does.</p>
+
+<h2>The Plates</h2>
+<div class="plates" id="plates"></div>
+
+<h2>A Key to Specimens</h2>
+<p>A dichotomous key, the kind botanists use: answer one question at a time about the thing in front of you, and it narrows to a name.</p>
+<div class="key" id="key" aria-live="polite"></div>
+
+<h2>On the Suffix &ldquo;-core&rdquo;</h2>
+<p>&ldquo;-core&rdquo; began in music genre names (hardcore, metalcore) and became a general-purpose aesthetic-maker after <i>normcore</i>, a word popularised in 2013&ndash;14, showed it could name a whole way of dressing. Since then it attaches to almost anything with a recognisable look and mood:</p>
+<table class="lineage">
+<tr><th>Term</th><th>Names the look of</th><th>Started as</th></tr>
+<tr><td>normcore</td><td>deliberately plain, unremarkable clothes</td><td>half a joke about trend-chasing</td></tr>
+<tr><td>cottagecore</td><td>rural, handmade, pastoral life</td><td>a sincere fantasy</td></tr>
+<tr><td>gorpcore</td><td>hiking gear worn in cities</td><td>a mild tease</td></tr>
+<tr><td><b>slopcore</b></td><td>generative-AI output at its most generic</td><td>an insult</td></tr>
+</table>
+<div class="core">
+<div><h3>Reading one: descriptive</h3>Slopcore names a recognisable visual and sonic register: the golden-hour gloss, the smoothed faces, the dream lettering, the frictionless playlist filler. Calling something &ldquo;very slopcore&rdquo; is a critic's shorthand, like calling a film &ldquo;very Netflix&rdquo;.</div>
+<div><h3>Reading two: adoptive</h3>Slopcore is slop made <i>on purpose</i> and with a wink: artists using the tells as material, the way vaporwave took mall muzak and corporate stock imagery and made them strange. Here the insult becomes a badge, which is how internet culture tends to absorb its own put-downs.</div>
+</div>
+<p class="note">Neither reading is official. The word is young and its use in criticism is thin; treat this page as a field guide to the territory the word points at, not a dictionary entry. Note too that &ldquo;slop&rdquo; is already stretching beyond AI, applied loosely to architecture and fashion <a href="#s3">[3]</a>.</p>
+
+<h2>Your Life List</h2>
+<p class="tally" id="tally"></p>
+<div class="tools">
+<button id="export">Export sightings</button>
+<label class="btn">Import sightings<input type="file" id="import" accept="application/json"></label>
+<button id="clear">Clear list</button>
+</div>
+<p class="note" id="msg" hidden></p>
+
+<footer>
+<b>Sources</b>
+<ol>
+<li id="s1">PBS NewsHour, &ldquo;<a href="https://www.pbs.org/newshour/nation/merriam-websters-word-of-the-year-for-2025-is-ais-slop">Merriam-Webster's word of the year for 2025 is AI's 'slop'</a>&rdquo;, Dec. 2025.</li>
+<li id="s2">Seismograf, <a href="https://www.seismograf.org/en/in-brief/artificial-intelligence-autoplay?page=1">review in brief</a> of the album <i>Slopcore</i>.</li>
+<li id="s3">The Ringer, &ldquo;<a href="https://www.theringer.com/2025/12/17/pop-culture/ai-slop-meaning-meme-examples-images-word-of-the-year">AI slop, word of the year</a>&rdquo;, Dec. 17, 2025.</li>
+</ol>
+The species' field marks are general observations about common generative-AI output, and they date fast: newer models fix old tells and grow new ones. Drawings are schematic. Sightings are stored only in this browser.
+</footer>
+</main>
+
+<script>
+const SPECIES = [
+ {id:"manus", latin:"Manus polydactyla", common:"The Many-Fingered Hand",
+  marks:"Six fingers, fused knuckles, a thumb on the wrong side, hands melting into cups or each other.",
+  habitat:"Early image generators, crowd scenes, anything holding anything.",
+  note:"Becoming scarce as models improve; now mostly a relict tell in older or cheaper images.",
+  svg:`<path class="ln" d="M70 140 C68 110 66 95 70 80"/><path class="ln" d="M110 140 C114 112 116 96 112 82"/>
+  <path class="wash" d="M70 82 Q91 70 112 82 L112 120 Q91 128 70 120Z"/>
+  <path class="ln" d="M70 82 C64 60 58 40 62 30 C66 24 72 28 73 36 L78 72"/><path class="ln" d="M78 72 C76 46 76 22 81 14 C86 10 90 16 89 24 L88 70"/>
+  <path class="ln" d="M88 70 C89 44 92 20 98 16 C103 14 105 20 103 28 L98 72"/><path class="ln" d="M98 72 C102 48 108 30 113 28 C118 28 118 34 116 40 L108 76"/>
+  <path class="ln red" d="M108 76 C114 58 122 46 127 46 C132 47 131 53 128 58 L112 84"/><path class="ln red" d="M112 84 C122 74 132 70 136 72 C139 76 135 80 130 84 L112 96"/>
+  <path class="ln" d="M70 90 C56 84 44 78 40 82 C36 88 48 94 70 108"/>
+  <path class="hatch" d="M74 100 L84 110 M80 96 L94 110 M88 94 L102 108"/><text x="138" y="62">vi?</text><text x="140" y="90">vii?</text>`},
+ {id:"lumen", latin:"Lumen aureum perpetuum", common:"The Endless Golden Hour",
+  marks:"Every scene lit like a perfume advert: warm rim light, glowing haze, poreless skin with a plastic sheen, saturated teal-and-orange.",
+  habitat:"Inspirational posts, fantasy landscapes, fake travel photos.",
+  note:"The most reliable tell at a glance: real light is rarely this flattering everywhere at once.",
+  svg:`<circle class="wash" cx="120" cy="58" r="26"/><circle class="ln" cx="120" cy="58" r="26"/>
+  <path class="ln" d="M120 20v-10M150 30l7-7M158 58h10M90 30l-7-7M82 58H72M150 86l7 7"/>
+  <path class="ln" d="M10 120 C50 96 80 112 110 100 C140 88 170 106 200 96 L200 145 L10 145Z"/>
+  <path class="hatch" d="M20 132h170M30 138h150M14 126h40M120 112h60"/>
+  <path class="ln" d="M56 112 l6 -30 l6 30 M50 96 h24"/>`},
+ {id:"textus", latin:"Textus somnians", common:"Dream Lettering",
+  marks:"Signs, labels, and book spines covered in letter-like shapes that almost spell words. Menus in no known language.",
+  habitat:"Shop fronts, posters, product mockups, backgrounds.",
+  note:"Newer models render short text well; look in the corners and small print, where the dream lettering hides.",
+  svg:`<rect class="ln" x="30" y="30" width="140" height="70"/><rect class="wash" x="30" y="30" width="140" height="70"/>
+  <text x="44" y="60" style="font-size:22px;font-style:normal;letter-spacing:2px">CAFFE&#x018E;</text>
+  <text x="42" y="86" style="font-size:11.5px;font-style:normal;letter-spacing:.5px">BRAKF&#x1D19;ST &#x2234; OPN</text>
+  <path class="ln" d="M60 100 v40 M140 100 v40 M40 140h120"/>`},
+ {id:"chimaera", latin:"Chimaera devota", common:"The Crustacean Saint",
+  marks:"A sincere subject built from absurd material: holy figures made of shrimp, soldiers carved from bread, children sculpting cars from bottles.",
+  habitat:"Social feeds in 2024, where waves of such images drew huge engagement and pages built to farm it.",
+  note:"The species most associated with the word &lsquo;slop&rsquo;: strange enough to stop a thumb, empty enough to mean nothing.",
+  svg:`<circle class="ln" cx="100" cy="40" r="16"/><circle class="ln" cx="100" cy="40" r="24" stroke-dasharray="2 4"/>
+  <path class="ln" d="M84 64 C76 90 74 120 78 140 M116 64 C124 90 126 120 122 140"/>
+  <path class="wash" d="M84 64 Q100 58 116 64 L122 140 L78 140Z"/>
+  <path class="ln" d="M84 76 q16 6 32 0 M82 90 q18 6 36 0 M80 104 q20 6 40 0 M79 118 q21 6 42 0 M78 132 q22 6 44 0"/>
+  <path class="ln red" d="M122 128 c12 -2 22 4 26 14 M146 142 l6 -4 M146 142 l2 6"/><path class="ln red" d="M150 120 l18 -14 M152 124 l20 -6"/>`},
+ {id:"prosa", latin:"Prosa delvens", common:"The Delving Paragraph",
+  marks:"Text that &ldquo;delves into the rich tapestry&rdquo;, says &ldquo;it's important to note&rdquo;, lists three balanced points, and concludes that it is ultimately a journey.",
+  habitat:"Content-farm articles, product listings, padded e-books, reply-guys.",
+  note:"Fluent and grammatical, which is the trouble: the tell is the absence of anything particular.",
+  svg:`<path class="ln" d="M40 20 h120 v120 h-120z"/><path class="wash" d="M40 20 h120 v120 h-120z"/>
+  <path class="ln" d="M52 38h96M52 50h90M52 62h96M52 74h70"/><path class="ln" d="M52 92h96M52 104h88M52 116h60"/>
+  <circle class="ln red" cx="140" cy="62" r="11"/><text x="118" y="132" style="fill:var(--red)">delve</text>`},
+ {id:"vox", latin:"Vox illecebrosa", common:"The Bait Caption",
+  marks:"An image paired with &ldquo;Made this myself, nobody ever likes my work&rdquo;, &ldquo;Why don't pictures like this ever trend?&rdquo;, or &ldquo;Amen?&rdquo;",
+  habitat:"Under Chimaera devota, nearly always. The caption feeds on comments.",
+  note:"Not the image but its lure: the caption is written to provoke a reply, which the platform reads as interest.",
+  svg:`<path class="ln" d="M30 30 h140 a10 10 0 0 1 10 10 v50 a10 10 0 0 1 -10 10 h-90 l-24 22 v-22 h-26 a10 10 0 0 1 -10 -10 v-50 a10 10 0 0 1 10 -10z"/>
+  <path class="wash" d="M30 30 h140 a10 10 0 0 1 10 10 v50 a10 10 0 0 1 -10 10 h-140 a10 10 0 0 1 -10 -10 v-50 a10 10 0 0 1 10 -10z"/>
+  <text x="38" y="58">made this myself</text><text x="38" y="76">nobody ever likes it</text>
+  <path class="ln red" d="M150 128 c-6 -10 -20 -8 -20 2 c0 10 20 18 20 18 c0 0 20 -8 20 -18 c0 -10 -14 -12 -20 -2z"/>`},
+ {id:"melodia", latin:"Melodia ubiqua", common:"The Frictionless Track",
+  marks:"Competent, mood-labelled music with no edges: lo-fi beats, &lsquo;relaxing jazz&rsquo;, ambient pads, slotted into playlists by the hundred under names nobody has heard of.",
+  habitat:"Background playlists, study streams, video soundtracks.",
+  note:"Hard to spot by ear. The tell is often around it: impossible release rates, no live trace, a catalogue that never varies.",
+  svg:`<path class="ln" d="M20 60h160M20 70h160M20 80h160M20 90h160M20 100h160"/>
+  <ellipse class="ln" cx="60" cy="95" rx="8" ry="6" transform="rotate(-20 60 95)"/><path class="ln" d="M67 92 V50"/>
+  <ellipse class="ln" cx="100" cy="85" rx="8" ry="6" transform="rotate(-20 100 85)"/><path class="ln" d="M107 82 V40"/>
+  <ellipse class="ln" cx="140" cy="95" rx="8" ry="6" transform="rotate(-20 140 95)"/><path class="ln" d="M147 92 V50"/>
+  <path class="ln" d="M67 50 L107 40 L147 50"/><text x="40" y="132">&#x221E; &times; the same four bars</text>`},
+ {id:"slopcore", latin:"Slopcore ironica", common:"Slopcore Proper",
+  marks:"Any of the above, made on purpose and knowingly: the glossy light, the dream lettering, the shrimp saint, used as material and played for effect.",
+  habitat:"Album art and titles, meme accounts, art that comments on slop by wearing it.",
+  note:"The only species here with an author who means it. The question to ask is not &lsquo;is this AI?&rsquo; but &lsquo;is it in on the joke?&rsquo;",
+  svg:`<path class="ln" d="M60 40 C40 40 40 110 60 110 C80 110 80 40 60 40Z"/><path class="ln" d="M140 40 C120 40 120 110 140 110 C160 110 160 40 140 40Z"/>
+  <path class="wash" d="M60 40 C40 40 40 110 60 110 C80 110 80 40 60 40Z"/>
+  <path class="ln" d="M52 70 q8 -6 14 0 M56 92 q6 6 10 0"/><path class="ln" d="M134 68 q6 6 12 0 M132 94 q10 -8 16 0"/>
+  <path class="ln" d="M60 110 v30 M140 110 v30 M60 140 h80"/><text x="72" y="30">the mask, worn knowingly</text>`}
+];
+
+const LS = "tidepool.slopcore.sightings";
+let seen = {};
+try { seen = JSON.parse(localStorage.getItem(LS) || "{}") || {}; } catch (e) { seen = {}; }
+function save(){ try { localStorage.setItem(LS, JSON.stringify(seen)); } catch (e) {} }
+
+const plates = document.getElementById("plates");
+const roman = ["I","II","III","IV","V","VI","VII","VIII"];
+function renderPlates(){
+  plates.innerHTML = SPECIES.map((s,i)=>`<article class="plate" id="p-${s.id}">
+  <span class="no">Plate ${roman[i]}</span>
+  <svg viewBox="0 0 200 150" aria-hidden="true">${s.svg}</svg>
+  <h3>${s.latin}</h3><div class="common">${s.common}</div>
+  <dl><dt>Field marks</dt><dd>${s.marks}</dd><dt>Habitat</dt><dd>${s.habitat}</dd><dt>Notes</dt><dd>${s.note}</dd></dl>
+  <label class="seen"><input type="checkbox" data-id="${s.id}" ${seen[s.id]?"checked":""}> Sighted ${seen[s.id]?`<time>${seen[s.id]}</time>`:""}</label>
+  </article>`).join("");
+  plates.querySelectorAll("input[type=checkbox]").forEach(cb=>cb.addEventListener("change",()=>{
+    const id = cb.dataset.id;
+    if (cb.checked) seen[id] = new Date().toISOString().slice(0,10); else delete seen[id];
+    save(); renderPlates(); tally();
+  }));
+}
+function tally(){
+  const n = SPECIES.filter(s=>seen[s.id]).length;
+  document.getElementById("tally").textContent = n ? `You have sighted ${n} of ${SPECIES.length} species. Tick a plate's box when you meet one in the wild.` : `No sightings yet. Tick a plate's box when you meet one in the wild.`;
+}
+
+// Dichotomous key
+const KEY = {
+  start:{q:"Was the specimen made largely with generative AI?", o:[["Yes, or it very likely was","mode"],["No, a person made it by hand","human"],["I can't tell","tells"]]},
+  tells:{q:"Look closer. Do you see odd hands, dream lettering, too-perfect golden light, or prose that &lsquo;delves&rsquo;?", o:[["Yes, one or more","mode"],["No, nothing like that","unsure"]]},
+  mode:{q:"Does it seem to be in on the joke, using its own AI-ness knowingly, as style or comment?", o:[["Yes, it's winking","=slopcore"],["No, it's played straight","purpose"]]},
+  purpose:{q:"Does it look made with care for its own sake, or made in bulk to fill a feed?", o:[["Made with care: a person had something particular in mind","notslop"],["Made in bulk, to fill space or farm attention","medium"]]},
+  medium:{q:"What is the specimen?", o:[["An image","image"],["Text","=prosa"],["Music or audio","=melodia"],["A caption asking for likes or comments","=vox"]]},
+  image:{q:"What is its most striking feature?", o:[["Something wrong with the hands or bodies","=manus"],["Writing that almost, but doesn't, spell words","=textus"],["A sincere subject made of absurd material","=chimaera"],["Glowing, flattering light on everything","=lumen"]]},
+  human:{end:true, h:"Not slop, at least not AI slop", t:"A person made it. It may still be bad, and the word &lsquo;slop&rsquo; is being stretched to cover low-effort human work too, but it is outside this guide's genus."},
+  unsure:{end:true, h:"Indeterminate", t:"No tells, no confident provenance. Field marks fade as models improve, so a clean specimen proves little either way. Note it and move on."},
+  notslop:{end:true, h:"AI-assisted work, not slop", t:"Slop is defined by quantity and indifference, not by the tool. Careful, intentional work made with AI is something else, whatever you think of it."}
+};
+const keyEl = document.getElementById("key");
+let path = [];
+function renderKey(node){
+  const step = path.length + 1;
+  const trail = path.length ? `<div class="trail">Your path: ${path.map(p=>p.a).join(" &rarr; ")}</div>` : "";
+  const ctl = `<div class="ctl">${path.length?'<button data-act="back">&larr; Back a step</button>':''}<button data-act="restart">Start over</button></div>`;
+  if (node.startsWith("=")) {
+    const s = SPECIES.find(x=>x.id===node.slice(1));
+    keyEl.innerHTML = `<div class="result"><div class="step">Identified</div><h3>${s.latin}</h3><div>${s.common}. ${s.note}</div><p><a href="#p-${s.id}">See Plate ${roman[SPECIES.indexOf(s)]} &darr;</a></p></div>${trail}${ctl}`;
+  } else if (KEY[node].end) {
+    keyEl.innerHTML = `<div class="result"><div class="step">Result</div><h3>${KEY[node].h}</h3><div>${KEY[node].t}</div></div>${trail}${ctl}`;
+  } else {
+    const k = KEY[node];
+    keyEl.innerHTML = `<div class="step">Couplet ${step}</div><div class="q">${k.q}</div><div class="opts">${k.o.map((o,i)=>`<button data-to="${o[1]}" data-a="${o[0].replace(/"/g,"&quot;")}"><b>${step}${"abcd"[i]}.</b>${o[0]}</button>`).join("")}</div>${trail}${path.length?ctl:""}`;
+  }
+  keyEl.dataset.node = node;
+}
+keyEl.addEventListener("click",e=>{
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.to){ path.push({from:keyEl.dataset.node,a:b.dataset.a}); renderKey(b.dataset.to); }
+  else if (b.dataset.act==="back"){ const p = path.pop(); renderKey(p.from); }
+  else if (b.dataset.act==="restart"){ path=[]; renderKey("start"); }
+});
+
+// Export / import / clear
+const msg = document.getElementById("msg");
+function say(t){ msg.hidden=false; msg.textContent=t; }
+document.getElementById("export").onclick=()=>{
+  const blob = new Blob([JSON.stringify({guide:"slopcore-field-guide",sightings:seen},null,2)],{type:"application/json"});
+  const a = document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="slop-sightings.json"; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000); say("Sightings exported.");
+};
+document.getElementById("import").onchange=async e=>{
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text()); const s = d.sightings || {};
+    const ids = new Set(SPECIES.map(x=>x.id)); let n=0;
+    for (const [k,v] of Object.entries(s)) if (ids.has(k) && /^\d{4}-\d\d-\d\d$/.test(v)) { seen[k]=v; n++; }
+    save(); renderPlates(); tally(); say(`Imported ${n} sighting${n===1?"":"s"}.`);
+  } catch(err){ say("That file couldn't be read as a sightings export."); }
+  e.target.value="";
+};
+document.getElementById("clear").onclick=()=>{
+  if (!confirm("Clear all sightings?")) return;
+  seen={}; save(); renderPlates(); tally(); say("List cleared.");
+};
+
+renderPlates(); tally(); renderKey("start");
+</script>
+</body>
+</html>
