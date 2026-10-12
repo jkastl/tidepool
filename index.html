@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>tidepool</title>
+<style>
+  :root {
+    --bg: #f4f1ea;
+    --card: #fffdf8;
+    --ink: #1f2a30;
+    --muted: #5d6b72;
+    --line: #d9d2c3;
+    --accent: #1f6f78;
+    --chip: #e7e1d3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f171b;
+      --card: #16222a;
+      --ink: #e4ecee;
+      --muted: #93a4ab;
+      --line: #263843;
+      --accent: #6cc4c9;
+      --chip: #1d2e37;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 16px 64px; }
+  h1 { font-size: 2rem; margin: 0 0 4px; letter-spacing: -0.02em; }
+  .lede { color: var(--muted); margin: 0 0 28px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .filters button {
+    font: inherit; font-size: 0.875rem;
+    border: 1px solid var(--line); background: var(--chip); color: var(--ink);
+    padding: 4px 12px; border-radius: 999px; cursor: pointer;
+  }
+  .filters button[aria-pressed="true"] {
+    background: var(--accent); border-color: var(--accent); color: var(--bg);
+  }
+  ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  li a {
+    display: block; text-decoration: none; color: inherit;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; padding: 16px 18px;
+  }
+  li a:hover, li a:focus-visible { border-color: var(--accent); outline: none; }
+  .title { font-weight: 650; font-size: 1.1rem; color: var(--accent); }
+  .summary { margin: 4px 0 8px; }
+  .meta { color: var(--muted); font-size: 0.85rem; }
+  .meta span + span::before { content: " · "; }
+  .empty { color: var(--muted); font-style: italic; }
+</style>
+</head>
+<body>
+<main>
+  <h1>tidepool</h1>
+  <p class="lede">Small, odd things washed up for a look. First drafts, not products.</p>
+  <div class="filters" id="filters" hidden></div>
+  <ol id="builds"></ol>
+  <p class="empty" id="empty" hidden>Nothing has washed up yet.</p>
+</main>
+<script>
+  const KINDS = ["question", "idea", "musing", "follow-up"];
+  const list = document.getElementById("builds");
+  const filters = document.getElementById("filters");
+  const empty = document.getElementById("empty");
+  let builds = [];
+  let kind = "all";
+
+  function render() {
+    list.replaceChildren();
+    const shown = builds.filter(b => kind === "all" || b.kind === kind);
+    empty.hidden = shown.length > 0;
+    for (const b of shown) {
+      const a = document.createElement("a");
+      a.href = encodeURIComponent(b.slug) + "/";
+      const title = document.createElement("div");
+      title.className = "title";
+      title.textContent = b.title;
+      const summary = document.createElement("div");
+      summary.className = "summary";
+      summary.textContent = b.summary || "";
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      for (const part of [b.date, b.kind, b.form, b.style]) {
+        if (!part) continue;
+        const s = document.createElement("span");
+        s.textContent = part;
+        meta.append(s);
+      }
+      a.append(title, summary, meta);
+      const li = document.createElement("li");
+      li.append(a);
+      list.append(li);
+    }
+  }
+
+  function renderFilters() {
+    const present = KINDS.filter(k => builds.some(b => b.kind === k));
+    if (present.length < 2) return;
+    filters.hidden = false;
+    for (const k of ["all", ...present]) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = k;
+      btn.setAttribute("aria-pressed", String(k === kind));
+      btn.addEventListener("click", () => {
+        kind = k;
+        for (const other of filters.children) {
+          other.setAttribute("aria-pressed", String(other === btn));
+        }
+        render();
+      });
+      filters.append(btn);
+    }
+  }
+
+  fetch("builds.json", { cache: "no-cache" })
+    .then(r => r.ok ? r.json() : [])
+    .catch(() => [])
+    .then(data => {
+      builds = (Array.isArray(data) ? data : [])
+        .slice()
+        .sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.slug || "").localeCompare(a.slug || ""));
+      renderFilters();
+      render();
+    });
+</script>
+</body>
+</html>
