@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "slug": "2026-10-12-ai-psychosis-loop",
+    "title": "The Agreement Loop",
+    "date": "2026-10-12",
+    "kind": "question",
+    "form": "interactive lab",
+    "style": "vintage manual",
+    "summary": "What \"AI psychosis\" means, and a toy model of how chatbot agreement and isolation can feed a belief loop.",
+    "source": "idea-tank#17"
+  }
+]
