@@ -117,15 +117,24 @@ for something bigger.
 - Text and source only. No dependency folders, build output, or file over
   1 MB. No screenshots committed.
 
-### Real people and current events
+### People and current events
 
-A build about a real person or recent news makes public claims, so:
+Builds are about ideas, not people.
+
+- **Never about a living person.** Not a profile, not their news, not their
+  posts, not a ranking of them. A living person may be named in passing for
+  a documented public role, when the build is not about them.
+- **Never about news involving people.** Current events about a technology,
+  a natural event, or a policy as policy are fine.
+- **Historical people are fine:** people who have died and are discussed for
+  their place in history, not current controversy. If in doubt, treat the
+  person as living.
+
+A build about current events (never about people) makes public claims, so:
 
 - Put the snapshot date at the top ("as of Oct. 12, 2026").
 - Attribute every factual claim to the named outlet that reported it, with a
   link, and add nothing beyond what those reports say.
-- Separate what happened from what someone said or posted.
-- No speculation about motives, health, or private life.
 
 ## Test before publishing
 
