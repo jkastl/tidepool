@@ -13,10 +13,18 @@ private idea-tank repo, and idea-tank runs apply them before every push. A
 session working in this repo alone cannot run them, so it must not add
 anything that came from a private capture.
 
-## Branching: push to main
+## Branching: builds go straight to main, setup goes through a PR
 
-Runs and sessions commit straight to `main`. No pull requests. Pages serves
-`main`, so a push is a publish.
+Pages serves `main`, so a push to `main` is a publish.
+
+| Change | How |
+| --- | --- |
+| A build: a new `<slug>/` folder and its `builds.json` entry | Commit straight to `main` and push. No pull request. |
+| Anything else: `CLAUDE.md`, `index.html`, `README.md`, `.nojekyll`, the manifest's format | A branch and a pull request for Jeff to review |
+
+`main` has a ruleset that blocks force-pushes and deleting the branch. Normal
+pushes are allowed. If a push is rejected because `main` moved, run
+`git pull --rebase origin main` and push again.
 
 ## Layout
 
