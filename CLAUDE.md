@@ -56,7 +56,7 @@ leave it and say so on its page.
 
 ## Variety
 
-Before choosing, read the last ten entries. Pick a `form` and a `style` that
+Before choosing, read the last three entries. Pick a `form` and a `style` that
 none of them used, unless the idea plainly calls for one. Name the style
 honestly in the manifest: two builds both called "minimal dark" count as the
 same style.
