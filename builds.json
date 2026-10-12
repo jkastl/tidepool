@@ -18,5 +18,15 @@
     "style": "botanical plate",
     "summary": "What \"slopcore\" means: plates of AI slop's common species, a key to identify a specimen, and what the \"-core\" suffix does.",
     "source": "idea-tank#18"
+  },
+  {
+    "slug": "2026-10-12-limbic-blueprint",
+    "title": "The Limbic Blueprint",
+    "date": "2026-10-12",
+    "kind": "question",
+    "form": "annotated map",
+    "style": "blueprint",
+    "summary": "What the limbic system is, mapped part by part against its nearest AI counterparts, with an honest rating of how far each analogy stretches.",
+    "source": "idea-tank#19"
   }
 ]

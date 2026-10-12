@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>The Limbic Blueprint</title>
+<style>
+/* Light: a diazo whiteprint, blue lines on pale paper. Dark: a classic blueprint. */
+:root{--bg:#eef2f4;--sheet:#f7f9fa;--line:#1c4f8a;--faint:#6f8fb3;--grid:rgba(28,79,138,.10);--grid2:rgba(28,79,138,.20);--hi:#c2410c;--fill:rgba(28,79,138,.10);--text:#16324f}
+@media (prefers-color-scheme:dark){:root{--bg:#0f3460;--sheet:#123b6b;--line:#e8f1ff;--faint:#9ab8de;--grid:rgba(232,241,255,.07);--grid2:rgba(232,241,255,.16);--hi:#ffc857;--fill:rgba(232,241,255,.10);--text:#e8f1ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 "Courier Prime","Courier New",ui-monospace,Menlo,monospace;
+ background-image:linear-gradient(var(--grid2) 1px,transparent 1px),linear-gradient(90deg,var(--grid2) 1px,transparent 1px),linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+ background-size:100px 100px,100px 100px,20px 20px,20px 20px}
+main{max-width:60rem;margin:0 auto;padding:1rem 16px 4rem}
+a{color:var(--hi)}
+.back{font-size:12px;letter-spacing:.1em}.back a{color:var(--faint);text-decoration:none}
+.sheet{border:2px solid var(--line);outline:1px solid var(--line);outline-offset:4px;background:var(--sheet);margin:1.5rem 0;position:relative}
+.hdr{display:grid;grid-template-columns:1fr auto;border-bottom:2px solid var(--line)}
+.hdr h1{margin:0;padding:.8rem 1rem;font-size:clamp(1.3rem,4vw,2rem);letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.hdr .dwg{border-left:2px solid var(--line);padding:.5rem .9rem;font-size:11px;letter-spacing:.1em;text-transform:uppercase;line-height:1.5;color:var(--faint)}
+.hdr .dwg b{color:var(--text);font-weight:700}
+.sub{padding:.6rem 1rem;border-bottom:1px solid var(--line);font-size:14px}
+.body{padding:1rem}
+h2{font-size:13px;letter-spacing:.2em;text-transform:uppercase;margin:0 0 .6rem;display:flex;gap:.6rem;align-items:center}
+h2::before{content:attr(data-n);border:1.5px solid var(--line);border-radius:50%;width:1.8em;height:1.8em;display:inline-grid;place-items:center;font-size:11px;flex:none}
+h2::after{content:"";flex:1;border-top:1px dashed var(--faint)}
+.map{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:1rem;align-items:start}
+@media (max-width:760px){.map{grid-template-columns:1fr}}
+svg{width:100%;height:auto;display:block}
+svg .o{fill:none;stroke:var(--line);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+svg .thin{fill:none;stroke:var(--faint);stroke-width:.8;stroke-dasharray:3 3}
+svg .s{fill:var(--fill);stroke:var(--line);stroke-width:1.6;cursor:pointer;transition:fill .2s,stroke .2s}
+svg .s:hover,svg .s:focus{fill:color-mix(in srgb,var(--hi) 30%,transparent);outline:none}
+svg .s.on{fill:color-mix(in srgb,var(--hi) 45%,transparent);stroke:var(--hi);stroke-width:2.4}
+svg .tube{fill:none;stroke:var(--line);stroke-width:13;stroke-linecap:round;cursor:pointer;opacity:.25}
+svg .tube.on,svg .tube:hover{stroke:var(--hi);opacity:.6}
+svg .tubeo{fill:none;stroke:var(--line);stroke-width:1.2;pointer-events:none}
+svg text{font-family:inherit;font-size:12.5px;fill:var(--text);letter-spacing:.06em;pointer-events:none}
+svg text.lbl{text-transform:uppercase}
+svg .lead{stroke:var(--faint);stroke-width:.8;fill:none;pointer-events:none}
+svg .net{pointer-events:none;stroke:var(--hi);stroke-width:1.6;fill:none;stroke-dasharray:6 4;animation:flow 1.2s linear infinite;opacity:0;transition:opacity .3s}
+svg .ring{fill:color-mix(in srgb,var(--hi) 14%,transparent);stroke:var(--hi);stroke-width:1.2;stroke-dasharray:8 5;opacity:0;transition:opacity .3s;pointer-events:none}
+.view-1952 svg .ring{opacity:1}
+.view-net svg .net{opacity:.9}
+@keyframes flow{to{stroke-dashoffset:-20}}
+@media (prefers-reduced-motion:reduce){svg .net{animation:none}}
+.views{display:flex;gap:0;margin:.2rem 0 .8rem;border:1.5px solid var(--line);width:max-content;max-width:100%;flex-wrap:wrap}
+.views button,.chips button{font:inherit;font-size:12px;letter-spacing:.08em;text-transform:uppercase;background:transparent;color:var(--text);border:0;padding:.4rem .8rem;cursor:pointer}
+.views button+button{border-left:1.5px solid var(--line)}
+.views button[aria-pressed=true]{background:var(--line);color:var(--sheet)}
+.viewnote{font-size:13px;color:var(--faint);min-height:3.2em}
+.panel{border:1.5px solid var(--line);padding:.8rem;position:relative}
+.panel .tag{position:absolute;top:-.75em;left:.7rem;background:var(--sheet);padding:0 .4rem;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint)}
+.panel h3{margin:.2rem 0 .1rem;font-size:1.15rem;letter-spacing:.06em;text-transform:uppercase}
+.panel .alt{font-size:12px;color:var(--faint);margin-bottom:.5rem}
+.panel dl{margin:0;font-size:14px}
+.panel dt{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint);margin-top:.6rem}
+.panel dd{margin:.1rem 0 0}
+.gauge{display:flex;gap:4px;margin:.3rem 0 .1rem}
+.gauge i{flex:1;height:12px;border:1.5px solid var(--line)}
+.gauge i.f{background:var(--hi);border-color:var(--hi)}
+.glab{font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
+.chips button{border:1px solid var(--line);font-size:11px;padding:.25rem .5rem}
+.chips button[aria-pressed=true]{background:var(--line);color:var(--sheet)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:.35rem .5rem;text-align:left;vertical-align:top}
+th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:400;color:var(--faint)}
+td.bar{width:34%;min-width:7rem}
+td.bar span{display:block;height:10px;background:var(--hi)}
+td.bar small{color:var(--faint)}
+tr{cursor:pointer}tr:hover td{background:var(--fill)}
+.tl{display:grid;grid-template-columns:5.5rem 1fr;gap:.3rem 1rem;font-size:14px}
+.tl b{color:var(--hi);font-weight:700}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;font-size:14px}
+@media (max-width:760px){.cols{grid-template-columns:1fr}}
+.cols div{border-top:2px solid var(--line);padding-top:.4rem}
+.cols h3{margin:0 0 .3rem;font-size:12px;letter-spacing:.15em;text-transform:uppercase}
+.verdict{border:2px solid var(--hi);padding:.8rem 1rem;font-size:15px}
+.verdict b{color:var(--hi)}
+.scroll{overflow-x:auto}
+footer{font-size:12px;color:var(--faint);margin-top:1rem}
+footer ol{padding-left:1.4rem}
+</style>
+</head>
+<body>
+<main>
+<p class="back"><a href="../">&larr; tidepool</a></p>
+
+<div class="sheet">
+ <div class="hdr"><h1>The Limbic Blueprint</h1>
+  <div class="dwg">Dwg. no. <b>L-1</b><br>Section <b>Mid-sagittal</b><br>Scale <b>Schematic</b></div></div>
+ <div class="sub">What the limbic system is, which of its jobs have machine counterparts, and how far the &ldquo;AI has no limbic system&rdquo; analogy honestly stretches. Click any part of the drawing.</div>
+ <div class="body">
+  <h2 data-n="1">Plan view: the brain, cut down the middle</h2>
+  <div class="views" role="group" aria-label="Drawing view">
+   <button data-view="parts" aria-pressed="true">Parts</button>
+   <button data-view="1952">1952 grouping</button>
+   <button data-view="net">Network view</button>
+  </div>
+  <div class="viewnote" id="viewnote"></div>
+  <div class="map" id="mapwrap">
+   <svg viewBox="0 0 600 430" id="brain" aria-label="Schematic mid-sagittal section of the brain with limbic structures">
+    <!-- outline: front of head at left -->
+    <path class="o" d="M80 250 C48 170 110 70 230 52 C340 36 470 62 525 140 C560 190 556 262 515 296 C496 312 470 314 452 308 C440 300 420 296 400 300 C360 312 330 310 320 304 C296 316 260 330 210 328 C150 326 104 300 80 250 Z"/>
+    <!-- cerebellum and brainstem -->
+    <path class="o" d="M452 308 C478 330 476 368 440 376 C404 382 380 360 384 330"/>
+    <path class="thin" d="M410 330 C430 336 446 346 452 362 M398 344 C418 348 434 356 440 372"/>
+    <path class="o" d="M330 300 C334 340 336 380 332 425 M372 302 C370 340 366 382 366 425"/>
+    <text class="lbl" x="392" y="420" style="fill:var(--faint)">brainstem</text>
+    <text class="lbl" x="460" y="395" style="fill:var(--faint)">cerebellum</text>
+    <!-- corpus callosum (reference, not limbic) -->
+    <path class="o" d="M190 196 C200 150 270 132 320 134 C380 136 430 158 432 196 C432 214 418 222 410 212 C404 168 360 152 320 152 C268 152 222 166 214 200 C210 214 192 214 190 196 Z"/>
+    <text x="268" y="146" style="fill:var(--faint);font-size:9px">corpus callosum</text>
+    <!-- 1952 grouping ring -->
+    <path class="ring" d="M150 200 C150 70 470 60 470 210 C470 300 430 342 340 340 C250 338 200 320 190 290 C170 260 150 240 150 200 Z"/>
+    <!-- prefrontal cortex (not limbic, for contrast) -->
+    <path class="s" data-id="pfc" tabindex="0" role="button" aria-label="Prefrontal cortex" d="M90 240 C66 180 104 104 180 80 C196 120 176 170 160 210 C150 236 132 252 104 262 Z"/>
+    <!-- cingulate gyrus -->
+    <path class="s" data-id="cingulate" tabindex="0" role="button" aria-label="Cingulate cortex" d="M172 200 C176 110 300 96 340 100 C420 104 458 150 452 200 L434 198 C432 152 384 128 320 130 C262 130 200 146 192 202 Z"/>
+    <!-- thalamus -->
+    <ellipse class="s" data-id="thalamus" tabindex="0" role="button" aria-label="Thalamus" cx="330" cy="230" rx="38" ry="22"/>
+    <!-- fornix (tube) -->
+    <path class="tube" data-id="fornix" tabindex="0" role="button" aria-label="Fornix" d="M282 268 C262 236 276 196 330 190 C384 186 412 226 404 282"/>
+    <path class="tubeo" d="M282 268 C262 236 276 196 330 190 C384 186 412 226 404 282"/>
+    <!-- hypothalamus -->
+    <path class="s" data-id="hypothalamus" tabindex="0" role="button" aria-label="Hypothalamus" d="M252 252 C262 240 290 242 296 256 C298 270 284 280 268 278 C254 276 246 264 252 252 Z"/>
+    <path class="o" d="M262 278 C262 290 258 300 252 306"/><text x="196" y="320" style="fill:var(--faint);font-size:9px">pituitary</text>
+    <circle class="s" data-id="fornix" tabindex="-1" cx="290" cy="276" r="6" aria-hidden="true"/>
+    <!-- nucleus accumbens -->
+    <ellipse class="s" data-id="accumbens" tabindex="0" role="button" aria-label="Nucleus accumbens" cx="222" cy="236" rx="16" ry="11"/>
+    <!-- hippocampus (curled tube) -->
+    <path class="tube" data-id="hippocampus" tabindex="0" role="button" aria-label="Hippocampus" style="stroke-width:18" d="M408 284 C404 318 352 326 306 314"/>
+    <path class="tubeo" d="M408 284 C404 318 352 326 306 314"/>
+    <!-- amygdala -->
+    <ellipse class="s" data-id="amygdala" tabindex="0" role="button" aria-label="Amygdala" cx="286" cy="306" rx="16" ry="12"/>
+    <!-- network loops -->
+    <path class="net" d="M404 290 C380 200 300 186 282 262"/>
+    <path class="net" d="M290 272 C310 254 320 246 330 240"/>
+    <path class="net" d="M330 214 C330 170 370 150 410 170"/>
+    <path class="net" d="M410 176 C440 230 430 280 408 288"/>
+    <path class="net" d="M286 300 C230 290 150 260 120 220"/>
+    <path class="net" d="M222 236 C180 230 150 220 128 210"/>
+    <path class="net" d="M286 300 C260 290 236 260 226 246"/>
+    <!-- leader labels -->
+    <path class="lead" d="M120 170 L60 130"/><text class="lbl" x="14" y="124">prefrontal</text>
+    <path class="lead" d="M300 108 L300 30"/><text class="lbl" x="262" y="24">cingulate</text>
+    <path class="lead" d="M360 230 L500 220"/><text class="lbl" x="502" y="224">thalamus</text>
+    <path class="lead" d="M386 210 L520 180"/><text class="lbl" x="500" y="172">fornix</text>
+    <path class="lead" d="M380 316 L470 340"/><text class="lbl" x="474" y="345">hippocampus</text>
+    <path class="lead" d="M276 314 L190 372"/><text class="lbl" x="128" y="384">amygdala</text>
+    <path class="lead" d="M258 262 L160 312"/><text class="lbl" x="50" y="318">hypothalamus</text>
+    <path class="lead" d="M210 238 L120 278"/><text class="lbl" x="30" y="282">accumbens</text>
+    <text x="16" y="418" style="fill:var(--faint);font-size:9px">FRONT &larr;</text>
+   </svg>
+   <div class="panel" id="panel" aria-live="polite"><span class="tag">Detail</span><div id="detail"></div>
+    <div class="chips" id="chips" role="group" aria-label="Choose a structure"></div></div>
+  </div>
+ </div>
+</div>
+
+<div class="sheet"><div class="body">
+ <h2 data-n="2">What the limbic system is</h2>
+ <p>&ldquo;Limbic&rdquo; comes from the Latin <i>limbus</i>, border: the structures that form a ring around the brainstem, on the inner edge of each hemisphere. They are tied to <b>emotion, memory, motivation, and the body's internal state</b>. The name is a historical grouping more than a single machine:</p>
+ <div class="tl">
+  <b>1878</b><span>Paul Broca describes <i>le grand lobe limbique</i>, the &ldquo;great limbic lobe&rdquo;, as an anatomical ring, not yet a theory of emotion.</span>
+  <b>1937</b><span>James Papez proposes a circuit for emotion: hippocampus &rarr; fornix &rarr; mammillary bodies &rarr; thalamus &rarr; cingulate &rarr; back to hippocampus.</span>
+  <b>1952</b><span>Paul MacLean names the &ldquo;limbic system&rdquo;, adding the amygdala, and later folds it into his &ldquo;triune brain&rdquo;: reptilian core, emotional limbic middle, rational neocortex on top.</span>
+  <b>1990s&ndash;</b><span>Researchers such as Joseph LeDoux argue the concept has no agreed criterion for what belongs in it. The hippocampus turns out to be mostly about memory and space; emotion is spread across many networks, including cortex. The triune-brain story is now regarded as a myth: mammals did not add a rational lid to a reptile brain.</span>
+ </div>
+ <p>So the honest modern answer: the limbic system is <b>a convenient label for a set of interconnected structures</b> that handle valuation, memory, and drive, deeply wired into the cortex rather than sitting beneath it. Switch the drawing to <i>Network view</i> to see the loops.</p>
+</div></div>
+
+<div class="sheet"><div class="body">
+ <h2 data-n="3">Bill of materials: limbic jobs and their machine counterparts</h2>
+ <p style="font-size:13px;color:var(--faint)">Analogy strength is a judgment call, rated on how much the machine version does the same job by a similar mechanism, not just under the same name. Click a row to find it on the drawing.</p>
+ <div class="scroll"><table id="bom"><thead><tr><th>Part</th><th>Job in the brain</th><th>Nearest AI counterpart</th><th>Analogy strength</th></tr></thead><tbody></tbody></table></div>
+</div></div>
+
+<div class="sheet"><div class="body">
+ <h2 data-n="4">What it means for AI</h2>
+ <p>&ldquo;The limbic system and AI&rdquo; turns up in three different conversations. They tend to get blurred together:</p>
+ <div class="cols">
+  <div><h3>A. The missing-layer metaphor</h3>Language models are sometimes called &ldquo;all cortex&rdquo;: fluent reasoning with nothing underneath that makes outcomes <i>matter</i>. Antonio Damasio's somatic-marker hypothesis (<i>Descartes' Error</i>, 1994) gives this teeth: patients with damage linking emotion to frontal cortex could still reason about choices but decided badly. On that view, emotion is part of good judgment, not its enemy. The metaphor is suggestive, but LLMs are not modelled on cortex either, so &ldquo;cortex without limbic&rdquo; is a figure of speech, not a wiring diagram.</div>
+  <div><h3>B. Real engineering borrowings</h3>Two limbic-adjacent ideas genuinely shaped AI. <b>Dopamine and reward prediction error</b>: in 1997 Schultz, Dayan and Montague showed dopamine neurons behave like the error term in temporal-difference learning, a reinforcement-learning algorithm. <b>Hippocampal replay</b>: DeepMind's 2015 Atari-playing DQN used &ldquo;experience replay&rdquo;, citing the hippocampus as inspiration, and complementary-learning-systems theory (McClelland, McNaughton &amp; O'Reilly, 1995) still informs how AI memory is designed.</div>
+  <div><h3>C. AI meeting <i>our</i> limbic systems</h3>The most practical link runs the other way. Systems tuned for engagement learn to press on human reward and salience circuitry: variable rewards, novelty, agreement, flattery. A chatbot that never stops agreeing is talking to your limbic system as much as your cortex; see the companion build, <a href="../2026-10-12-ai-psychosis-loop/">The Agreement Loop</a>.</div>
+ </div>
+ <p class="verdict" style="margin-top:1.2rem"><b>Verdict:</b> today's AI has no limbic system. It has mechanical versions of a few limbic <i>jobs</i>: a reward signal used in training, replayed memories, salience scoring, error checks. What it lacks is the part that makes those jobs <i>about</i> something: a body to keep in balance and stakes it can lose. Whether a machine would need that to judge well, as Damasio's patients suggest people do, is the open question.</p>
+</div></div>
+
+<footer>
+ <b>Notes</b>
+ <ol>
+  <li>Drawing is schematic: positions are approximate and several structures are paired, one per hemisphere, though only one is shown.</li>
+  <li>Which parts &ldquo;count&rdquo; as limbic varies by textbook; the nucleus accumbens and thalamus are often listed as extended or associated structures, and the prefrontal cortex is shown only for contrast.</li>
+  <li>Analogy ratings are this page's own judgment, offered as a starting point for argument, not a finding.</li>
+ </ol>
+</footer>
+</main>
+
+<script>
+const LV = ["None","Loose","Partial","Strong"];
+const P = {
+ amygdala:{name:"Amygdala", alt:"Two almond-shaped clusters, deep in the temporal lobes", lvl:1,
+  job:"Fast appraisal of what matters: threat, reward, novelty. Tags experiences with emotional weight so they are learned and remembered more strongly. Often called the 'fear centre', though it handles salience and value broadly.",
+  ai:"A fast learned classifier that flags what matters before slower processing, such as a salience score or a safety filter.",
+  llm:"Nothing inside a language model persistently decides what it cares about. A moderation classifier can run beside it, but that is a gate, not a feeling.", short:"Salience & threat"},
+ hippocampus:{name:"Hippocampus", alt:"A curled ridge along the floor of each temporal lobe", lvl:2,
+  job:"Forms new episodic memories and hands them to cortex over time (consolidation), partly by replaying experiences during rest and sleep. Also builds spatial maps: place cells, grid cells.",
+  ai:"Experience replay (DeepMind's DQN, 2015) and the split between fast and slow memory in complementary-learning-systems theory. Retrieval systems and chat memory features act like a crude external hippocampus.",
+  llm:"A model's context window is like working memory. Its weights stop changing after training, so nothing consolidates. It forgets each conversation unless an outside tool saves notes.", short:"New memories, replay"},
+ hypothalamus:{name:"Hypothalamus", alt:"Small, under the thalamus, above the pituitary", lvl:1,
+  job:"Homeostasis: hunger, thirst, temperature, sleep, and hormones via the pituitary. The source of drives: signals that something in the body needs fixing.",
+  ai:"The reward function or objective in reinforcement learning; 'homeostatic' RL research gives agents internal variables to keep in range.",
+  llm:"A training objective shaped it, but at run time nothing is being depleted or at stake. It has goals in the sense of instructions, not needs.", short:"Drives & body balance"},
+ cingulate:{name:"Cingulate cortex", alt:"A belt of cortex arching over the corpus callosum", lvl:1,
+  job:"The front part monitors conflict and errors, weighs whether effort is worth it, and carries the unpleasantness of pain. Papez put it at the top of his emotion circuit.",
+  ai:"The critic in actor-critic learning, uncertainty estimates, or a separate verifier that checks a model's answer.",
+  llm:"Some systems add self-checking or a second model as a judge. It does the checking, but nothing in it feels effort or discomfort.", short:"Error & conflict monitor"},
+ accumbens:{name:"Nucleus accumbens", alt:"Ventral striatum, fed by dopamine neurons from the midbrain", lvl:3,
+  job:"A hub of the reward system. Dopamine arriving here signals reward prediction error: better or worse than expected. That drives learning and wanting.",
+  ai:"Temporal-difference learning's error signal. Schultz, Dayan and Montague (1997) showed dopamine firing matches it closely, the clearest two-way link between neuroscience and AI.",
+  llm:"Reinforcement fine-tuning uses reward signals during training, but there is no ongoing dopamine-like learning in a conversation.", short:"Reward prediction error"},
+ thalamus:{name:"Thalamus", alt:"The brain's central relay, two egg-shaped masses", lvl:1,
+  job:"Relays and gates almost all sensory traffic to cortex. Its anterior nuclei are part of the Papez circuit, so some definitions count it as limbic.",
+  ai:"Routing and gating: attention mechanisms, or the router in a mixture-of-experts model that decides which sub-network handles an input.",
+  llm:"Attention does route information, but it is spread through every layer, not a separate relay station.", short:"Relay & gating"},
+ fornix:{name:"Fornix & mammillary bodies", alt:"An arching fibre cable and the two small bumps it ends in", lvl:0,
+  job:"The main cable out of the hippocampus, carrying memory signals to the mammillary bodies and on to the thalamus. Damage here impairs forming new memories.",
+  ai:"No specific counterpart. It is wiring, a reminder that the system is a set of loops, not a stack of modules.",
+  llm:"Every model has connections, but there is no dedicated memory pathway to point to.", short:"Memory cable"},
+ pfc:{name:"Prefrontal cortex", alt:"Not limbic: shown for contrast", lvl:1,
+  job:"Planning, holding rules in mind, abstract reasoning, and regulating emotion. Its lower middle part links emotion to decisions; damage there is what Damasio studied.",
+  ai:"The usual stand-in for 'what LLMs are': reasoning without feeling.",
+  llm:"Fluent planning and reasoning, yes. But LLMs were not built to model cortex, so 'all cortex' is a metaphor, not anatomy.", short:"Planning (not limbic)"}
+};
+const ORDER = ["amygdala","hippocampus","hypothalamus","cingulate","accumbens","thalamus","fornix","pfc"];
+const VIEWNOTES = {
+ parts:"Each outlined part is clickable. Tubes are fibre tracts or curled structures.",
+ "1952":"MacLean's 1952 'limbic system': one emotional brain, drawn as a ring under the 'rational' cortex. Tidy, and too tidy.",
+ net:"The modern picture: loops. Papez's memory circuit runs round the middle; the amygdala and accumbens wire into prefrontal cortex. Emotion and reasoning share the circuitry."
+};
+const detail = document.getElementById("detail"), chips = document.getElementById("chips");
+const wrap = document.getElementById("mapwrap"), svg = document.getElementById("brain");
+let cur = "amygdala";
+try { const s = localStorage.getItem("tidepool.limbic.sel"); if (P[s]) cur = s; } catch(e){}
+function select(id, scroll){
+  cur = id; const p = P[id];
+  try { localStorage.setItem("tidepool.limbic.sel", id); } catch(e){}
+  svg.querySelectorAll("[data-id]").forEach(el=>el.classList.toggle("on", el.dataset.id===id));
+  detail.innerHTML = `<h3>${p.name}</h3><div class="alt">${p.alt}</div>
+   <dl><dt>Job in the brain</dt><dd>${p.job}</dd><dt>Nearest AI counterpart</dt><dd>${p.ai}</dd>
+   <dt>Does a language model have it?</dt><dd>${p.llm}</dd>
+   <dt>Analogy strength</dt><dd><div class="gauge">${[1,2,3].map(i=>`<i class="${i<=p.lvl?"f":""}"></i>`).join("")}</div><span class="glab">${LV[p.lvl]}</span></dd></dl>`;
+  chips.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.id===id));
+  if (scroll) document.getElementById("mapwrap").scrollIntoView({behavior:"smooth",block:"start"});
+}
+chips.innerHTML = ORDER.map(id=>`<button data-id="${id}">${id==="accumbens"?"Accumbens":id==="pfc"?"Prefrontal":P[id].name.split(" ")[0]}</button>`).join("");
+chips.addEventListener("click", e=>{ const b=e.target.closest("button"); if(b) select(b.dataset.id); });
+svg.addEventListener("click", e=>{ const el=e.target.closest("[data-id]"); if(el) select(el.dataset.id); });
+svg.addEventListener("keydown", e=>{ if((e.key==="Enter"||e.key===" ") && e.target.dataset.id){ e.preventDefault(); select(e.target.dataset.id); }});
+document.querySelectorAll(".views button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".views button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+  wrap.className = "map view-"+b.dataset.view; document.getElementById("viewnote").textContent = VIEWNOTES[b.dataset.view];
+}));
+document.getElementById("viewnote").textContent = VIEWNOTES.parts;
+const tb = document.querySelector("#bom tbody");
+tb.innerHTML = ORDER.map(id=>{const p=P[id]; return `<tr data-id="${id}"><td><b>${p.name}</b></td><td>${p.short}</td><td>${p.ai.split(/[.;:]/)[0]}</td><td class="bar"><span style="width:${p.lvl/3*100}%"></span><small>${LV[p.lvl]}</small></td></tr>`}).join("");
+tb.addEventListener("click", e=>{ const r=e.target.closest("tr"); if(r) select(r.dataset.id, true); });
+select(cur);
+</script>
+</body>
+</html>
