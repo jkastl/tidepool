@@ -109,9 +109,9 @@ for something bigger.
   stays out of search engines. (A `robots.txt` would not help: crawlers only
   read it at the domain root.)
 - A small link back to the front page (`../`) somewhere unobtrusive.
-- An inline favicon in every page's `<head>`, so browsers never request a
-  missing `/favicon.ico`. Pick an emoji that fits the build:
-  `<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">`
+- `<link rel="icon" href="data:,">` in every page's `<head>`. It declares an
+  empty icon, so browsers never request a missing `/favicon.ico`. No emoji or
+  decorative icons.
 - State in `localStorage` or IndexedDB, inside try/catch, with export and
   import for anything someone would hate to lose.
 - Public APIs only if they need no key and allow browser (CORS) calls.
