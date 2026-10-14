@@ -13,6 +13,10 @@ private idea-tank repo, and idea-tank runs apply them before every push. A
 session working in this repo alone cannot run them, so it must not add
 anything that came from a private capture.
 
+The same goes for everything else here, not just builds: this file, the
+front page, commit messages, and pull request titles and descriptions. Refer
+to the person who owns the repo as "the owner", never by name.
+
 ## Branching: builds go straight to main, setup goes through a PR
 
 Pages serves `main`, so a push to `main` is a publish.
@@ -21,7 +25,7 @@ Pages serves `main`, so a push to `main` is a publish.
 | --- | --- |
 | A build: a new `<slug>/` folder and its `builds.json` entry | Commit straight to `main` and push. No pull request. |
 | A revision: changes to the files inside an existing `<slug>/` folder and its `builds.json` entry (see [Revising a build](#revising-a-build)) | Commit straight to `main` and push. No pull request. |
-| Anything else: `CLAUDE.md`, `index.html`, `README.md`, `.nojekyll`, the manifest's format | A branch and a pull request for Jeff to review |
+| Anything else: `CLAUDE.md`, `index.html`, `README.md`, `.nojekyll`, the manifest's format | A branch and a pull request for the owner to review |
 
 Builds and revisions go to `main` even when the session was set up with a
 branch of its own.
