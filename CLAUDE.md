@@ -20,7 +20,11 @@ Pages serves `main`, so a push to `main` is a publish.
 | Change | How |
 | --- | --- |
 | A build: a new `<slug>/` folder and its `builds.json` entry | Commit straight to `main` and push. No pull request. |
+| A revision: changes to the files inside an existing `<slug>/` folder and its `builds.json` entry (see [Revising a build](#revising-a-build)) | Commit straight to `main` and push. No pull request. |
 | Anything else: `CLAUDE.md`, `index.html`, `README.md`, `.nojekyll`, the manifest's format | A branch and a pull request for Jeff to review |
+
+Builds and revisions go to `main` even when the session was set up with a
+branch of its own.
 
 `main` has a ruleset that blocks force-pushes and deleting the branch. Normal
 pushes are allowed. If a push is rejected because `main` moved, run
@@ -51,7 +55,8 @@ leave it and say so on its page.
   "form": "tool",
   "style": "nautical chart",
   "summary": "A clock face that tells tide time instead of sun time.",
-  "source": "idea-tank#7"
+  "source": "idea-tank#7",
+  "revised": "2026-10-15"
 }
 ```
 
@@ -61,13 +66,16 @@ leave it and say so on its page.
 - `summary`: one public-safe line. It appears on the front page.
 - `source`: where the build came from, for runs to detect a build they
   already made. `idea-tank#N` for idea-tank issue N.
+- `revised`: optional. The date of the build's latest revision. Left out
+  until the build is first revised. The front page shows it.
 
 ## Variety
 
 Before choosing, read the last three entries. Pick a `form` and a `style` that
 none of them used, unless the idea plainly calls for one. Name the style
 honestly in the manifest: two builds both called "minimal dark" count as the
-same style.
+same style. A revision does not add or move an entry, so it does not change
+which three are last.
 
 The kind sets the build's job:
 
@@ -139,6 +147,40 @@ A build about current events (never about people) makes public claims, so:
 - Attribute every factual claim to the named outlet that reported it, with a
   link, and add nothing beyond what those reports say.
 
+## Revising a build
+
+After a build is published, its owner sometimes asks for changes: a topic
+expanded, a section added, a visual tweak, a correction. This is the path
+for those.
+
+- **Who.** Only an interactive session, and only for a specific change
+  the owner asked for. Scheduled runs never change a published build. A
+  capture that asks for more on a built idea gets a new build, never an
+  edit.
+- **Needs idea-tank too.** Before pushing, a revision passes the same
+  privacy check as a new build, and that check lives in the private
+  idea-tank repo. A session that has only tidepool does not push a
+  revision: it asks for idea-tank to be attached. The full procedure is
+  idea-tank's `CLAUDE.md`, "Revising a published build".
+- **Where.** Edit files inside the existing `<slug>/` folder and its
+  `builds.json` entry, then commit straight to `main`. The slug, the folder
+  name, and the URL never change, even if the topic grows. Nor do the
+  entry's `date`, `kind`, or `source`. Update `title`, `summary`, `form`,
+  or `style` only if the change makes them wrong.
+- **Scope.** Keep the build's form and style unless the owner asks to
+  change them. If the ask is big enough to be a different build (a new
+  form, a different topic), say so and offer a new build instead.
+- **Rules.** Everything in [Build rules](#build-rules) still holds,
+  including [People and current events](#people-and-current-events). A
+  revision cannot turn a build into something a new build could not be.
+- **Test.** As in [Test before publishing](#test-before-publishing): the
+  changed parts and the core experience, desktop and phone width, light and
+  dark, no console errors.
+- **Record.** Set `revised` on the entry to today's date, and commit the
+  change and the entry together as `Revise <slug>: <what changed>`, for
+  example
+  `Revise 2026-10-14-slide-to-screen: add an image-pyramid diagram to the viewer`.
+
 ## Test before publishing
 
 Serve the repo root with `python3 -m http.server` and drive the build with
@@ -146,5 +188,6 @@ Playwright using the preinstalled Chromium (if a project needs a different
 Playwright version, launch with `executablePath: '/opt/pw-browsers/chromium'`;
 never run `playwright install`). Open `/<slug>/`, walk the core experience
 start to finish, use every control, check the console for errors, and look
-at it at desktop and phone width. Also check the front page lists the new
-build. Fix what you find before pushing.
+at it at desktop and phone width, in light and dark. Also check the front
+page lists the new build, or shows the revised date for a revision. Fix what
+you find before pushing.
