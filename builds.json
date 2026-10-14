@@ -38,5 +38,15 @@
     "style": "theatre playbill",
     "summary": "The word catharsis from Aristotle's stage to the psychology lab, and why letting feelings out doesn't drain them the way the steam-valve picture says.",
     "source": "idea-tank#25"
+  },
+  {
+    "slug": "2026-10-14-slide-to-screen",
+    "title": "Slide to Screen: Digital Pathology",
+    "date": "2026-10-14",
+    "kind": "idea",
+    "form": "interactive explainer",
+    "style": "H&E stain and glass slide",
+    "summary": "Digital pathology from tissue to pixels: the lab pipeline step by step, a zoomable whole-slide image pyramid, a file-size calculator, and a glossary of the key terms.",
+    "source": "idea-tank#27"
   }
 ]
