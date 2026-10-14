@@ -91,7 +91,8 @@
       summary.textContent = b.summary || "";
       const meta = document.createElement("div");
       meta.className = "meta";
-      for (const part of [b.date, b.kind, b.form, b.style]) {
+      const revised = b.revised ? "revised " + b.revised : "";
+      for (const part of [b.date, revised, b.kind, b.form, b.style]) {
         if (!part) continue;
         const s = document.createElement("span");
         s.textContent = part;
