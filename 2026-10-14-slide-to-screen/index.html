@@ -249,7 +249,7 @@
   <div class="viewer">
     <canvas id="wsi" aria-label="Zoomable synthetic tissue image"></canvas>
     <div class="hud" id="hud"></div>
-    <div class="minipyr" aria-hidden="true"><svg id="minipyr" viewBox="0 0 170 150"></svg><span>image pyramid</span></div>
+    <div class="minipyr" aria-hidden="true"><svg id="minipyr" viewBox="0 0 170 252"></svg><span>image pyramid</span></div>
     <div class="scalebar" id="scalebar"><div></div><span></span></div>
   </div>
   <div class="controls">
@@ -613,11 +613,12 @@ function render() {
     return `<div class="${k === L ? "on" : ""}"><b>L${k}</b>${m} &micro;m/px<br>${fmtN(Math.round(WORLD_W / m) * Math.round(WORLD_H / m))} px</div>`;
   }).join("");
   $("#zoom").value = Math.round(scaleToZoom(scale));
-  drawMiniPyramid(L, x0, y0, x0 + W * s, y0 + H * s);
+  drawMiniPyramid(L, x0, y0, x0 + W * s, y0 + H * s, tx0, ty0, tx1, ty1);
 }
 // A small isometric stack of the pyramid's levels: the level being read is
-// filled, its tile grid drawn, and the part of it on screen outlined.
-function drawMiniPyramid(L, vx0, vy0, vx1, vy1) {
+// filled and the tiles fetched for the screen are marked on it. Below it, a
+// flat map of that level's tile grid around the view, with those tiles filled.
+function drawMiniPyramid(L, vx0, vy0, vx1, vy1, tx0, ty0, tx1, ty1) {
   const C = Math.cos(Math.PI / 6), Sn = Math.sin(Math.PI / 6);
   const ox = 68, base = 110, gap = 23;
   const layer = k => { const w = 84 * (1 - k * .19); return { w, h: w * WORLD_H / WORLD_W, y: base - k * gap }; };
@@ -626,7 +627,7 @@ function drawMiniPyramid(L, vx0, vy0, vx1, vy1) {
     return [(ox + (a - b) * C).toFixed(1), (l.y + (a + b) * Sn).toFixed(1)];
   };
   const poly = (k, u0, v0, u1, v1) => [pt(k, u0, v0), pt(k, u1, v0), pt(k, u1, v1), pt(k, u0, v1)].map(p => p.join(",")).join(" ");
-  let out = "";
+  let out = "", ring = "";
   for (let k = 0; k < LEVELS; k++) {
     const on = k === L, m = BASE_MPP * Math.pow(DS, k);
     const ntx = Math.ceil(WORLD_W / (256 * m)), nty = Math.ceil(WORLD_H / (256 * m));
@@ -638,14 +639,46 @@ function drawMiniPyramid(L, vx0, vy0, vx1, vy1) {
     for (let j = stepY; j < nty; j += stepY) { const v = j / nty; g += `M${pt(k, 0, v)}L${pt(k, 1, v)}`; }
     if (g) out += `<path d="${g}" stroke="${on ? "#fff" : "#4f2a7a"}" stroke-opacity="${on ? .45 : .3}" stroke-width=".5" fill="none"/>`;
     if (on) {
-      const u0 = Math.max(0, vx0 / WORLD_W), v0 = Math.max(0, vy0 / WORLD_H);
-      const u1 = Math.min(1, vx1 / WORLD_W), v1 = Math.min(1, vy1 / WORLD_H);
-      out += `<polygon points="${poly(k, u0, v0, u1, v1)}" fill="#d9467e" fill-opacity=".55" stroke="#d9467e" stroke-width="1.2"/>`;
+      const tu = 256 * m / WORLD_W, tv = 256 * m / WORLD_H;
+      const u0 = tx0 * tu, v0 = ty0 * tv, u1 = Math.min(1, tx1 * tu), v1 = Math.min(1, ty1 * tv);
+      out += `<polygon points="${poly(k, u0, v0, u1, v1)}" fill="#d9467e" fill-opacity=".8" stroke="#d9467e" stroke-width="1"/>`;
+      // when the fetched block is too small to see, ring it
+      if (u1 - u0 < .12 && v1 - v0 < .12) {
+        const c = pt(k, (u0 + u1) / 2, (v0 + v1) / 2);
+        ring = `<circle cx="${c[0]}" cy="${c[1]}" r="5" fill="none" stroke="#d9467e" stroke-width="1.6"/>`;
+      }
     }
     const lp = pt(k, 1, 0);
     out += `<text x="${+lp[0] + 5}" y="${+lp[1] + 3}" font-size="9" font-family="ui-monospace, Menlo, Consolas, monospace" fill="${on ? "#d9467e" : "#6a5872"}" font-weight="${on ? 700 : 400}">L${k}${on ? " \u25c0" : ""}</text>`;
   }
+  out += ring; // drawn last so the upper layers do not hide it
+  out += tileMap(L, vx0, vy0, vx1, vy1, tx0, ty0, tx1, ty1);
   $("#minipyr").innerHTML = out;
+}
+function tileMap(L, vx0, vy0, vx1, vy1, tx0, ty0, tx1, ty1) {
+  const tileUm = 256 * BASE_MPP * Math.pow(DS, L);
+  const ntx = Math.ceil(WORLD_W / tileUm), nty = Math.ceil(WORLD_H / tileUm);
+  // show the whole level if it is small, otherwise a window centred on the fetched tiles
+  const cols = Math.min(ntx, Math.max(14, tx1 - tx0 + 2)), rows = Math.min(nty, Math.max(9, ty1 - ty0 + 2));
+  const wx0 = Math.min(ntx - cols, Math.max(0, Math.round((tx0 + tx1 - cols) / 2)));
+  const wy0 = Math.min(nty - rows, Math.max(0, Math.round((ty0 + ty1 - rows) / 2)));
+  const top = 166, areaW = 162, areaH = 82;
+  const cs = Math.min(areaW / cols, areaH / rows);
+  const left = 4 + (areaW - cs * cols) / 2;
+  const mono = `font-family="ui-monospace, Menlo, Consolas, monospace"`;
+  let o = `<line x1="4" x2="166" y1="146" y2="146" stroke="#4f2a7a" stroke-opacity=".25"/>`;
+  o += `<text x="4" y="158" font-size="9" ${mono} fill="#4f2a7a" font-weight="700">L${L} tiles</text>`;
+  o += `<text x="166" y="158" font-size="8" ${mono} fill="#6a5872" text-anchor="end">${cols < ntx || rows < nty ? `window of ${ntx}&times;${nty}` : `all ${ntx}&times;${nty}`}</text>`;
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+    const gx = wx0 + i, gy = wy0 + j, hit = gx >= tx0 && gx < tx1 && gy >= ty0 && gy < ty1;
+    o += `<rect x="${(left + i * cs + .5).toFixed(1)}" y="${(top + j * cs + .5).toFixed(1)}" width="${(cs - 1).toFixed(1)}" height="${(cs - 1).toFixed(1)}" fill="${hit ? "#d9467e" : "#f3e9f0"}" stroke="#4f2a7a" stroke-opacity=".35" stroke-width=".5"/>`;
+  }
+  // the screen's outline, in tile units
+  const X = u => left + (u / tileUm - wx0) * cs, Y = v => top + (v / tileUm - wy0) * cs;
+  const ax = Math.max(left, X(Math.max(0, vx0))), ay = Math.max(top, Y(Math.max(0, vy0)));
+  const bx = Math.min(left + cols * cs, X(Math.min(WORLD_W, vx1))), by = Math.min(top + rows * cs, Y(Math.min(WORLD_H, vy1)));
+  if (bx > ax && by > ay) o += `<rect x="${ax.toFixed(1)}" y="${ay.toFixed(1)}" width="${(bx - ax).toFixed(1)}" height="${(by - ay).toFixed(1)}" fill="none" stroke="#4f2a7a" stroke-width="1.4"/>`;
+  return o;
 }
 function clampView() {
   const mx = fitScale();
