@@ -47,6 +47,7 @@
     "form": "interactive explainer",
     "style": "H&E stain and glass slide",
     "summary": "Digital pathology from tissue to pixels: the lab pipeline step by step, a zoomable whole-slide image pyramid, a file-size calculator, and a glossary of the key terms.",
-    "source": "idea-tank#27"
+    "source": "idea-tank#27",
+    "revised": "2026-10-14"
   }
 ]
