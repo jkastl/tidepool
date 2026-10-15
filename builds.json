@@ -49,5 +49,15 @@
     "summary": "Digital pathology from tissue to pixels: the lab pipeline step by step, a zoomable whole-slide image pyramid, a file-size calculator, and a glossary of the key terms.",
     "source": "idea-tank#27",
     "revised": "2026-10-14"
+  },
+  {
+    "slug": "2026-10-15-podracer-pit-program",
+    "title": "Pit Program: How a Podracer Works",
+    "date": "2026-10-15",
+    "kind": "question",
+    "form": "interactive lab",
+    "style": "vintage motorsport race program",
+    "summary": "A film podracer taken apart: a cutaway sorting each part into real engineering or movie magic, a test track where differential thrust steers and tow cables go slack, and the g-forces a pilot would face.",
+    "source": "idea-tank#30"
   }
 ]
