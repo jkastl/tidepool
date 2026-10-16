@@ -171,7 +171,7 @@ there". Other people's work is theirs, so:
   interface, layout, colors, or mascot, and do not copy its code, even
   when its license would allow it. Libraries from a CDN, per the build
   rules, are fine.
-- **Fair and factual.** Say how this build differs, not that the other
+- **Fair and factual.** Say what this build adds, not that the other
   thing is bad. State only what their own pages or a named source say
   about them, and do not guess at prices or features.
 - **Projects, not people.** Name the project, not the person behind it. A
