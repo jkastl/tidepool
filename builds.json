@@ -59,5 +59,15 @@
     "style": "vintage motorsport race program",
     "summary": "A film podracer taken apart: a cutaway sorting each part into real engineering or movie magic, a test track where differential thrust steers and tow cables go slack, and the g-forces a pilot would face.",
     "source": "idea-tank#30"
+  },
+  {
+    "slug": "2026-10-16-wled-strip-planner",
+    "title": "WLED Strip Planner",
+    "date": "2026-10-16",
+    "kind": "question",
+    "form": "tool",
+    "style": "PCB silkscreen",
+    "summary": "What WLED is and what an addressable LED strip really needs: a planner for pixel count, supply size, power feeds, wire drop, and frame rate, a wiring diagram drawn to match, and the firmware's vocabulary.",
+    "source": "idea-tank#32"
   }
 ]

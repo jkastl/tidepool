@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>WLED Strip Planner</title>
+<style>
+  :root {
+    --mask: #f4f5ef;
+    --mask-2: #e8eadf;
+    --silk: #16241b;
+    --muted: #4d5a51;
+    --copper: #a8641f;
+    --copper-soft: #d9a46a;
+    --pad: #c7c9c2;
+    --pad-edge: #8e918a;
+    --warn: #b3261e;
+    --ok: #1d6b3c;
+    --grid: rgba(22, 36, 27, 0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --mask: #0d3322;
+      --mask-2: #11402b;
+      --silk: #eef3ea;
+      --muted: #a9c4b1;
+      --copper: #e0a050;
+      --copper-soft: #8f6332;
+      --pad: #c9ccc6;
+      --pad-edge: #8a8f88;
+      --warn: #ff8a7a;
+      --ok: #8fe0ad;
+      --grid: rgba(238, 243, 234, 0.05);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background-color: var(--mask);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 20px 20px;
+    color: var(--silk);
+    font: 15px/1.55 ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  .board {
+    max-width: 980px;
+    margin: 24px auto;
+    padding: 28px 22px 40px;
+    border: 2px solid var(--silk);
+    border-radius: 18px;
+    position: relative;
+    background: transparent;
+  }
+  /* mounting holes */
+  .board::before, .board::after {
+    content: "";
+    position: absolute;
+    top: 12px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 3px solid var(--copper);
+    background: var(--mask);
+  }
+  .board::before { left: 12px; }
+  .board::after { right: 12px; }
+  .home { margin: 0 0 18px; font-size: 13px; text-align: right; }
+  a { color: var(--copper); }
+  header .ref {
+    letter-spacing: 0.18em;
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  h1 {
+    font-size: clamp(26px, 5vw, 40px);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 6px 0 8px;
+    line-height: 1.1;
+  }
+  h2 {
+    font-size: 15px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin: 0 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2 .des {
+    display: inline-block;
+    border: 1.5px solid var(--silk);
+    padding: 1px 6px;
+    font-size: 12px;
+  }
+  h3 { font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; margin: 18px 0 6px; }
+  .lede { max-width: 66ch; margin: 0; }
+  section {
+    margin-top: 30px;
+    padding: 18px 16px;
+    border: 1.5px dashed var(--silk);
+    border-radius: 6px;
+    position: relative;
+  }
+  .note { color: var(--muted); font-size: 13px; }
+  .grid { display: grid; gap: 18px; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  fieldset { border: none; margin: 0; padding: 0; }
+  label { display: block; font-size: 13px; letter-spacing: 0.04em; margin: 10px 0 4px; text-transform: uppercase; }
+  select, input[type=number] {
+    width: 100%;
+    font: inherit;
+    color: #16241b;
+    background: var(--pad);
+    border: 2px solid var(--pad-edge);
+    border-radius: 4px;
+    padding: 6px 8px;
+  }
+  input[type=range] { width: 100%; accent-color: var(--copper); }
+  .row { display: flex; gap: 10px; }
+  .row > div { flex: 1; min-width: 0; }
+  .readout { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: baseline; }
+  .readout dt { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .readout dd { margin: 0; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+  .readout .sep { grid-column: 1 / -1; border-top: 1px dotted var(--muted); margin: 6px 0; }
+  .flag { margin: 10px 0 0; padding: 8px 10px; border-left: 4px solid var(--copper); font-size: 13px; }
+  .flag.warn { border-color: var(--warn); color: var(--warn); }
+  .flag.ok { border-color: var(--ok); }
+  svg { width: 100%; height: auto; display: block; }
+  .svg-silk { stroke: var(--silk); fill: none; }
+  .svg-text { fill: var(--silk); font: 12px ui-monospace, Menlo, Consolas, monospace; }
+  .svg-muted { fill: var(--muted); font: 11px ui-monospace, Menlo, Consolas, monospace; }
+  .trace { stroke: var(--copper); stroke-width: 4; fill: none; stroke-linecap: round; }
+  .trace-data { stroke: var(--copper); stroke-width: 2.5; stroke-dasharray: 6 4; fill: none; }
+  .gnd { stroke: var(--muted); stroke-width: 3; fill: none; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; margin-top: 8px; }
+  .legend span::before { content: ""; display: inline-block; width: 22px; height: 0; vertical-align: middle; margin-right: 6px; border-top: 4px solid var(--copper); }
+  .legend .d::before { border-top: 3px dashed var(--copper); }
+  .legend .g::before { border-top-color: var(--muted); border-top-width: 3px; }
+  ol.steps { padding-left: 22px; margin: 6px 0; }
+  ol.steps li { margin: 6px 0; }
+  .terms { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .term { border: 1.5px solid var(--silk); border-radius: 4px; padding: 10px 12px; }
+  .term b { display: block; text-transform: uppercase; letter-spacing: 0.08em; font-size: 13px; margin-bottom: 4px; }
+  .term b .ref { color: var(--copper); margin-right: 6px; }
+  .term p { margin: 0; font-size: 13.5px; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tabs button {
+    font: inherit; font-size: 13px;
+    background: transparent; color: var(--silk);
+    border: 1.5px solid var(--silk); border-radius: 3px;
+    padding: 4px 10px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .tabs button[aria-selected=true] { background: var(--silk); color: var(--mask); }
+  .tabpanel[hidden] { display: none; }
+  footer { margin-top: 30px; font-size: 12px; color: var(--muted); }
+  .sources li { margin: 4px 0; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="board">
+  <p class="home"><a href="../">&larr; tidepool</a></p>
+
+  <header>
+    <div class="ref">REV A &middot; LED-CTRL-01 &middot; ESP32 / ESP8266</div>
+    <h1>WLED Strip Planner</h1>
+    <p class="lede">WLED is free, open-source firmware that turns a cheap ESP32 or ESP8266
+    Wi-Fi board into a controller for addressable LED strips, with a browser
+    interface, an effects library, and hooks for home automation and light
+    shows. The software is the easy part. Most first projects that go wrong
+    go wrong on the electricity, so this page starts there: describe your
+    strip and it works out what you need.</p>
+  </header>
+
+  <section id="planner" aria-labelledby="h-planner">
+    <h2 id="h-planner"><span class="des">U1</span> Planner</h2>
+    <div class="grid">
+      <fieldset>
+        <label for="type">Strip type</label>
+        <select id="type">
+          <option value="ws2812b">WS2812B &middot; 5 V &middot; RGB</option>
+          <option value="sk6812">SK6812 &middot; 5 V &middot; RGBW</option>
+          <option value="ws2815">WS2815 &middot; 12 V &middot; RGB</option>
+          <option value="custom">Custom</option>
+        </select>
+        <div class="row">
+          <div>
+            <label for="volts">Strip volts</label>
+            <select id="volts"><option value="5">5 V</option><option value="12">12 V</option><option value="24">24 V</option></select>
+          </div>
+          <div>
+            <label for="ma">mA per pixel, full white</label>
+            <input id="ma" type="number" min="1" max="255" step="1">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="len">Length (m)</label>
+            <input id="len" type="number" min="0.1" max="100" step="0.1" value="5">
+          </div>
+          <div>
+            <label for="dens">Pixels per m</label>
+            <select id="dens"><option>30</option><option selected>60</option><option>96</option><option>144</option></select>
+          </div>
+        </div>
+        <label for="bright">Brightest you'll really run: <span id="brightv"></span>%</label>
+        <input id="bright" type="range" min="10" max="100" step="5" value="100">
+        <label for="head">Supply headroom: <span id="headv"></span>%</label>
+        <input id="head" type="range" min="0" max="40" step="5" value="20">
+        <div class="row">
+          <div>
+            <label for="feed">Feed power every (m)</label>
+            <input id="feed" type="number" min="0.5" max="50" step="0.5">
+          </div>
+          <div>
+            <label for="outs">Data outputs</label>
+            <select id="outs"><option>1</option><option>2</option><option>3</option><option>4</option></select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="awg">Feed wire</label>
+            <select id="awg">
+              <option value="22">22 AWG</option><option value="20">20 AWG</option>
+              <option value="18" selected>18 AWG</option><option value="16">16 AWG</option>
+              <option value="14">14 AWG</option><option value="12">12 AWG</option>
+            </select>
+          </div>
+          <div>
+            <label for="wlen">Wire run, one way (m)</label>
+            <input id="wlen" type="number" min="0.1" max="30" step="0.1" value="1.5">
+          </div>
+        </div>
+        <p class="note" id="typenote"></p>
+      </fieldset>
+
+      <div>
+        <dl class="readout" aria-live="polite">
+          <dt>Pixels</dt><dd id="o-px"></dd>
+          <dt>Worst case, full white</dt><dd id="o-max"></dd>
+          <dt>At your brightness</dt><dd id="o-use"></dd>
+          <div class="sep"></div>
+          <dt>Supply to buy</dt><dd id="o-psu"></dd>
+          <dt>WLED max current</dt><dd id="o-abl"></dd>
+          <div class="sep"></div>
+          <dt>Power feeds</dt><dd id="o-feeds"></dd>
+          <dt>Current per feed</dt><dd id="o-perfeed"></dd>
+          <dt>Drop in each feed wire</dt><dd id="o-drop"></dd>
+          <div class="sep"></div>
+          <dt>Pixels per output</dt><dd id="o-pxout"></dd>
+          <dt>Max frame rate</dt><dd id="o-fps"></dd>
+        </dl>
+        <div id="flags"></div>
+      </div>
+    </div>
+    <h3>How it works it out</h3>
+    <p class="note" id="math"></p>
+  </section>
+
+  <section id="wiring" aria-labelledby="h-wiring">
+    <h2 id="h-wiring"><span class="des">J1</span> Wiring for your strip</h2>
+    <svg id="diagram" viewBox="0 0 900 300" role="img" aria-label="Wiring diagram: supply feeding the controller and the strip at several points, with the data line running through a level shifter and a resistor to the first pixel"></svg>
+    <div class="legend"><span>Power (+)</span><span class="g">Ground, shared by everything</span><span class="d">Data, one way only</span></div>
+    <ol class="steps">
+      <li><b>One ground for all.</b> The supply, the board, and every feed point share ground. Data is measured against ground, so a board on a separate supply with no common ground gives garbage colours or nothing.</li>
+      <li><b>Data has a direction.</b> Strips have arrows printed on them. The controller connects to the input end; feeding the wrong end does nothing.</li>
+      <li><b>Lift the data line.</b> ESP boards talk at 3.3 V and 5 V pixels expect close to 5 V. It often works anyway, until it doesn't. A 74AHCT125 or 74HCT125 level shifter between board and strip is the usual fix for a first pixel that flickers or a strip that ignores you. WLED's own wiring guide covers it.</li>
+      <li><b>A resistor and a capacitor.</b> A small resistor (a few hundred ohms) in the data line near the first pixel damps ringing, and a large capacitor across the supply at the strip's start soaks up the surge at switch-on. Builders differ on values; both are cheap insurance, not magic.</li>
+      <li><b>Feed power, not data, along the way.</b> The thin copper on a strip drops voltage over distance, so the far end goes dim and orange. Extra feeds (power injection) connect + and ground at intervals; the data line stays single.</li>
+      <li><b>Fuse each feed.</b> Thin wire carrying many amps from a big supply is how strips start melting. A fuse sized to the wire on each feed protects it.</li>
+      <li><b>Don't power a strip through the board.</b> A board's 5 V pin passes current through its USB port and small parts. If you must, keep WLED's limit under about 1 A.</li>
+    </ol>
+  </section>
+
+  <section id="wled" aria-labelledby="h-wled">
+    <h2 id="h-wled"><span class="des">R1</span> WLED, the software</h2>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" aria-controls="t-get" id="b-get">Get it on</button>
+      <button role="tab" aria-selected="false" aria-controls="t-words" id="b-words">The vocabulary</button>
+      <button role="tab" aria-selected="false" aria-controls="t-talk" id="b-talk">Talking to it</button>
+    </div>
+    <div class="tabpanel" id="t-get" role="tabpanel" aria-labelledby="b-get">
+      <ol class="steps">
+        <li><b>Pick a board.</b> Both ESP8266 and ESP32 boards run WLED. The ESP32 is the safer pick for a new build: more memory, more LED outputs, more headroom for add-ons.</li>
+        <li><b>Flash it.</b> WLED's project page links a web installer that flashes the board over USB from a browser that supports Web Serial, with no toolchain to set up.</li>
+        <li><b>Join it to Wi-Fi.</b> A fresh install starts its own access point. Connect to it, give it your network's details, and it reboots onto your Wi-Fi.</li>
+        <li><b>Tell it about the strip.</b> In the LED settings: the data pin, the LED type, the pixel count, and the brightness limiter's two numbers from the planner above (supply current and mA per pixel).</li>
+        <li><b>Play.</b> Pick an effect and a palette from a phone or browser. Save what you like as a preset.</li>
+      </ol>
+    </div>
+    <div class="tabpanel" id="t-words" role="tabpanel" aria-labelledby="b-words" hidden>
+      <div class="terms">
+        <div class="term"><b><span class="ref">S</span>Segment</b><p>A slice of the strip that runs its own effect and colours. One strip under a shelf can be three segments doing three things.</p></div>
+        <div class="term"><b><span class="ref">E</span>Effect</b><p>The motion: a pattern over time, like a chase, twinkle, fire, or rainbow. WLED ships with well over a hundred.</p></div>
+        <div class="term"><b><span class="ref">P</span>Palette</b><p>The colours an effect draws from. The same effect looks completely different in "ocean" and "lava". Effect and palette are picked separately.</p></div>
+        <div class="term"><b><span class="ref">PR</span>Preset</b><p>A saved snapshot of the whole state: segments, effects, palettes, brightness. Presets are what buttons, schedules, and automations recall.</p></div>
+        <div class="term"><b><span class="ref">PL</span>Playlist</b><p>A preset that steps through other presets on a timer, for a display that changes through the evening.</p></div>
+        <div class="term"><b><span class="ref">ABL</span>Brightness limiter</b><p>WLED estimates current from the pixel count, the mA-per-pixel setting, and the colours it is about to show, and dims the whole strip if the estimate passes the limit you set. It is an estimate, not a measurement, so it protects a supply only if its numbers are honest.</p></div>
+      </div>
+    </div>
+    <div class="tabpanel" id="t-talk" role="tabpanel" aria-labelledby="b-talk" hidden>
+      <div class="terms">
+        <div class="term"><b><span class="ref">UI</span>Web and app</b><p>Every WLED board serves its own control page on your network; there are phone apps that find boards automatically.</p></div>
+        <div class="term"><b><span class="ref">SYNC</span>Board to board</b><p>Boards can broadcast their state over UDP, so a change on one is copied by the others: one look across several rooms.</p></div>
+        <div class="term"><b><span class="ref">HA</span>Home automation</b><p>Home Assistant has an integration for it, and WLED also speaks MQTT and a JSON API, so lights can follow sensors, schedules, and scenes.</p></div>
+        <div class="term"><b><span class="ref">DMX</span>Light-show protocols</b><p>E1.31, Art-Net, and DDP let sequencing software stream every pixel's colour in real time, which is how synchronized holiday displays drive many boards at once.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-src">
+    <h2 id="h-src"><span class="des">TP</span> Sources and limits</h2>
+    <ul class="sources">
+      <li><a href="https://kno.wled.ge/">WLED knowledge base</a>: the project's own documentation, including LED settings and wiring guides for level shifters.</li>
+      <li><a href="https://github.com/Aircoookie/WLED">WLED on GitHub</a>: source code and the feature list (segments, presets, sync, and the streaming protocols).</li>
+      <li>The per-pixel figures in the planner are common ratings, not measurements. Strips from different makers draw differently, and WS2815 figures in particular vary from one datasheet and seller to the next. Use your seller's watts-per-metre or a meter at full white if you have them.</li>
+      <li>The feed spacing defaults (about 2 m on 5 V, 5 m on 12 V) are starting rules of thumb. Check the far end at full white: if it shifts toward orange or pink, add a feed.</li>
+      <li>Wire drop uses copper's resistance per metre at room temperature for each gauge, out and back. It does not account for connectors, which often add more drop than the wire.</li>
+    </ul>
+  </section>
+
+  <footer>An independent explainer, not affiliated with the WLED project. Mains wiring belongs to a qualified electrician; everything here is about the low-voltage side. &middot; <a href="../">tidepool</a></footer>
+</div>
+
+<script>
+(() => {
+  const TYPES = {
+    ws2812b: { volts: 5, ma: 60, bits: 24, feed: 2, note: "WS2812B: one chip per pixel, three colour channels at up to about 20 mA each, so about 60 mA per pixel at full white. WLED's own 5 V preset assumes 55 mA." },
+    sk6812:  { volts: 5, ma: 80, bits: 32, feed: 2, note: "SK6812 RGBW: a fourth, white channel, so up to about 80 mA per pixel with everything on, and 32 bits of data per pixel instead of 24." },
+    ws2815:  { volts: 12, ma: 45, bits: 24, feed: 5, note: "WS2815: 12 V pixels with a backup data line, so one dead pixel does not black out the rest. Ratings vary a lot between sources; 45 mA is a cautious figure. At 12 V the same watts need far less current, so the strip runs longer between feeds." },
+    custom:  { volts: 5, ma: 50, bits: 24, feed: 2, note: "Custom: set the volts and the full-white mA per pixel from your strip's datasheet or seller listing." }
+  };
+  // Copper resistance, ohms per metre, about 20 °C.
+  const AWG = { 22: 0.0530, 20: 0.0333, 18: 0.0210, 16: 0.0132, 14: 0.00829, 12: 0.00521 };
+  const PSU = [1, 2, 3, 4, 5, 6, 8, 10, 12.5, 15, 20, 25, 30, 40, 50, 60];
+  const KEY = "tidepool-wled-planner-v1";
+  const $ = id => document.getElementById(id);
+  const ids = ["type", "volts", "ma", "len", "dens", "bright", "head", "feed", "outs", "awg", "wlen"];
+
+  function load() {
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (s) for (const k of ids) if (s[k] != null && $(k)) $(k).value = s[k];
+      return !!s;
+    } catch (e) { return false; }
+  }
+  function save() {
+    try {
+      const s = {};
+      for (const k of ids) s[k] = $(k).value;
+      localStorage.setItem(KEY, JSON.stringify(s));
+    } catch (e) { /* storage unavailable; fine */ }
+  }
+  function applyType() {
+    const t = TYPES[$("type").value];
+    $("volts").value = String(t.volts);
+    $("ma").value = t.ma;
+    $("feed").value = t.feed;
+  }
+  const fmt = (n, d = 1) => Number(n).toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d });
+  const num = (id, lo, hi, dflt) => {
+    const v = parseFloat($(id).value);
+    return Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : dflt;
+  };
+
+  function calc() {
+    const type = $("type").value;
+    const t = TYPES[type];
+    const V = parseFloat($("volts").value);
+    const ma = num("ma", 1, 255, t.ma);
+    const len = num("len", 0.1, 100, 5);
+    const dens = parseFloat($("dens").value);
+    const bright = parseFloat($("bright").value) / 100;
+    const head = parseFloat($("head").value) / 100;
+    const feedEvery = num("feed", 0.5, 50, t.feed);
+    const outs = parseInt($("outs").value, 10);
+    const awg = $("awg").value;
+    const wlen = num("wlen", 0.1, 30, 1.5);
+    $("brightv").textContent = Math.round(bright * 100);
+    $("headv").textContent = Math.round(head * 100);
+    $("typenote").textContent = t.note;
+
+    const px = Math.max(1, Math.round(len * dens));
+    const ampsMax = px * ma / 1000;
+    const ampsUse = ampsMax * bright;
+    const need = ampsUse * (1 + head);
+    const psu = PSU.find(a => a >= need);
+    const feeds = Math.max(1, Math.ceil(len / feedEvery));
+    const perFeed = ampsUse / feeds;
+    const drop = perFeed * AWG[awg] * wlen * 2;
+    const dropPct = drop / V * 100;
+    const pxOut = Math.ceil(px / outs);
+    // WS281x-style data: 800 kHz, 1.25 µs a bit; plus a latch gap (~300 µs on newer chips).
+    const frameUs = pxOut * t.bits * 1.25 + 300;
+    const fps = 1e6 / frameUs;
+    const ablMa = psu ? Math.floor(psu * 1000 * 0.9 / 50) * 50 : null;
+
+    $("o-px").textContent = px.toLocaleString();
+    $("o-max").textContent = `${fmt(ampsMax)} A · ${fmt(ampsMax * V, 0)} W`;
+    $("o-use").textContent = `${fmt(ampsUse)} A · ${fmt(ampsUse * V, 0)} W`;
+    $("o-psu").textContent = psu ? `${V} V, ${psu} A` : `${V} V, over 60 A: split it`;
+    $("o-abl").textContent = ablMa ? `${ablMa.toLocaleString()} mA @ ${ma} mA/px` : "n/a";
+    $("o-feeds").textContent = feeds === 1 ? "1 (start only)" : `${feeds}`;
+    $("o-perfeed").textContent = `${fmt(perFeed)} A`;
+    $("o-drop").textContent = `${fmt(drop, 2)} V · ${fmt(dropPct)}%`;
+    $("o-pxout").textContent = pxOut.toLocaleString();
+    $("o-fps").textContent = `${Math.floor(fps)} fps`;
+
+    const flags = [];
+    if (!psu) flags.push(["warn", "That is more than one common supply provides. Split the strip across several supplies, each feeding its own section, with all grounds tied together."]);
+    if (dropPct > 5) flags.push(["warn", `Each feed wire loses ${fmt(dropPct)}% of the voltage before it reaches the strip. Use a thicker gauge, a shorter run, or more feeds.`]);
+    if (perFeed > 10) flags.push(["warn", `${fmt(perFeed)} A through one feed is a lot for strip copper and connectors. Add feeds so each carries less.`]);
+    if (fps < 30) flags.push(["warn", `At ${Math.floor(fps)} fps, fast effects will look steppy. Split the pixels across more data outputs (an ESP32 has more to give than an ESP8266).`]);
+    if (V === 5 && len > 5 && feeds === 1) flags.push(["warn", "A 5 V strip this long fed only from one end will usually fade toward the far end. Add feeds."]);
+    if (bright < 1) flags.push(["", `Sizing the supply for ${Math.round(bright * 100)}% means WLED's limiter has to hold the line: set it as shown, or a full-white moment will ask for ${fmt(ampsMax)} A.`]);
+    if (!flags.length) flags.push(["ok", "Nothing alarming. Check the far end at full white once it is built."]);
+    $("flags").innerHTML = flags.map(([c, m]) => `<p class="flag ${c}">${m}</p>`).join("");
+
+    $("math").textContent =
+      `${fmt(len)} m × ${dens}/m = ${px} pixels. ${px} × ${ma} mA = ${fmt(ampsMax)} A at full white; ` +
+      `at ${Math.round(bright * 100)}% that is ${fmt(ampsUse)} A, plus ${Math.round(head * 100)}% headroom = ${fmt(need)} A, ` +
+      `rounded up to a common supply size. WLED's limit is set to about 90% of the supply. ` +
+      `Feeds: ${fmt(len)} m ÷ ${fmt(feedEvery)} m, rounded up = ${feeds}, each carrying ${fmt(perFeed)} A. ` +
+      `Wire drop: ${fmt(perFeed)} A × ${AWG[awg]} Ω/m × ${fmt(wlen)} m × 2 (out and back) = ${fmt(drop, 2)} V. ` +
+      `Frame: ${pxOut} pixels × ${t.bits} bits × 1.25 µs + 300 µs latch = ${fmt(frameUs / 1000, 2)} ms, so at most ${Math.floor(fps)} frames a second per output.`;
+
+    draw(feeds, V, psu, outs);
+    save();
+  }
+
+  function draw(feeds, V, psu, outs) {
+    const svg = $("diagram");
+    const sx = 330, ex = 870, sy = 210;
+    let s = "";
+    // Supply
+    s += `<rect class="svg-silk" x="20" y="30" width="120" height="70" rx="4" stroke-width="2"/>`;
+    s += `<text class="svg-text" x="80" y="60" text-anchor="middle">SUPPLY</text>`;
+    s += `<text class="svg-muted" x="80" y="80" text-anchor="middle">${V} V ${psu ? psu + " A" : "split"}</text>`;
+    // Controller
+    s += `<rect class="svg-silk" x="40" y="160" width="100" height="70" rx="4" stroke-width="2"/>`;
+    s += `<text class="svg-text" x="90" y="190" text-anchor="middle">ESP</text>`;
+    s += `<text class="svg-muted" x="90" y="208" text-anchor="middle">WLED</text>`;
+    // Level shifter and resistor
+    s += `<rect class="svg-silk" x="180" y="185" width="54" height="34" rx="3" stroke-width="2"/>`;
+    s += `<text class="svg-muted" x="207" y="206" text-anchor="middle">LVL</text>`;
+    s += `<rect class="svg-silk" x="260" y="194" width="34" height="16" stroke-width="2"/>`;
+    s += `<text class="svg-muted" x="277" y="232" text-anchor="middle">R</text>`;
+    // Data line
+    s += `<path class="trace-data" d="M140 202 H180 M234 202 H260 M294 202 H${sx}"/>`;
+    // Strip
+    const segW = ex - sx;
+    s += `<rect class="svg-silk" x="${sx}" y="${sy - 18}" width="${segW}" height="36" rx="3" stroke-width="2"/>`;
+    const nPx = 24;
+    for (let i = 0; i < nPx; i++) {
+      const x = sx + 12 + i * (segW - 24) / (nPx - 1);
+      s += `<rect x="${x - 5}" y="${sy - 5}" width="10" height="10" fill="var(--pad)" stroke="var(--pad-edge)"/>`;
+    }
+    s += `<text class="svg-muted" x="${sx}" y="${sy + 36}">DIN →</text>`;
+    s += `<text class="svg-muted" x="${ex}" y="${sy + 36}" text-anchor="end">far end</text>`;
+    // Power bus from supply
+    const busY = 130, gndY = 270;
+    s += `<path class="trace" d="M140 50 H170 V${busY} H${ex - 10}"/>`;
+    s += `<path class="gnd" d="M140 80 H155 V${gndY} H${ex - 10}"/>`;
+    // Controller power and ground
+    s += `<path class="trace" d="M110 ${busY} V160"/>`;
+    s += `<path class="gnd" d="M70 230 V${gndY}"/>`;
+    // Feeds
+    for (let i = 0; i < feeds; i++) {
+      const x = feeds === 1 ? sx + 16 : sx + 16 + i * (segW - 32) / (feeds - 1);
+      s += `<path class="trace" d="M${x} ${busY} V${sy - 18}"/>`;
+      s += `<path class="gnd" d="M${x + 8} ${sy + 18} V${gndY}"/>`;
+      s += `<rect class="svg-silk" x="${x - 9}" y="${busY + 12}" width="18" height="10" stroke-width="1.5"/>`;
+      s += `<circle cx="${x}" cy="${busY}" r="4" fill="var(--copper)"/>`;
+    }
+    s += `<text class="svg-muted" x="${sx + 30}" y="${busY - 8}">+${V} V bus · ${feeds} feed${feeds > 1 ? "s" : ""}, each fused</text>`;
+    s += `<text class="svg-muted" x="${sx + 30}" y="${gndY - 6}">common ground</text>`;
+    s += `<text class="svg-muted" x="180" y="176">3.3 → 5 V</text>`;
+    if (outs > 1) s += `<text class="svg-muted" x="20" y="294">${outs} data outputs: one per section of the strip</text>`;
+    svg.innerHTML = s;
+  }
+
+  // Tabs
+  const tabs = [...document.querySelectorAll('[role=tab]')];
+  tabs.forEach(b => b.addEventListener("click", () => {
+    tabs.forEach(o => {
+      const on = o === b;
+      o.setAttribute("aria-selected", String(on));
+      $(o.getAttribute("aria-controls")).hidden = !on;
+    });
+  }));
+
+  if (!load()) applyType();
+  $("type").addEventListener("change", () => { applyType(); calc(); });
+  ids.filter(k => k !== "type").forEach(k => $(k).addEventListener("input", calc));
+  calc();
+})();
+</script>
+</body>
+</html>
