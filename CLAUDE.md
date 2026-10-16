@@ -151,6 +151,33 @@ A build about current events (never about people) makes public claims, so:
 - Attribute every factual claim to the named outlet that reported it, with a
   link, and add nothing beyond what those reports say.
 
+### Prior art in a build
+
+Idea-tank runs check what already exists before building an idea, and a
+build may say what turned up, in a short section such as "Already out
+there". Other people's work is theirs, so:
+
+- **Name and link, nothing else of theirs.** Use the product's or project's
+  name in plain text and link to its own page. No logos, icons,
+  screenshots, product photos, embedded media, or text copied from their
+  site, docs, or marketing. Describe each one in the build's own words, in
+  a line.
+- **Names identify, never brand.** A name appears only to say what the
+  thing is. It never goes in the build's title, slug, headings used as
+  branding, or `builds.json` summary. Nothing may suggest the build is
+  affiliated with, endorsed by, or a version of the other work: not "an
+  open-source Spotify", but "an open-source music player".
+- **No borrowed look or code.** Do not imitate another product's
+  interface, layout, colors, or mascot, and do not copy its code, even
+  when its license would allow it. Libraries from a CDN, per the build
+  rules, are fine.
+- **Fair and factual.** Say what this build adds, not that the other
+  thing is bad. State only what their own pages or a named source say
+  about them, and do not guess at prices or features.
+- **Projects, not people.** Name the project, not the person behind it. A
+  creator may be named only in passing for a documented public role, as in
+  [People and current events](#people-and-current-events).
+
 ## Revising a build
 
 After a build is published, its owner sometimes asks for changes: a topic
