@@ -69,5 +69,15 @@
     "style": "PCB silkscreen",
     "summary": "What WLED is and what an addressable LED strip really needs: a planner for pixel count, supply size, power feeds, wire drop, and frame rate, a wiring diagram drawn to match, and the firmware's vocabulary.",
     "source": "idea-tank#32"
+  },
+  {
+    "slug": "2026-10-17-arm-operators-manual",
+    "title": "Operator's Manual: How a Robot Arm Reaches",
+    "date": "2026-10-17",
+    "kind": "question",
+    "form": "visual essay",
+    "style": "vintage operator's manual",
+    "summary": "Robot arm basics as an old operator's manual: joints and degrees of freedom, a drag-the-hand inverse kinematics figure with elbow-up, elbow-down, and redundancy, a singularity you can run into, and the motors, grippers, and arm families.",
+    "source": "idea-tank#33"
   }
 ]
