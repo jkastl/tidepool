@@ -67,8 +67,9 @@
     "kind": "question",
     "form": "tool",
     "style": "PCB silkscreen",
-    "summary": "What WLED is and what an addressable LED strip really needs: a planner for pixel count, supply size, power feeds, wire drop, and frame rate, a wiring diagram drawn to match, and the firmware's vocabulary.",
-    "source": "idea-tank#32"
+    "summary": "What WLED is and how to plan the power side of an LED strip: a planner for pixel count, supply size, power feeds, wire drop, and frame rate, a wiring diagram drawn to match, and the firmware's vocabulary.",
+    "source": "idea-tank#32",
+    "revised": "2026-10-18"
   },
   {
     "slug": "2026-10-17-arm-operators-manual",
