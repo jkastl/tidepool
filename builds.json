@@ -26,8 +26,9 @@
     "kind": "question",
     "form": "annotated map",
     "style": "blueprint",
-    "summary": "What the limbic system is, mapped part by part against its nearest AI counterparts, with an honest rating of how far each analogy stretches.",
-    "source": "idea-tank#19"
+    "summary": "What the limbic system is, mapped part by part against its nearest AI counterparts, with a rough rating of how far each analogy stretches.",
+    "source": "idea-tank#19",
+    "revised": "2026-10-18"
   },
   {
     "slug": "2026-10-13-catharsis-playbill",
