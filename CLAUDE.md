@@ -171,12 +171,34 @@ there". Other people's work is theirs, so:
   interface, layout, colors, or mascot, and do not copy its code, even
   when its license would allow it. Libraries from a CDN, per the build
   rules, are fine.
-- **Fair and factual.** Say what this build adds, not that the other
-  thing is bad. State only what their own pages or a named source say
+- **Fair and factual.** Say plainly what this build tries, not that the
+  other thing is bad or missing something (see [Tone](#tone)). State only what their own pages or a named source say
   about them, and do not guess at prices or features.
 - **Projects, not people.** Name the project, not the person behind it. A
   creator may be named only in passing for a documented public role, as in
   [People and current events](#people-and-current-events).
+
+## Tone
+
+A build is a first try at something interesting, shared the way a hobbyist
+shares notes: "this caught my eye, here's what I tried." It is not an expert
+arriving to fix a field, and it should never read like one.
+
+- **No grand framing.** Not "what X really needs", "what X is really
+  about", "the real problem is", "the missing piece", "what nobody talks
+  about", or "finally". Say what the build does.
+- **Other work is not a gap to fill.** An "Already out there" section says
+  what exists and what this one tries, not what the others fail to do.
+  Assume their makers thought of the obvious and had their reasons.
+- **Modest claims.** Say where the build simplifies, estimates, or guesses.
+  Not "everything you need", "the definitive", or "the right way".
+- **Plain words.** Short sentences and everyday vocabulary. A style can be
+  playful or dramatic in its type and layout; the prose still talks like a
+  person, not a manifesto.
+
+For example: "The real basics are electrical" reads as a correction nobody
+asked for. "A lot of the early questions turn out to be about power and
+wiring, so that's where this starts" says the same thing kindly.
 
 ## Revising a build
 
