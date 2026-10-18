@@ -79,5 +79,15 @@
     "style": "vintage operator's manual",
     "summary": "Robot arm basics as an old operator's manual: joints and degrees of freedom, a drag-the-hand inverse kinematics figure with elbow-up, elbow-down, and redundancy, a singularity you can run into, and the motors, grippers, and arm families.",
     "source": "idea-tank#33"
+  },
+  {
+    "slug": "2026-10-18-pull-the-stops",
+    "title": "Pull the Stops: How a Pipe Organ Speaks",
+    "date": "2026-10-18",
+    "kind": "idea",
+    "form": "toy",
+    "style": "walnut console and ivory drawknobs",
+    "summary": "A playable pipe organ console: draw stops, start the blower, and watch which pipes open in the wind chest and which harmonics each stop adds, with the reason organ stops are measured in feet.",
+    "source": "idea-tank#38"
   }
 ]

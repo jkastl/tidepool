@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Pull the Stops: How a Pipe Organ Speaks</title>
+<style>
+  :root {
+    --page: #f3ead8;
+    --page-2: #e9dcc2;
+    --ink: #2a1b10;
+    --muted: #6b5644;
+    --rule: #b89c78;
+    --wood: #5a3420;
+    --wood-2: #6e4128;
+    --wood-dark: #3a2013;
+    --wood-grain: rgba(0, 0, 0, 0.08);
+    --ivory: #f6efdf;
+    --ivory-edge: #cbbd9d;
+    --ebony: #1d1612;
+    --engrave: #2a1b10;
+    --reed: #9b2418;
+    --brass: #b8893a;
+    --brass-soft: #e2c486;
+    --pipe: #b9b4a8;
+    --pipe-edge: #807a6e;
+    --speak: #d99a2b;
+    --open: rgba(217, 154, 43, 0.22);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page: #1b120c;
+      --page-2: #241810;
+      --ink: #efe3cc;
+      --muted: #b9a286;
+      --rule: #5b4430;
+      --wood: #4a2a19;
+      --wood-2: #5a331e;
+      --wood-dark: #2a170d;
+      --wood-grain: rgba(0, 0, 0, 0.18);
+      --ivory: #e9dfc8;
+      --ivory-edge: #a8987a;
+      --ebony: #0e0a08;
+      --engrave: #2a1b10;
+      --reed: #9b2418;
+      --brass: #d3a650;
+      --brass-soft: #8a6a32;
+      --pipe: #8d887d;
+      --pipe-edge: #5c574e;
+      --speak: #f0b544;
+      --open: rgba(240, 181, 68, 0.2);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    font-size: 18px;
+    line-height: 1.55;
+  }
+  a { color: inherit; text-decoration-color: var(--brass); text-underline-offset: 3px; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 16px 64px; }
+  .home { display: inline-block; margin: 16px 0 0; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  header.title { text-align: center; padding: 28px 0 18px; border-bottom: 3px double var(--rule); }
+  header.title .kicker { font-variant: small-caps; letter-spacing: 0.2em; color: var(--muted); font-size: 15px; }
+  h1 { font-size: clamp(32px, 6vw, 54px); line-height: 1.05; margin: 8px 0 10px; font-weight: 600; letter-spacing: 0.01em; }
+  h1 em { font-style: italic; font-weight: 400; }
+  header.title p { max-width: 640px; margin: 0 auto; color: var(--muted); }
+  h2 { font-variant: small-caps; letter-spacing: 0.12em; font-weight: 600; font-size: 26px; margin: 44px 0 6px; border-bottom: 1px solid var(--rule); padding-bottom: 4px; }
+  h3 { font-size: 19px; margin: 22px 0 4px; font-style: italic; font-weight: 600; }
+  p { margin: 10px 0; }
+  .lede { font-size: 19px; }
+  .small { font-size: 15px; color: var(--muted); }
+
+  /* ---------- the console ---------- */
+  .console {
+    margin: 26px 0 0;
+    border-radius: 10px;
+    padding: 16px 14px 18px;
+    background:
+      repeating-linear-gradient(92deg, var(--wood-grain) 0 2px, transparent 2px 11px),
+      repeating-linear-gradient(88deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 23px),
+      linear-gradient(180deg, var(--wood-2), var(--wood) 60%, var(--wood-dark));
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,0.25), inset 0 2px 0 rgba(255,255,255,0.08), 0 8px 24px rgba(0,0,0,0.25);
+    color: var(--ivory);
+  }
+  .nameboard {
+    text-align: center; font-variant: small-caps; letter-spacing: 0.25em; font-size: 13px;
+    color: var(--brass-soft); margin-bottom: 10px;
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; justify-content: center; }
+  .jamb { display: grid; grid-template-columns: repeat(5, minmax(58px, 1fr)); gap: 12px 10px; flex: 1 1 420px; max-width: 560px; }
+  .knob {
+    -webkit-appearance: none; appearance: none; border: 0; padding: 0; background: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 0; font: inherit; color: inherit;
+  }
+  .knob .face {
+    width: 62px; height: 62px; border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, #fffaf0, var(--ivory) 45%, var(--ivory-edge) 100%);
+    box-shadow: 0 0 0 3px var(--wood-dark), 0 0 0 5px var(--brass), 0 3px 4px 5px rgba(0,0,0,0.35);
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    color: var(--engrave); font-size: 9.5px; line-height: 1.05; font-variant: small-caps; letter-spacing: 0.04em;
+    padding: 6px; transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .knob .face b { display: block; font-size: 13px; margin-top: 2px; font-variant: normal; letter-spacing: 0; }
+  .knob.reed .face { color: var(--reed); }
+  .knob .shank {
+    width: 18px; height: 6px; background: linear-gradient(90deg, #555, #ccc, #555); border-radius: 2px;
+    transition: height 0.12s ease; margin-top: -1px;
+  }
+  .knob[aria-pressed="true"] .face { transform: translateY(-2px) scale(1.07); box-shadow: 0 0 0 3px var(--wood-dark), 0 0 0 5px var(--brass-soft), 0 6px 8px 5px rgba(0,0,0,0.45); }
+  .knob[aria-pressed="true"] .shank { height: 14px; }
+  .knob:focus-visible .face { outline: 3px solid var(--speak); outline-offset: 6px; }
+
+  .side { display: flex; flex-direction: column; gap: 12px; flex: 0 1 220px; min-width: 200px; }
+  .blower {
+    -webkit-appearance: none; appearance: none; font: inherit; cursor: pointer;
+    background: var(--ebony); color: var(--brass-soft); border: 2px solid var(--brass); border-radius: 6px;
+    padding: 8px 10px; font-variant: small-caps; letter-spacing: 0.12em; font-size: 15px; display: flex; gap: 10px; align-items: center;
+  }
+  .lamp { width: 12px; height: 12px; border-radius: 50%; background: #3a2a1a; box-shadow: inset 0 0 0 1px #000; flex: none; }
+  .blower[aria-pressed="true"] .lamp { background: #ffb43a; box-shadow: 0 0 8px 2px rgba(255,180,58,0.7); }
+  .swell label { font-variant: small-caps; letter-spacing: 0.12em; font-size: 14px; color: var(--brass-soft); display: block; }
+  .swell input { width: 100%; accent-color: var(--brass); }
+  .gauge { font-size: 13px; color: var(--brass-soft); font-variant: small-caps; letter-spacing: 0.1em; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; }
+  .presets button {
+    -webkit-appearance: none; appearance: none; font: inherit; font-size: 12px; cursor: pointer;
+    background: transparent; color: var(--ivory); border: 1px solid var(--brass); border-radius: 12px; padding: 2px 9px;
+    font-variant: small-caps; letter-spacing: 0.08em;
+  }
+  .presets button:hover { background: rgba(255,255,255,0.06); }
+
+  .keys-wrap { margin-top: 16px; overflow-x: auto; padding-bottom: 4px; }
+  .keys { position: relative; height: 130px; min-width: 460px; user-select: none; -webkit-user-select: none; touch-action: none; }
+  .key { position: absolute; top: 0; border-radius: 0 0 4px 4px; cursor: pointer; }
+  .key.white { height: 130px; background: linear-gradient(180deg, #fffbf1, var(--ivory) 85%, var(--ivory-edge)); box-shadow: inset -1px 0 0 #9b8d6e, inset 0 -4px 0 rgba(0,0,0,0.08); }
+  .key.black { height: 80px; background: linear-gradient(180deg, #3b3029, var(--ebony)); z-index: 2; box-shadow: 0 2px 2px rgba(0,0,0,0.5); }
+  .key.down.white { background: linear-gradient(180deg, #f0e3c4, #e6d6b0); }
+  .key.down.black { background: #4a3a2e; }
+  .key .lbl { position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 10px; color: #7a6a52; pointer-events: none; }
+  .hint { font-size: 13px; color: var(--brass-soft); margin-top: 6px; text-align: center; }
+
+  /* ---------- chest + spectrum panels ---------- */
+  .panel { background: var(--page-2); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 14px 10px; margin-top: 18px; }
+  .panel h3 { margin-top: 0; }
+  .panel svg { display: block; width: 100%; height: auto; }
+  .scrollx { overflow-x: auto; }
+  .scrollx svg { min-width: 640px; }
+  .status { font-size: 15px; color: var(--muted); min-height: 1.5em; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 14px; color: var(--muted); margin-top: 6px; }
+  .sw { display: inline-block; width: 12px; height: 12px; vertical-align: -1px; margin-right: 5px; border: 1px solid var(--pipe-edge); }
+
+  /* ---------- prose bits ---------- */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 700px) { .grid2 { grid-template-columns: 1fr; } }
+  table { border-collapse: collapse; width: 100%; font-size: 16px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-variant: small-caps; letter-spacing: 0.08em; font-weight: 600; }
+  .calc { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: end; }
+  .calc label { font-size: 15px; display: flex; flex-direction: column; gap: 3px; }
+  .calc select, .calc input { font: inherit; font-size: 16px; padding: 4px 6px; background: var(--page); color: var(--ink); border: 1px solid var(--rule); border-radius: 4px; }
+  .calc output { font-size: 20px; }
+  ol.path { padding-left: 22px; }
+  ol.path li { margin: 6px 0; }
+  dl.gloss dt { font-variant: small-caps; letter-spacing: 0.06em; font-weight: 600; margin-top: 10px; }
+  dl.gloss dd { margin: 0 0 0 18px; }
+  .prior li { margin: 6px 0; }
+  footer { margin-top: 48px; border-top: 3px double var(--rule); padding-top: 12px; font-size: 14px; color: var(--muted); text-align: center; }
+  @media (max-width: 520px) {
+    body { font-size: 17px; }
+    .jamb { grid-template-columns: repeat(4, minmax(58px, 1fr)); gap: 12px 6px; }
+    .knob .face { width: 58px; height: 58px; font-size: 9px; }
+    .side { flex-basis: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home" href="../">&larr; tidepool</a>
+
+  <header class="title">
+    <div class="kicker">a playable explainer</div>
+    <h1>Pull the Stops <em>How a pipe organ speaks</em></h1>
+    <p>A pipe organ is a wind machine with a very large switchboard. Keys pick the note, stops pick the pipes, and a pipe sounds only where the two agree. Start the blower, draw a few stops, and play.</p>
+  </header>
+
+  <section aria-labelledby="console-h">
+    <h2 id="console-h">The console</h2>
+    <p class="lede">Every stop knob below is one <strong>rank</strong>: a row of pipes, one per key, all with the same tone colour. The number on the knob is its <strong>footage</strong>, which says what octave or harmonic the rank sounds at.</p>
+
+    <div class="console" id="console">
+      <div class="nameboard">great organ &middot; a toy of eleven stops</div>
+      <div class="row">
+        <div class="jamb" id="jamb" role="group" aria-label="Stop knobs"></div>
+        <div class="side">
+          <button class="blower" id="blower" aria-pressed="false" type="button"><span class="lamp"></span><span id="blowerText">Start the blower</span></button>
+          <div class="gauge" id="gauge">wind: none</div>
+          <div class="swell">
+            <label for="swell">Swell shutters <span id="swellVal">open</span></label>
+            <input type="range" id="swell" min="0" max="100" value="100" aria-describedby="swellHelp">
+            <div class="small" id="swellHelp" style="color: var(--brass-soft); font-size: 12px;">Closing them muffles and quiets the sound, as the expression pedal does.</div>
+          </div>
+          <div>
+            <div class="gauge" style="margin-bottom: 4px;">registrations</div>
+            <div class="presets" id="presets"></div>
+          </div>
+        </div>
+      </div>
+      <div class="keys-wrap">
+        <div class="keys" id="keys" aria-label="Keyboard, C3 to C5"></div>
+      </div>
+      <div class="hint">Tap or click keys. On a computer keyboard, A W S E D F T G Y H U J K play C4 to C5.</div>
+    </div>
+
+    <div class="panel">
+      <h3>Inside the wind chest</h3>
+      <p class="small">Each column is a key and its <strong>pallet</strong>, the valve a key opens. Each row is a rank and its <strong>slider</strong>, the strip a stop knob slides open. Pipes are drawn to scale for their rank, longest on the left. A pipe speaks only where its key's pallet and its rank's slider are both open, and only if there is wind.</p>
+      <div class="status" id="chestStatus" aria-live="polite"></div>
+      <div class="scrollx"><svg id="chest" viewBox="0 0 900 420" role="img" aria-label="Wind chest grid of ranks and keys"></svg></div>
+      <div class="legend">
+        <span><span class="sw" style="background: var(--pipe)"></span>silent pipe</span>
+        <span><span class="sw" style="background: var(--open)"></span>slider or pallet open</span>
+        <span><span class="sw" style="background: var(--speak)"></span>speaking pipe</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>What you are hearing</h3>
+      <p class="small">The sound of one key, split into its harmonics. Each drawn stop adds energy at its own place: a 4' stop lands on the 2nd harmonic of the 8' pitch, a 2&#8197;2/3' on the 3rd, a 1&#8197;3/5' on the 5th. Stacking stops builds a tone out of harmonics, the way additive synthesis does.</p>
+      <div class="status" id="specStatus"></div>
+      <svg id="spec" viewBox="0 0 900 260" role="img" aria-label="Harmonic spectrum of the current registration"></svg>
+    </div>
+  </section>
+
+  <section aria-labelledby="foot-h">
+    <h2 id="foot-h">Why the numbers are in feet</h2>
+    <div class="grid2">
+      <div>
+        <p>An open pipe sounds at a wavelength about twice its length. The lowest C on a standard organ keyboard is about 65&nbsp;Hz, and half its wavelength in air is a little over eight feet. So a rank that plays at ordinary written pitch is called an <strong>8' stop</strong>, after the length of its longest pipe.</p>
+        <p>Halve the length and the pitch goes up an octave: a 4' stop sounds an octave above the key, 2' two octaves above, 16' an octave below. Fractional footages are the in-between harmonics: 2&#8197;2/3' sounds an octave and a fifth up (the 3rd harmonic), 1&#8197;3/5' two octaves and a third up (the 5th).</p>
+        <p>A <strong>stopped</strong> pipe, capped at the top, sounds an octave lower than an open pipe of the same length. That is how a 16' stopped rank fits in about eight feet of pipe, and why stopped flutes have a hollow tone: a capped pipe mostly produces odd harmonics.</p>
+      </div>
+      <div>
+        <h3>Pipe length calculator</h3>
+        <div class="calc">
+          <label>Stop footage
+            <select id="cFoot">
+              <option value="16">16'</option>
+              <option value="8" selected>8'</option>
+              <option value="4">4'</option>
+              <option value="2.6667">2 2/3'</option>
+              <option value="2">2'</option>
+              <option value="1.6">1 3/5'</option>
+            </select>
+          </label>
+          <label>Key
+            <select id="cKey"></select>
+          </label>
+          <label>Pipe
+            <select id="cType">
+              <option value="open">open</option>
+              <option value="stopped">stopped</option>
+            </select>
+          </label>
+        </div>
+        <p style="margin-top: 14px;">Sounds at <output id="cHz"></output>, from a pipe about <output id="cLen"></output> long.</p>
+        <p class="small">Uses a speed of sound of 343&nbsp;m/s and ignores end correction and pipe width, which make real pipes a little shorter than this. The low C here is C2, the bottom key of a 61-note manual.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="wind-h">
+    <h2 id="wind-h">The path of the wind</h2>
+    <ol class="path">
+      <li><strong>Blower.</strong> An electric fan (once, people at bellows) pushes air into the organ.</li>
+      <li><strong>Reservoir.</strong> A weighted bellows that holds the air at a steady pressure, so a big chord does not make the pitch sag.</li>
+      <li><strong>Wind trunk.</strong> Ducts carry that air to each division's wind chest.</li>
+      <li><strong>Wind chest and pallets.</strong> The chest is a sealed box of pressurized air under the pipes. Pressing a key opens its pallet, a hinged valve that lets air into the channel under every pipe of that note.</li>
+      <li><strong>Sliders.</strong> Between the channel and the pipe feet runs a perforated strip for each rank. Drawing a stop slides it so its holes line up, opening that rank. This is the grid in the toy above.</li>
+      <li><strong>Pipe.</strong> Air reaches the pipe's foot and it speaks.</li>
+    </ol>
+    <p>How the key reaches its pallet is the organ's <strong>action</strong>. In a <strong>mechanical</strong> or tracker action, thin wooden or metal rods connect key to pallet directly, so the player feels the valve open. In <strong>electro-pneumatic</strong> and <strong>electric</strong> actions, the key closes a switch and a magnet or a small bellows opens the valve, so the console can sit far from the pipes.</p>
+  </section>
+
+  <section aria-labelledby="kinds-h">
+    <h2 id="kinds-h">Two ways to make a pipe speak</h2>
+    <div class="grid2">
+      <div>
+        <h3>Flue pipes</h3>
+        <p>Most pipes in an organ. Air from the foot is shaped into a sheet that strikes a sharp lip at the mouth, the same way a recorder or whistle works. No moving parts. Width, shape, and whether the top is open or stopped give the families: <strong>principals</strong> (the organ's core sound), <strong>flutes</strong> (rounder, wider), and <strong>strings</strong> (narrow and keen).</p>
+      </div>
+      <div>
+        <h3>Reed pipes</h3>
+        <p>A brass tongue beats against an opening, like a clarinet's reed, and a resonator on top shapes the tone. Reeds such as the <strong>trumpet</strong> are bright, loud, and full of harmonics. On many consoles their knobs are engraved in red, as the trumpet is here.</p>
+      </div>
+    </div>
+    <h3>Manuals, pedals, and divisions</h3>
+    <p>Bigger organs have several keyboards (<strong>manuals</strong>) and a pedalboard. Each controls its own <strong>division</strong>, a separate set of ranks with its own chest: the <strong>Great</strong> is the main chorus, the <strong>Swell</strong> sits in a box with shutters for getting louder and softer, and the <strong>Pedal</strong> holds the deep 16' and 32' ranks. <strong>Couplers</strong> let one keyboard play another division's stops too.</p>
+    <h3>Mixtures</h3>
+    <p>A <strong>mixture</strong> is one knob for several high ranks at once, here three, sounding octaves and fifths far above the key. It gives a full chorus its sparkle. On a real organ, a mixture's pitches drop back an octave at a few points up the keyboard (it "breaks") so the top notes do not climb out of hearing; this toy leaves that out.</p>
+  </section>
+
+  <section aria-labelledby="gloss-h">
+    <h2 id="gloss-h">A short glossary</h2>
+    <dl class="gloss">
+      <dt>Rank</dt><dd>One row of pipes, one per key, all of the same kind.</dd>
+      <dt>Stop</dt><dd>The knob (or tab) that opens a rank; also used for the rank itself.</dd>
+      <dt>Registration</dt><dd>The combination of stops drawn. Try the buttons on the console.</dd>
+      <dt>Diapason, principal</dt><dd>The organ's signature flue tone; an 8', 4', 2' stack of them is the classic chorus.</dd>
+      <dt>Mutation</dt><dd>A stop that sounds a harmonic other than an octave, such as the twelfth (2&#8197;2/3') or tierce (1&#8197;3/5').</dd>
+      <dt>Bourdon, gedackt</dt><dd>Stopped flutes: capped pipes, hollow and soft.</dd>
+      <dt>Swell box</dt><dd>An enclosure with shutters, opened and closed by a pedal, for changing volume.</dd>
+    </dl>
+  </section>
+
+  <section aria-labelledby="prior-h">
+    <h2 id="prior-h">Already out there</h2>
+    <p>Good explanations already exist; this page adds a small console you can play while watching the wind chest and the harmonics. Worth a look:</p>
+    <ul class="prior">
+      <li><a href="https://www.pipedreams.org/page/how-a-pipe-organ-works">How a Pipe Organ Works</a>, from the public-radio organ program Pipedreams: a written walkthrough.</li>
+      <li><a href="https://www.okhistory.org/learn/pipeorgan">How Does a Pipe Organ Work?</a>, from the Oklahoma History Center: an illustrated step-by-step guide.</li>
+      <li><a href="https://www.classicfm.com/discover-music/instruments/organ/guide-pipes-stops-anna-lapwood/">Classic FM's video guide</a> to stops, manuals, pedals, and pipes.</li>
+      <li><a href="https://github.com/GrandOrgue/grandorgue">GrandOrgue</a>, a free, open-source virtual organ that plays sample sets recorded from real instruments.</li>
+      <li><a href="https://kokkinizita.linuxaudio.org/linuxaudio/aeolus/">Aeolus</a>, a free organ emulator that synthesizes its pipes rather than sampling them.</li>
+    </ul>
+    <p class="small">The sounds here are simple synthesized tones, chosen to make the harmonics easy to see, not to imitate any real organ.</p>
+  </section>
+
+  <footer>Pull the Stops &middot; a tidepool build &middot; <a href="../">all builds</a></footer>
+</div>
+
+<script>
+(() => {
+  // ---------- data ----------
+  // mult: pitch relative to the key's 8' pitch. timbre: harmonic amplitudes for each pipe.
+  const T = {
+    principal: [1, 0.45, 0.25, 0.13, 0.08, 0.05, 0.03],
+    flute: [1, 0.12, 0.05, 0.02],
+    stopped: [1, 0, 0.28, 0, 0.1, 0, 0.04],
+    string: [1, 0.7, 0.55, 0.45, 0.38, 0.3, 0.25, 0.2, 0.16],
+    reed: [1, 0.85, 0.75, 0.65, 0.58, 0.5, 0.45, 0.4, 0.34, 0.3, 0.26, 0.22, 0.18],
+  };
+  const STOPS = [
+    { id: "bourdon16", name: "Bourdon", foot: "16'", ranks: [0.5], timbre: "stopped", stopped: true, level: 0.8 },
+    { id: "diap8", name: "Open Diapason", foot: "8'", ranks: [1], timbre: "principal", level: 0.9 },
+    { id: "gedackt8", name: "Gedackt", foot: "8'", ranks: [1], timbre: "stopped", stopped: true, level: 0.7 },
+    { id: "gamba8", name: "Gamba", foot: "8'", ranks: [1], timbre: "string", level: 0.45 },
+    { id: "trumpet8", name: "Trumpet", foot: "8'", ranks: [1], timbre: "reed", level: 0.55, reed: true },
+    { id: "princ4", name: "Principal", foot: "4'", ranks: [2], timbre: "principal", level: 0.7 },
+    { id: "flute4", name: "Flute", foot: "4'", ranks: [2], timbre: "flute", level: 0.6 },
+    { id: "twelfth", name: "Twelfth", foot: "2 ⅔'", ranks: [3], timbre: "principal", level: 0.45 },
+    { id: "fifteenth", name: "Fifteenth", foot: "2'", ranks: [4], timbre: "principal", level: 0.5 },
+    { id: "tierce", name: "Tierce", foot: "1 ⅗'", ranks: [5], timbre: "flute", level: 0.4 },
+    { id: "mixture", name: "Mixture", foot: "III", ranks: [6, 8, 12], timbre: "principal", level: 0.28 },
+  ];
+  const PRESETS = [
+    { name: "quiet flute", stops: ["gedackt8"] },
+    { name: "principal chorus", stops: ["diap8", "princ4", "fifteenth"] },
+    { name: "full chorus", stops: ["bourdon16", "diap8", "princ4", "twelfth", "fifteenth", "mixture"] },
+    { name: "cornet", stops: ["gedackt8", "flute4", "twelfth", "fifteenth", "tierce"] },
+    { name: "trumpet solo", stops: ["trumpet8", "diap8"] },
+    { name: "all in", stops: STOPS.map(s => s.id) },
+    { name: "clear", stops: [] },
+  ];
+  const NAMES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
+  const FIRST = 48, LAST = 72; // MIDI C3..C5
+  const freq = m => 440 * Math.pow(2, (m - 69) / 12);
+  const noteName = m => NAMES[m % 12] + (Math.floor(m / 12) - 1);
+
+  const state = { drawn: new Set(), held: new Set(), wind: false, swell: 1, lastKey: 60 };
+
+  // ---------- audio ----------
+  let ctx = null, master = null, swellFilter = null, comp = null;
+  const waves = {};
+  const voices = new Map(); // midi -> [{osc, g}]
+  function ensureAudio() {
+    if (ctx) return ctx.state === "suspended" ? ctx.resume() : Promise.resolve();
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return Promise.resolve();
+    ctx = new AC();
+    comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -18; comp.ratio.value = 4;
+    swellFilter = ctx.createBiquadFilter();
+    swellFilter.type = "lowpass";
+    master = ctx.createGain();
+    applySwell();
+    master.connect(swellFilter); swellFilter.connect(comp); comp.connect(ctx.destination);
+    for (const [k, amps] of Object.entries(T)) {
+      const real = new Float32Array(amps.length + 1), imag = new Float32Array(amps.length + 1);
+      amps.forEach((a, i) => { imag[i + 1] = a; });
+      waves[k] = ctx.createPeriodicWave(real, imag);
+    }
+    return ctx.resume ? ctx.resume() : Promise.resolve();
+  }
+  function applySwell() {
+    if (!ctx) return;
+    const s = state.swell, t = ctx.currentTime;
+    master.gain.setTargetAtTime(0.18 * (0.25 + 0.75 * s), t, 0.05);
+    swellFilter.frequency.setTargetAtTime(500 + 9500 * s * s, t, 0.05);
+  }
+  function startVoice(m) {
+    if (!ctx || !state.wind || voices.has(m)) return;
+    const list = [], t = ctx.currentTime, f0 = freq(m);
+    const count = [...state.drawn].reduce((n, id) => n + STOPS.find(s => s.id === id).ranks.length, 0);
+    const norm = 1 / Math.sqrt(Math.max(1, count));
+    for (const id of state.drawn) {
+      const s = STOPS.find(x => x.id === id);
+      for (const r of s.ranks) {
+        const f = f0 * r;
+        if (f > 12000) continue;
+        const osc = ctx.createOscillator(), g = ctx.createGain();
+        osc.setPeriodicWave(waves[s.timbre]);
+        osc.frequency.value = f;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(s.level * norm, t + (s.reed ? 0.02 : 0.05));
+        osc.connect(g); g.connect(master); osc.start(t);
+        list.push({ osc, g });
+      }
+    }
+    voices.set(m, list);
+  }
+  function stopVoice(m) {
+    const list = voices.get(m);
+    if (!list) return;
+    voices.delete(m);
+    const t = ctx.currentTime;
+    for (const { osc, g } of list) {
+      g.gain.cancelScheduledValues(t);
+      g.gain.setValueAtTime(g.gain.value, t);
+      g.gain.linearRampToValueAtTime(0, t + 0.09);
+      osc.stop(t + 0.12);
+    }
+  }
+  function refreshVoices() {
+    for (const m of [...voices.keys()]) stopVoice(m);
+    if (state.wind) for (const m of state.held) startVoice(m);
+  }
+
+  // ---------- stop jamb ----------
+  const jamb = document.getElementById("jamb");
+  for (const s of STOPS) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "knob" + (s.reed ? " reed" : "");
+    b.dataset.id = s.id;
+    b.setAttribute("aria-pressed", "false");
+    b.setAttribute("aria-label", `${s.name} ${s.foot.replace("III", "three ranks")}`);
+    b.innerHTML = `<span class="face"><span>${s.name}<b>${s.foot}</b></span></span><span class="shank"></span>`;
+    b.addEventListener("click", () => { toggleStop(s.id); });
+    jamb.appendChild(b);
+  }
+  function toggleStop(id, on) {
+    const want = on === undefined ? !state.drawn.has(id) : on;
+    if (want) state.drawn.add(id); else state.drawn.delete(id);
+    syncStops(); refreshVoices(); renderAll(); save();
+  }
+  function syncStops() {
+    jamb.querySelectorAll(".knob").forEach(k => k.setAttribute("aria-pressed", state.drawn.has(k.dataset.id) ? "true" : "false"));
+  }
+  const presets = document.getElementById("presets");
+  for (const p of PRESETS) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = p.name;
+    b.addEventListener("click", () => { state.drawn = new Set(p.stops); syncStops(); refreshVoices(); renderAll(); save(); });
+    presets.appendChild(b);
+  }
+
+  // ---------- blower + swell ----------
+  const blower = document.getElementById("blower"), gauge = document.getElementById("gauge");
+  blower.addEventListener("click", async () => {
+    state.wind = !state.wind;
+    if (state.wind) await ensureAudio();
+    blower.setAttribute("aria-pressed", String(state.wind));
+    document.getElementById("blowerText").textContent = state.wind ? "Blower running" : "Start the blower";
+    gauge.textContent = state.wind ? "wind: steady, reservoir full" : "wind: none";
+    refreshVoices(); renderAll();
+  });
+  const swell = document.getElementById("swell"), swellVal = document.getElementById("swellVal");
+  swell.addEventListener("input", () => {
+    state.swell = swell.value / 100;
+    swellVal.textContent = swell.value > 85 ? "open" : swell.value < 15 ? "closed" : "part open";
+    applySwell();
+  });
+
+  // ---------- keyboard ----------
+  const keysEl = document.getElementById("keys");
+  const whites = [];
+  for (let m = FIRST; m <= LAST; m++) if (![1, 3, 6, 8, 10].includes(m % 12)) whites.push(m);
+  const W = 100 / whites.length;
+  const keyEls = new Map();
+  for (let m = FIRST; m <= LAST; m++) {
+    const black = [1, 3, 6, 8, 10].includes(m % 12);
+    const el = document.createElement("div");
+    el.className = "key " + (black ? "black" : "white");
+    el.dataset.m = m;
+    el.setAttribute("role", "button");
+    el.setAttribute("aria-label", noteName(m));
+    if (black) {
+      const left = whites.filter(w => w < m).length * W - W * 0.32;
+      el.style.left = left + "%"; el.style.width = (W * 0.64) + "%";
+    } else {
+      const i = whites.indexOf(m);
+      el.style.left = (i * W) + "%"; el.style.width = W + "%";
+      if (m % 12 === 0) el.innerHTML = `<span class="lbl">${noteName(m)}</span>`;
+    }
+    keysEl.appendChild(el); keyEls.set(m, el);
+  }
+  const pointerKey = new Map();
+  function press(m) {
+    if (state.held.has(m)) return;
+    state.held.add(m); state.lastKey = m;
+    keyEls.get(m).classList.add("down");
+    startVoice(m); renderAll();
+  }
+  function release(m) {
+    if (!state.held.has(m)) return;
+    state.held.delete(m);
+    keyEls.get(m).classList.remove("down");
+    stopVoice(m); renderAll();
+  }
+  function keyAt(x, y) {
+    const el = document.elementFromPoint(x, y);
+    return el && el.closest && el.closest(".key") ? Number(el.closest(".key").dataset.m) : null;
+  }
+  keysEl.addEventListener("pointerdown", e => {
+    const m = keyAt(e.clientX, e.clientY);
+    if (m == null) return;
+    e.preventDefault();
+    if (state.wind) ensureAudio();
+    pointerKey.set(e.pointerId, m); press(m);
+  });
+  keysEl.addEventListener("pointermove", e => {
+    if (!pointerKey.has(e.pointerId)) return;
+    const m = keyAt(e.clientX, e.clientY), old = pointerKey.get(e.pointerId);
+    if (m != null && m !== old) { release(old); pointerKey.set(e.pointerId, m); press(m); }
+  });
+  const up = e => { if (pointerKey.has(e.pointerId)) { release(pointerKey.get(e.pointerId)); pointerKey.delete(e.pointerId); } };
+  keysEl.addEventListener("pointerup", up);
+  keysEl.addEventListener("pointercancel", up);
+  keysEl.addEventListener("pointerleave", up);
+  const KB = "awsedftgyhujk";
+  window.addEventListener("keydown", e => {
+    if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+    const i = KB.indexOf(e.key.toLowerCase());
+    if (i >= 0) { press(60 + i); }
+  });
+  window.addEventListener("keyup", e => {
+    const i = KB.indexOf(e.key.toLowerCase());
+    if (i >= 0) release(60 + i);
+  });
+  window.addEventListener("blur", () => { for (const m of [...state.held]) release(m); });
+
+  // ---------- wind chest drawing ----------
+  const NS = "http://www.w3.org/2000/svg";
+  const chest = document.getElementById("chest");
+  const chestStatus = document.getElementById("chestStatus");
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  function el(tag, attrs, parent) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  const CH = { x0: 150, y0: 14, rowH: 36, cols: LAST - FIRST + 1 };
+  const colW = (900 - CH.x0 - 10) / CH.cols;
+  // Pipe speaking length in feet for a rank at key m (written pitch C2 = 8' for mult 1)
+  const pipeFeet = (s, r, m) => (8 / r) * Math.pow(2, -(m - 36) / 12) * (s.stopped ? 0.5 : 1);
+  function renderChest() {
+    chest.innerHTML = "";
+    const pipe = css("--pipe"), edge = css("--pipe-edge"), speak = css("--speak"), open = css("--open"), ink = css("--ink"), muted = css("--muted"), reedC = css("--reed");
+    const rows = STOPS.length;
+    const H = CH.y0 + rows * CH.rowH + 40;
+    chest.setAttribute("viewBox", `0 0 900 ${H}`);
+    // pallet columns
+    for (const m of state.held) {
+      el("rect", { x: CH.x0 + (m - FIRST) * colW, y: CH.y0 - 4, width: colW, height: rows * CH.rowH + 8, fill: open }, chest);
+    }
+    STOPS.forEach((s, i) => {
+      const y = CH.y0 + i * CH.rowH;
+      const drawn = state.drawn.has(s.id);
+      if (drawn) el("rect", { x: CH.x0 - 4, y: y + 1, width: 900 - CH.x0 - 2, height: CH.rowH - 2, fill: open }, chest);
+      const label = el("text", { x: CH.x0 - 10, y: y + CH.rowH / 2 + 5, "text-anchor": "end", "font-size": 14, fill: drawn ? (s.reed ? reedC : ink) : muted, "font-family": "inherit", "font-weight": drawn ? 700 : 400 }, chest);
+      label.textContent = `${s.name} ${s.foot}`;
+      el("line", { x1: CH.x0 - 4, x2: 898, y1: y + CH.rowH, y2: y + CH.rowH, stroke: edge, "stroke-width": 0.5, "stroke-opacity": 0.6 }, chest);
+      // scale pipe heights within the row: longest pipe of this rank fills the row
+      const longest = pipeFeet(s, s.ranks[0], FIRST);
+      for (let m = FIRST; m <= LAST; m++) {
+        const len = pipeFeet(s, s.ranks[0], m);
+        const h = Math.max(4, (CH.rowH - 8) * Math.sqrt(len / longest));
+        const w = Math.max(2, colW * (s.timbre === "flute" || s.stopped ? 0.62 : s.timbre === "string" ? 0.32 : 0.48));
+        const x = CH.x0 + (m - FIRST) * colW + (colW - w) / 2;
+        const speaking = state.wind && drawn && state.held.has(m);
+        el("rect", { x, y: y + CH.rowH - 4 - h, width: w, height: h, rx: s.reed ? 0 : w / 3,
+          fill: speaking ? speak : pipe, stroke: edge, "stroke-width": 0.6 }, chest);
+        if (s.stopped) el("rect", { x: x - 0.5, y: y + CH.rowH - 4 - h - 2, width: w + 1, height: 2, fill: edge }, chest);
+        if (s.reed) el("rect", { x: x - 1, y: y + CH.rowH - 4 - h, width: w + 2, height: Math.min(4, h), fill: edge }, chest);
+      }
+    });
+    // key labels
+    for (let m = FIRST; m <= LAST; m++) {
+      if (m % 12 !== 0) continue;
+      const t = el("text", { x: CH.x0 + (m - FIRST + 0.5) * colW, y: CH.y0 + rows * CH.rowH + 22, "text-anchor": "middle", "font-size": 14, fill: muted, "font-family": "inherit" }, chest);
+      t.textContent = noteName(m);
+    }
+    const t = el("text", { x: CH.x0 - 10, y: CH.y0 + rows * CH.rowH + 22, "text-anchor": "end", "font-size": 13, fill: muted, "font-style": "italic", "font-family": "inherit" }, chest);
+    t.textContent = "pallets →";
+    // status line
+    const nSpeak = state.wind ? [...state.drawn].reduce((n, id) => n + STOPS.find(s => s.id === id).ranks.length, 0) * state.held.size : 0;
+    let msg;
+    if (!state.held.size && !state.drawn.size) msg = "No stops drawn and no keys down: every slider and pallet is shut.";
+    else if (!state.held.size) msg = `${state.drawn.size} stop${state.drawn.size > 1 ? "s" : ""} drawn. Press a key to open a pallet.`;
+    else if (!state.drawn.size) msg = "A pallet is open, but no slider is: draw a stop and the pipes above it will speak.";
+    else if (!state.wind) msg = "Pallet and slider are open, but there is no wind. Start the blower.";
+    else msg = `${nSpeak} pipe${nSpeak === 1 ? "" : "s"} speaking.`;
+    chestStatus.textContent = msg;
+  }
+
+  // ---------- spectrum ----------
+  const spec = document.getElementById("spec"), specStatus = document.getElementById("specStatus");
+  function renderSpec() {
+    spec.innerHTML = "";
+    const ink = css("--ink"), muted = css("--muted"), speak = css("--speak"), edge = css("--pipe-edge"), reedC = css("--reed"), rule = css("--rule");
+    const L = 50, R = 880, top = 16, base = 200;
+    const lo = Math.log2(0.5), hi = Math.log2(32);
+    const X = h => L + (Math.log2(h) - lo) / (hi - lo) * (R - L);
+    el("line", { x1: L, x2: R, y1: base, y2: base, stroke: muted, "stroke-width": 1 }, spec);
+    const marks = [[0.5, "16'"], [1, "8'"], [2, "4'"], [3, "2⅔'"], [4, "2'"], [5, "1⅗'"], [8, "1'"], [16, "½'"], [32, "¼'"]];
+    for (const [h, lab] of marks) {
+      el("line", { x1: X(h), x2: X(h), y1: top, y2: base, stroke: rule, "stroke-width": 0.6, "stroke-dasharray": "3 4" }, spec);
+      const t = el("text", { x: X(h), y: base + 18, "text-anchor": "middle", "font-size": 14, fill: muted, "font-family": "inherit" }, spec);
+      t.textContent = lab;
+    }
+    const cap = el("text", { x: (L + R) / 2, y: base + 44, "text-anchor": "middle", "font-size": 13, fill: muted, "font-style": "italic", "font-family": "inherit" }, spec);
+    cap.textContent = "pitch, as the footage that would sound it (log scale)";
+    // gather energy per partial
+    const bins = new Map();
+    for (const id of state.drawn) {
+      const s = STOPS.find(x => x.id === id);
+      for (const r of s.ranks) {
+        T[s.timbre].forEach((a, k) => {
+          if (!a) return;
+          const h = +(r * (k + 1)).toFixed(4);
+          if (h > 32) return;
+          const prev = bins.get(h) || { a: 0, reed: 0 };
+          prev.a += a * s.level; if (s.reed) prev.reed += a * s.level;
+          bins.set(h, prev);
+        });
+      }
+    }
+    const max = Math.max(1, ...[...bins.values()].map(b => b.a));
+    for (const [h, b] of [...bins.entries()].sort((a, c) => a[0] - c[0])) {
+      const height = (base - top) * Math.sqrt(b.a / max);
+      el("rect", { x: X(h) - 3.5, y: base - height, width: 7, height, fill: b.reed > b.a / 2 ? reedC : speak, stroke: edge, "stroke-width": 0.5 }, spec);
+    }
+    const m = state.held.size ? state.lastKey : 60;
+    if (!state.drawn.size) specStatus.textContent = "Draw a stop to see its harmonics.";
+    else specStatus.textContent = `For ${noteName(m)}: the 8' line is ${freq(m).toFixed(1)} Hz. ${bins.size} harmonic${bins.size === 1 ? "" : "s"} in this registration.`;
+    if (!state.drawn.size) {
+      const t = el("text", { x: (L + R) / 2, y: (top + base) / 2, "text-anchor": "middle", "font-size": 16, fill: muted, "font-family": "inherit", "font-style": "italic" }, spec);
+      t.textContent = "silence";
+    }
+  }
+
+  function renderAll() { renderChest(); renderSpec(); }
+
+  // ---------- calculator ----------
+  const cFoot = document.getElementById("cFoot"), cKey = document.getElementById("cKey"), cType = document.getElementById("cType");
+  for (let m = 36; m <= 96; m += 12) {
+    const o = document.createElement("option"); o.value = m; o.textContent = noteName(m) + (m === 36 ? " (lowest key)" : m === 60 ? " (middle C)" : "");
+    cKey.appendChild(o);
+  }
+  cKey.value = "36";
+  function calc() {
+    const foot = parseFloat(cFoot.value), m = Number(cKey.value), stopped = cType.value === "stopped";
+    const hz = freq(m) * (8 / foot);
+    const meters = 343 / (stopped ? 4 : 2) / hz;
+    const ft = meters / 0.3048;
+    document.getElementById("cHz").textContent = hz < 100 ? hz.toFixed(1) + " Hz" : Math.round(hz) + " Hz";
+    document.getElementById("cLen").textContent = ft >= 1 ? `${ft.toFixed(1)} ft (${meters.toFixed(2)} m)` : `${(ft * 12).toFixed(1)} in (${(meters * 100).toFixed(1)} cm)`;
+  }
+  [cFoot, cKey, cType].forEach(x => x.addEventListener("change", calc));
+  calc();
+
+  // ---------- saved registration ----------
+  const KEY = "tidepool-pull-the-stops";
+  function save() { try { localStorage.setItem(KEY, JSON.stringify([...state.drawn])); } catch (e) {} }
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (Array.isArray(saved)) state.drawn = new Set(saved.filter(id => STOPS.some(s => s.id === id)));
+    else state.drawn = new Set(["diap8"]);
+  } catch (e) { state.drawn = new Set(["diap8"]); }
+  syncStops();
+  renderAll();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", renderAll);
+})();
+</script>
+</body>
+</html>
