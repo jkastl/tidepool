@@ -1,7 +1,7 @@
 // Page counts with GoatCounter: no cookies, no personal data. Every page
 // loads this file, so the site code lives in one place.
 (function () {
-  var code = ""; // GoatCounter site code: "abc" for https://abc.goatcounter.com
+  var code = "jkastl"; // GoatCounter site code: https://jkastl.goatcounter.com
   if (!code || !/\.github\.io$/.test(location.hostname)) return;
   var endpoint = "https://" + code + ".goatcounter.com/count";
   window.goatcounter = window.goatcounter || {};
