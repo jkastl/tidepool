@@ -27,8 +27,7 @@
     "form": "annotated map",
     "style": "blueprint",
     "summary": "What the limbic system is, mapped part by part against its nearest AI counterparts, with a rough rating of how far each analogy stretches.",
-    "source": "idea-tank#19",
-    "revised": "2026-10-18"
+    "source": "idea-tank#19"
   },
   {
     "slug": "2026-10-13-catharsis-playbill",
@@ -49,7 +48,7 @@
     "style": "H&E stain and glass slide",
     "summary": "Digital pathology from tissue to pixels: the lab pipeline step by step, a zoomable whole-slide image pyramid, a file-size calculator, and a glossary of the key terms.",
     "source": "idea-tank#27",
-    "revised": "2026-10-18"
+    "revised": "2026-10-14"
   },
   {
     "slug": "2026-10-15-podracer-pit-program",
@@ -69,8 +68,7 @@
     "form": "tool",
     "style": "PCB silkscreen",
     "summary": "What WLED is and how to plan the power side of an LED strip: a planner for pixel count, supply size, power feeds, wire drop, and frame rate, a wiring diagram drawn to match, and the firmware's vocabulary.",
-    "source": "idea-tank#32",
-    "revised": "2026-10-18"
+    "source": "idea-tank#32"
   },
   {
     "slug": "2026-10-17-arm-operators-manual",

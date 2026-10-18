@@ -23,9 +23,9 @@ Pages serves `main`, so a push to `main` is a publish.
 
 | Change | How |
 | --- | --- |
-| A build: a new `<slug>/` folder and its `builds.json` entry | Commit straight to `main` and push. No pull request. |
-| A revision: changes to the files inside an existing `<slug>/` folder and its `builds.json` entry (see [Revising a build](#revising-a-build)) | Commit straight to `main` and push. No pull request. |
-| Anything else: `CLAUDE.md`, `index.html`, `README.md`, `.nojekyll`, the manifest's format | A branch and a pull request for the owner to review |
+| A build: a new `<slug>/` folder, its `builds.json` entry, and its line in `sitemap.xml` | Commit straight to `main` and push. No pull request. |
+| A revision or a tweak: changes to the files inside an existing `<slug>/` folder, its `builds.json` entry, and `sitemap.xml` (see [Revising a build](#revising-a-build)) | Commit straight to `main` and push. No pull request. |
+| Anything else: `CLAUDE.md`, `index.html`, `stats.js`, `README.md`, `.nojekyll`, the manifest's format, the head block's format | A branch and a pull request for the owner to review |
 
 Builds and revisions go to `main` even when the session was set up with a
 branch of its own.
@@ -40,6 +40,8 @@ pushes are allowed. If a push is rejected because `main` moved, run
 | --- | --- |
 | `index.html` | The front page: every build, newest first, read from `builds.json` |
 | `builds.json` | The manifest: one entry per build |
+| `sitemap.xml` | Every page's URL for search engines, generated from `builds.json` |
+| `stats.js` | Page counts (GoatCounter). Every page loads it; the site code lives only here |
 | `<slug>/` | One build. `slug` is `YYYY-MM-DD-short-name`, dated the day it was built |
 | `.nojekyll` | Tells Pages to serve files as they are |
 
@@ -70,8 +72,10 @@ leave it and say so on its page.
 - `summary`: one public-safe line. It appears on the front page.
 - `source`: where the build came from, for runs to detect a build they
   already made. `idea-tank#N` for idea-tank issue N.
-- `revised`: optional. The date of the build's latest revision. Left out
-  until the build is first revised. The front page shows it.
+- `revised`: optional. The date of the build's latest major revision (see
+  [Revising a build](#revising-a-build)). Left out until the build is first
+  revised that way, and not changed by a small tweak. The front page shows
+  it.
 
 ## Variety
 
@@ -115,11 +119,32 @@ for something bigger.
 
 - `index.html` at the folder root, no build step. Plain HTML, CSS, and JS
   (ES modules are fine). Libraries only from a CDN (jsdelivr, cdnjs, unpkg),
-  pinned to an exact version.
+  pinned to an exact version. The one other outside script is GoatCounter's
+  counter, which `stats.js` loads; a build never loads it, or any other
+  analytics, itself.
 - Every path relative: Pages serves the build under `/tidepool/<slug>/`.
-- `<meta name="robots" content="noindex">` in every page's `<head>`. Tidepool
-  stays out of search engines. (A `robots.txt` would not help: crawlers only
-  read it at the domain root.)
+- **The head block**, in every page's `<head>` right after `<title>`, between
+  `<!-- site:head -->` and `<!-- /site:head -->`: the search and sharing tags
+  and the counter. Search engines may index tidepool; the owner's
+  `github.io` home page just does not link to it. Idea-tank's
+  `tools/site.py sync` writes the block from the manifest entry, so a run
+  never writes it by hand. Without that tool, copy the block from the
+  newest build and change every value:
+  - `<meta name="description">` and `og:description`: the entry's `summary`
+  - `<link rel="canonical">` and `og:url`: `https://jkastl.github.io/tidepool/<slug>/`
+  - `og:type` `article`, `og:site_name` `tidepool`, `og:title` the entry's
+    `title`, and `<meta name="twitter:card" content="summary">`
+  - a `application/ld+json` script: a schema.org `CreativeWork` with the
+    title, summary, URL, `datePublished` (the entry's `date`),
+    `dateModified` (its `revised`, if set), and `isPartOf` the tidepool
+    `WebSite`
+  - `<script src="../stats.js" defer></script>`
+
+  No author, name, or anything else about the owner, in this block or
+  anywhere. No `noindex`. No `og:image` (no screenshots, per below).
+- **A line in `sitemap.xml`** for each build: its URL and a `lastmod` of
+  its `revised` date, or its `date` if never revised. The front page's line
+  takes the newest of those. `tools/site.py sync` writes the whole file.
 - A small link back to the front page (`../`) somewhere unobtrusive.
 - `<link rel="icon" href="data:,">` in every page's `<head>`. It declares an
   empty icon, so browsers never request a missing `/favicon.ico`. No emoji or
@@ -206,6 +231,17 @@ After a build is published, its owner sometimes asks for changes: a topic
 expanded, a section added, a visual tweak, a correction. This is the path
 for those.
 
+There are two sizes of change, and only the first one counts as a revision
+on the record:
+
+| Change | Examples | `revised` | Commit |
+| --- | --- | --- | --- |
+| **Major revision**: changes what the build says or does | A new section, an expanded topic, a new control or feature, a corrected fact | Set to today | `Revise <slug>: <what changed>` |
+| **Small tweak**: leaves what it says and does alone | Head block and other meta tags, the counter, sitewide boilerplate, a typo, a polished sentence, a small visual fix | Left as it is | `Tweak <slug>: <what changed>`, or `Tweak all builds: <what changed>` for one change across every build |
+
+If unsure, it is a tweak. Everything below applies to both, except where it
+says `revised`.
+
 - **Who.** Only an interactive session, and only for a specific change
   the owner asked for. Scheduled runs never change a published build. A
   capture that asks for more on a built idea gets a new build, never an
@@ -219,7 +255,9 @@ for those.
   `builds.json` entry, then commit straight to `main`. The slug, the folder
   name, and the URL never change, even if the topic grows. Nor do the
   entry's `date`, `kind`, or `source`. Update `title`, `summary`, `form`,
-  or `style` only if the change makes them wrong.
+  or `style` only if the change makes them wrong. A change to `title` or
+  `summary` also changes the head block, so resync it (see
+  [Build rules](#build-rules)).
 - **Scope.** Keep the build's form and style unless the owner asks to
   change them. If the ask is big enough to be a different build (a new
   form, a different topic), say so and offer a new build instead.
@@ -229,10 +267,13 @@ for those.
 - **Test.** As in [Test before publishing](#test-before-publishing): the
   changed parts and the core experience, desktop and phone width, light and
   dark, no console errors.
-- **Record.** Set `revised` on the entry to today's date, and commit the
-  change and the entry together as `Revise <slug>: <what changed>`, for
-  example
+- **Record.** For a major revision, set `revised` on the entry to today's
+  date, resync the head block and `sitemap.xml` (both carry the date), and
+  commit the change and the entry together as
+  `Revise <slug>: <what changed>`, for example
   `Revise 2026-10-14-slide-to-screen: add an image-pyramid diagram to the viewer`.
+  For a small tweak, leave `revised` alone and commit as
+  `Tweak <slug>: <what changed>`.
 
 ## Test before publishing
 
@@ -242,5 +283,6 @@ Playwright version, launch with `executablePath: '/opt/pw-browsers/chromium'`;
 never run `playwright install`). Open `/<slug>/`, walk the core experience
 start to finish, use every control, check the console for errors, and look
 at it at desktop and phone width, in light and dark. Also check the front
-page lists the new build, or shows the revised date for a revision. Fix what
-you find before pushing.
+page lists the new build, or shows the revised date for a major revision,
+and that idea-tank's `tools/site.py check` passes. Locally `stats.js` does
+nothing, so tests never count as visits. Fix what you find before pushing.
