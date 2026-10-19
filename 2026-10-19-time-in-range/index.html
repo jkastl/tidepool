@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Time in Range: A Sampling Lab for Home INR Testing</title>
+<!-- site:head -->
+<meta name="description" content="How the INR is built from a clotting time, what a home test strip does with a drop of blood, and a lab where two testing schedules watch the same wandering line and estimate its time in range.">
+<link rel="canonical" href="https://jkastl.github.io/tidepool/2026-10-19-time-in-range/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="tidepool">
+<meta property="og:title" content="Time in Range: A Sampling Lab for Home INR Testing">
+<meta property="og:description" content="How the INR is built from a clotting time, what a home test strip does with a drop of blood, and a lab where two testing schedules watch the same wandering line and estimate its time in range.">
+<meta property="og:url" content="https://jkastl.github.io/tidepool/2026-10-19-time-in-range/">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{
+ "@context": "https://schema.org",
+ "@type": "CreativeWork",
+ "name": "Time in Range: A Sampling Lab for Home INR Testing",
+ "description": "How the INR is built from a clotting time, what a home test strip does with a drop of blood, and a lab where two testing schedules watch the same wandering line and estimate its time in range.",
+ "url": "https://jkastl.github.io/tidepool/2026-10-19-time-in-range/",
+ "datePublished": "2026-10-19",
+ "inLanguage": "en",
+ "isPartOf": {
+  "@type": "WebSite",
+  "name": "tidepool",
+  "url": "https://jkastl.github.io/tidepool/"
+ }
+}</script>
+<script src="../stats.js" defer></script>
+<!-- /site:head -->
+<style>
+  :root {
+    --paper: #fbf5ef;
+    --paper-2: #f4e9df;
+    --grid: #f1c4c0;
+    --grid-major: #e59a94;
+    --ink: #1f1b1a;
+    --muted: #6d5f5a;
+    --trace: #c3242c;
+    --band: rgba(60, 150, 110, 0.16);
+    --band-edge: #3d8a63;
+    --reading: #1f1b1a;
+    --interp: #2556a8;
+    --flag: #d98a00;
+    --panel: #fffaf6;
+    --rule: #d8b9b2;
+    --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
+    --narrow: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #191515;
+      --paper-2: #221c1b;
+      --grid: #3a2726;
+      --grid-major: #5a3634;
+      --ink: #efe6e2;
+      --muted: #b3a29c;
+      --trace: #ff6b6b;
+      --band: rgba(90, 200, 150, 0.14);
+      --band-edge: #6fcf9f;
+      --reading: #f4ece8;
+      --interp: #8db4ff;
+      --flag: #ffb84d;
+      --panel: #1f1918;
+      --rule: #4a3633;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--paper); }
+  body {
+    margin: 0;
+    color: var(--ink);
+    font: 16px/1.55 var(--mono);
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid-major) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+    background-attachment: local;
+  }
+  /* sprocket holes down both edges, like recorder paper */
+  body::before, body::after {
+    content: "";
+    position: fixed; top: 0; bottom: 0; width: 22px;
+    background-image: radial-gradient(circle at 11px 14px, var(--paper-2) 5px, var(--rule) 5.5px, transparent 6.5px);
+    background-size: 22px 28px;
+    border-right: 1px dashed var(--rule);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::before { left: 0; }
+  body::after { right: 0; border-right: none; border-left: 1px dashed var(--rule); }
+  main {
+    position: relative; z-index: 1;
+    max-width: 920px; margin: 0 auto; padding: 28px 40px 60px;
+  }
+  .back { font-size: 13px; color: var(--muted); }
+  .back a { color: inherit; }
+  header.top {
+    margin: 18px 0 10px;
+    border-top: 3px solid var(--ink); border-bottom: 1px solid var(--ink);
+    padding: 14px 0 12px;
+  }
+  .stamp {
+    display: inline-block; font: 600 12px/1 var(--narrow); letter-spacing: .14em;
+    text-transform: uppercase; color: var(--trace);
+    border: 1.5px solid var(--trace); padding: 5px 8px; transform: rotate(-1.5deg);
+  }
+  h1 {
+    font: 700 clamp(30px, 6vw, 52px)/1.02 var(--narrow);
+    letter-spacing: -.01em; margin: 12px 0 8px; text-transform: uppercase;
+  }
+  h1 span { color: var(--trace); }
+  .lede { max-width: 64ch; margin: 0; }
+  .caveat {
+    margin: 14px 0 0; font-size: 13px; color: var(--muted);
+    border-left: 3px solid var(--trace); padding-left: 10px; max-width: 70ch;
+  }
+  section { margin: 46px 0 0; }
+  .chan {
+    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--ink); padding-bottom: 6px; margin-bottom: 14px;
+  }
+  .chan .num {
+    font: 700 12px/1 var(--narrow); letter-spacing: .12em; text-transform: uppercase;
+    background: var(--ink); color: var(--paper); padding: 5px 7px;
+  }
+  h2 { font: 700 26px/1.1 var(--narrow); margin: 0; text-transform: uppercase; }
+  h3 { font: 700 17px/1.2 var(--narrow); margin: 18px 0 6px; text-transform: uppercase; letter-spacing: .04em; }
+  p { max-width: 70ch; }
+  a { color: var(--interp); }
+  .panel {
+    background: var(--panel); border: 1px solid var(--rule);
+    box-shadow: 3px 3px 0 var(--rule); padding: 16px; margin: 14px 0;
+  }
+  .formula {
+    font-size: clamp(16px, 3.4vw, 22px); text-align: center; margin: 4px 0 14px;
+    padding: 10px; border: 1px dashed var(--rule);
+  }
+  .formula sup { font-size: .7em; }
+  .sliders { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  label.s { display: block; font-size: 13px; color: var(--muted); }
+  label.s b { color: var(--ink); font-weight: 700; }
+  input[type=range] { width: 100%; accent-color: var(--trace); }
+  .readout { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .gauge {
+    flex: 1 1 150px; border: 1px solid var(--ink); padding: 8px 10px; background: var(--paper);
+  }
+  .gauge .k { font: 600 11px/1.2 var(--narrow); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .gauge .v { font-size: 26px; font-weight: 700; }
+  .gauge .v.big { color: var(--trace); }
+  .twin { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; margin-top: 10px; }
+  .twin .gauge .v { font-size: 22px; }
+  .steps { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); counter-reset: st; }
+  .steps li {
+    counter-increment: st; border: 1px solid var(--rule); background: var(--panel); padding: 10px 10px 12px; font-size: 14px; position: relative;
+  }
+  .steps li::before {
+    content: "T+" counter(st); display: block; font: 700 12px/1 var(--narrow); letter-spacing: .1em; color: var(--trace); margin-bottom: 6px;
+  }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-size: 14px; }
+  .controls select, .controls button {
+    font: inherit; font-size: 14px; color: var(--ink); background: var(--paper);
+    border: 1px solid var(--ink); padding: 5px 8px; border-radius: 0;
+  }
+  .controls button { cursor: pointer; box-shadow: 2px 2px 0 var(--ink); }
+  .controls button:active { transform: translate(2px, 2px); box-shadow: none; }
+  .controls label { display: inline-flex; align-items: center; gap: 6px; }
+  .strip { margin-top: 18px; }
+  .strip-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .strip-head h3 { margin: 0; }
+  .strip-head .iv { font-size: 13px; color: var(--muted); }
+  .chart { width: 100%; height: auto; display: block; background: var(--paper); border: 1px solid var(--ink); margin-top: 6px; }
+  .chart .g { stroke: var(--grid); stroke-width: 1; }
+  .chart .gm { stroke: var(--grid-major); stroke-width: 1; }
+  .chart .band { fill: var(--band); }
+  .chart .edge { stroke: var(--band-edge); stroke-width: 1; stroke-dasharray: 4 3; }
+  .chart .trace { fill: none; stroke: var(--trace); stroke-width: 2; stroke-linejoin: round; }
+  .chart .interp { fill: none; stroke: var(--interp); stroke-width: 1.6; stroke-dasharray: 6 4; }
+  .chart .rd { fill: var(--reading); }
+  .chart .tick { stroke: var(--reading); stroke-width: 1; }
+  .chart .miss { fill: var(--flag); }
+  .chart text { fill: var(--muted); font: 10px var(--mono); }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+  .stats .gauge .v { font-size: 20px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .legend i { display: inline-block; width: 22px; height: 0; vertical-align: middle; margin-right: 6px; border-top: 2px solid; }
+  .legend .l1 { border-color: var(--trace); }
+  .legend .l2 { border-color: var(--interp); border-top-style: dashed; }
+  .legend .l3 { width: 8px; height: 8px; border: none; background: var(--reading); border-radius: 50%; }
+  .legend .l4 { width: 10px; height: 6px; border: none; background: var(--flag); }
+  .legend .l5 { width: 18px; height: 10px; border: none; background: var(--band); outline: 1px dashed var(--band-edge); }
+  .verdict { margin-top: 14px; padding: 10px 12px; border: 1px dashed var(--ink); font-size: 14px; }
+  ul.refs { padding-left: 18px; }
+  ul.refs li { margin: 6px 0; max-width: 72ch; }
+  footer { margin-top: 54px; border-top: 3px solid var(--ink); padding-top: 10px; font-size: 13px; color: var(--muted); }
+  @media (max-width: 640px) {
+    main { padding: 20px 30px 50px; }
+    body::before, body::after { width: 14px; background-size: 14px 24px; background-image: radial-gradient(circle at 7px 12px, var(--paper-2) 3px, var(--rule) 3.5px, transparent 4.5px); }
+    .twin { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="back"><a href="../">&larr; tidepool</a></div>
+
+  <header class="top">
+    <span class="stamp">Chart speed: 1 week / div</span>
+    <h1>Time in <span>Range</span></h1>
+    <p class="lede">A small lab about home INR testing. The INR is one number that people on warfarin try to keep inside a band. This page shows where the number comes from, what a home meter does with a drop of blood, and then the part that caught my eye: how often you check a wandering line changes what you think it did.</p>
+    <p class="caveat">Educational and simplified. The simulated lines are made up, not modelled on real patients, and nothing here is dosing advice. A target band and a testing schedule are set with a clinician.</p>
+  </header>
+
+  <section id="ratio">
+    <div class="chan"><span class="num">Channel 1</span><h2>The ratio</h2></div>
+    <p>The test underneath is the prothrombin time, or PT: add a reagent called thromboplastin to plasma and time how many seconds it takes to clot. The trouble is that different labs' reagents clot at different speeds, so the raw seconds don't travel. The INR fixes that with two corrections: divide by the lab's mean normal PT, then raise the ratio to the reagent's ISI, a calibration number found by testing it against a reference reagent (<a href="https://www.healthcare.uiowa.edu/path_handbook/Appendix/Heme/INR.html">University of Iowa pathology handbook</a>; <a href="https://doi.org/10.29074%2Fascls.25.1.13">Clinical Laboratory Science</a>). The WHO adopted a reference thromboplastin in 1983, and makers calibrate against it (<a href="https://diagnostics.roche.com/global/en/article-listing/a-brief-discussion-of-prothrombin-time.html">Roche Diagnostics</a>).</p>
+    <div class="panel">
+      <div class="formula">INR = ( PT &divide; mean normal PT )<sup>ISI</sup></div>
+      <div class="sliders">
+        <label class="s">Patient PT: <b id="ptV"></b> s<input id="pt" type="range" min="10" max="60" step="0.1" value="27"></label>
+        <label class="s">Mean normal PT: <b id="mnV"></b> s<input id="mn" type="range" min="10" max="15" step="0.1" value="12"></label>
+        <label class="s">Reagent ISI: <b id="isiV"></b><input id="isi" type="range" min="0.9" max="2.2" step="0.01" value="1.1"></label>
+      </div>
+      <div class="readout">
+        <div class="gauge"><div class="k">PT ratio</div><div class="v" id="ratioV"></div></div>
+        <div class="gauge"><div class="k">INR</div><div class="v big" id="inrV"></div></div>
+      </div>
+    </div>
+
+    <h3>Same blood, two reagents</h3>
+    <p>Run it backwards. Pick one INR and see how many seconds two reagents would show for it, both with a mean normal PT of 12 s. With an ISI of 1.0 the INR is just the plain ratio. A less sensitive reagent (higher ISI) clots sooner for the same blood, and the exponent stretches its shorter time back to the same INR.</p>
+    <div class="panel">
+      <label class="s">Blood's INR: <b id="tiV"></b><input id="ti" type="range" min="1" max="5" step="0.05" value="2.5"></label>
+      <div class="twin">
+        <div class="gauge"><div class="k">Reagent A, ISI 1.0</div><div class="v" id="ra"></div></div>
+        <div class="gauge"><div class="k">Reagent B, ISI 1.8</div><div class="v" id="rb"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="strip">
+    <div class="chan"><span class="num">Channel 2</span><h2>Inside the strip</h2></div>
+    <p>A home meter does the same timing on a fingerstick drop instead of lab plasma. The strip carries dried reagent and electrodes, and the meter watches for the moment clotting gets going. Device descriptions show two approaches: some strips hold a peptide that thrombin cuts, releasing a piece that carries a current the meter can see, and some measure the clot through a change in the sample's electrical impedance (<a href="https://www.nice.org.uk/guidance/dg14/chapter/the-diagnostic-tests">NICE's review of the meters</a>). Either way, the meter turns a time into an INR with its own built-in calibration.</p>
+    <ol class="steps">
+      <li>A drop of blood from a fingerstick lands on the strip.</li>
+      <li>The dried thromboplastin dissolves and starts the clotting cascade.</li>
+      <li>Thrombin builds up. Depending on the strip, it cuts a peptide that gives off a current, or the forming clot changes impedance.</li>
+      <li>The meter notes when the signal crosses its threshold. That's the clotting time.</li>
+      <li>A stored calibration turns the time into an INR on the screen.</li>
+    </ol>
+  </section>
+
+  <section id="lab">
+    <div class="chan"><span class="num">Channel 3</span><h2>The sampling lab</h2></div>
+    <p>Below are two strips of chart paper. The red trace is a made-up "true" INR over six months: it drifts slowly, jitters, and now and then takes a bump (an illness or a diet change, say). Each schedule only sees the line on test days, the black dots. Between them, the usual way to estimate time in range is to draw a straight line from one reading to the next and count the days that fall inside the band, a method from Rosendaal and colleagues (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9500314/">Frontiers in Cardiovascular Medicine, 2022</a>). That's the blue dashed line.</p>
+    <p>Both strips share the same bumps and jitter. With "act on readings" on, an out-of-range reading nudges the line back toward the middle over a few days, a stand-in for whatever a clinician would change. That's why the two red traces can drift apart.</p>
+
+    <div class="panel">
+      <div class="controls">
+        <label>Band
+          <select id="band">
+            <option value="2,3">2.0 to 3.0</option>
+            <option value="2.5,3.5">2.5 to 3.5</option>
+          </select>
+        </label>
+        <label>Line
+          <select id="wob">
+            <option value="0.6">calm</option>
+            <option value="1" selected>typical</option>
+            <option value="1.5">bumpy</option>
+          </select>
+        </label>
+        <label><input type="checkbox" id="act" checked> act on readings</label>
+        <label><input type="checkbox" id="recheck" checked> recheck in 7 days after an out-of-range reading</label>
+        <label><input type="checkbox" id="showI" checked> show the straight-line guess</label>
+        <button id="reroll" type="button">New trace</button>
+      </div>
+
+      <div class="strip" id="stripA">
+        <div class="strip-head"><h3>Schedule A</h3><span class="iv">every <b class="ivV"></b> days</span></div>
+        <input class="iv-in" type="range" min="1" max="56" step="1" value="28" aria-label="Schedule A test interval in days">
+        <svg class="chart" viewBox="0 0 640 230" role="img" aria-label="Schedule A chart"></svg>
+        <div class="stats"></div>
+      </div>
+
+      <div class="strip" id="stripB">
+        <div class="strip-head"><h3>Schedule B</h3><span class="iv">every <b class="ivV"></b> days</span></div>
+        <input class="iv-in" type="range" min="1" max="56" step="1" value="7" aria-label="Schedule B test interval in days">
+        <svg class="chart" viewBox="0 0 640 230" role="img" aria-label="Schedule B chart"></svg>
+        <div class="stats"></div>
+      </div>
+
+      <div class="legend">
+        <span><i class="l1"></i>true INR (simulated)</span>
+        <span><i class="l3"></i>a test</span>
+        <span><i class="l2"></i>straight-line guess between tests</span>
+        <span><i class="l5"></i>target band</span>
+        <span><i class="l4"></i>out-of-range stretch no test landed on</span>
+      </div>
+      <div class="verdict" id="verdict"></div>
+    </div>
+
+    <h3>Things to try</h3>
+    <ul class="refs">
+      <li>Set A to 28 and B to 7, then press "New trace" a few times. Monthly testing often reports a tidier picture than the line really had, because short bumps fall between visits.</li>
+      <li>Turn "act on readings" off. Now testing can't change the line, only what you see of it. Both strips have the same true time in range; only the estimates differ.</li>
+      <li>Set B to 1. Daily tests make the guess match the truth, but every reading also carries a little meter noise, and acting on each one can chase jitter.</li>
+    </ul>
+  </section>
+
+  <section id="trials">
+    <div class="chan"><span class="num">Log</span><h2>What the trials found</h2></div>
+    <p>The sampling question is roughly what the self-testing trials asked, with real people and real outcomes instead of a toy line.</p>
+    <ul class="refs">
+      <li><b>THINRS</b>, a Veterans Affairs trial published in the New England Journal of Medicine in October 2010, randomized 2,922 people on warfarin to weekly home testing or monthly high-quality clinic testing. It found no significant difference in the main outcome, the time to a first stroke, major bleed, or death. The home group had a small gain in time in range, more minor bleeds, and higher satisfaction (<a href="https://immattersacp.org/weekly/archives/2010/10/26/5.htm">ACP Internist Weekly</a>; <a href="https://www.mdedge.com/content/home-inr-monitoring-safe-patients-warfarin">MDedge</a>).</li>
+      <li><b>A Cochrane review</b> updated in 2016 pooled 28 randomized trials with 8,950 people. Self-testing and self-management together came with about half the thromboembolic events and no drop in major bleeds, on evidence it rated low to moderate in quality (<a href="https://www.cochrane.org/CD003839">Cochrane</a>).</li>
+    </ul>
+    <p>So the lab's lesson, that more frequent looks catch more, shows up in the trials as a modest gain rather than a dramatic one. The people in them were trained and chosen as able to do it, which is part of the picture.</p>
+  </section>
+
+  <section id="out-there">
+    <div class="chan"><span class="num">Ref</span><h2>Already out there</h2></div>
+    <ul class="refs">
+      <li><a href="https://medlineplus.gov/lab-tests/prothrombin-time-test-and-inr-ptinr">MedlinePlus: Prothrombin time test and INR</a>, the NIH's plain-language page on the test.</li>
+      <li><a href="https://www.epistemonikos.org/fr/documents/ef5a94719b97dd93ce7ad129bd19989e1fa713b4">The Warfarin SMART trial</a>, a randomized trial of home self-management against usual care.</li>
+      <li><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3713938/">A study of supervised self-testing with an online system</a>, on PubMed Central.</li>
+      <li><a href="https://clinicaltrials.gov/study/NCT00594828">A registered trial of patient self-testing</a> on ClinicalTrials.gov.</li>
+    </ul>
+    <p>Those cover what the test is and what self-testing did in practice. This one tries something smaller: putting the formula and the sampling question on sliders, so you can watch them work.</p>
+  </section>
+
+  <section id="rough">
+    <div class="chan"><span class="num">Note</span><h2>Where this is rough</h2></div>
+    <ul class="refs">
+      <li>The true lines are a random walk plus jitter plus a few bumps. Real INR depends on diet, other medicines, illness, and much else that isn't modelled.</li>
+      <li>"Act on readings" moves the line part way back to the middle over four days. That is a placeholder for a clinician's decision, not a dosing rule.</li>
+      <li>Each reading gets a small random error. Real meter-versus-lab differences vary by device and by INR level.</li>
+      <li>The band options are two common ones; some conditions use others (<a href="https://www.ovid.com/journals/jphpr/pdf/10.1177/0897190017734765~optimal-intensity-of-warfarin-therapy-in-patients-with">Journal of Pharmacy Practice</a>). Rosendaal's method also skips gaps over 56 days, which is why the interval stops there.</li>
+    </ul>
+  </section>
+
+  <footer>
+    tidepool &middot; a first try, shared as notes &middot; <a href="../">all builds</a>
+  </footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---- Channel 1 ----
+  function ratio() {
+    var pt = +$("pt").value, mn = +$("mn").value, isi = +$("isi").value;
+    $("ptV").textContent = pt.toFixed(1);
+    $("mnV").textContent = mn.toFixed(1);
+    $("isiV").textContent = isi.toFixed(2);
+    var r = pt / mn;
+    $("ratioV").textContent = r.toFixed(2);
+    $("inrV").textContent = Math.pow(r, isi).toFixed(2);
+  }
+  function twin() {
+    var t = +$("ti").value;
+    $("tiV").textContent = t.toFixed(2);
+    $("ra").textContent = (12 * Math.pow(t, 1 / 1.0)).toFixed(1) + " s";
+    $("rb").textContent = (12 * Math.pow(t, 1 / 1.8)).toFixed(1) + " s";
+  }
+  ["pt", "mn", "isi"].forEach(function (id) { $(id).addEventListener("input", ratio); });
+  $("ti").addEventListener("input", twin);
+  ratio(); twin();
+
+  // ---- Channel 3 ----
+  var D = 182, YMIN = 0.8, YMAX = 5.2;
+  var W = 640, H = 230, L = 34, R = 8, T = 10, B = 26;
+
+  function rng(seed) {
+    return function () {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function gauss(r) {
+    var u = 1 - r(), v = r();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  // Shared randomness: both schedules see the same bumps and jitter.
+  function shared(seed, w) {
+    var r = rng(seed);
+    var trend = gauss(r) * 0.004 * w;
+    var drift = [], jit = [], err = [], ev = [];
+    for (var d = 0; d < D; d++) {
+      drift.push(trend + gauss(r) * 0.018 * w);
+      jit.push(gauss(r) * 0.11 * w);
+      err.push(gauss(r) * 0.08);
+      ev.push(0);
+    }
+    var n = 2 + Math.floor(r() * 3);
+    for (var k = 0; k < n; k++) {
+      var start = 8 + Math.floor(r() * (D - 30));
+      var len = 4 + Math.floor(r() * 12);
+      var amp = (r() < 0.5 ? -1 : 1) * (0.5 + r() * 0.8) * w;
+      for (var i = 0; i < len && start + i < D; i++) {
+        ev[start + i] += amp * Math.sin(Math.PI * (i + 0.5) / len);
+      }
+    }
+    return { drift: drift, jit: jit, err: err, ev: ev };
+  }
+
+  function simulate(s, interval, opt) {
+    var lo = opt.lo, hi = opt.hi, mid = (lo + hi) / 2;
+    var sp = mid, a = 0, next = 0;
+    var x = [], reads = [], push = new Array(D + 6).fill(0);
+    for (var d = 0; d < D; d++) {
+      sp += s.drift[d] + push[d];
+      a = 0.75 * a + s.jit[d];
+      var v = Math.max(YMIN + 0.05, sp + a + s.ev[d]);
+      x.push(v);
+      if (d === next) {
+        var rd = Math.max(YMIN + 0.05, v + s.err[d]);
+        var out = rd < lo || rd > hi;
+        reads.push({ d: d, v: rd });
+        if (opt.act && out) {
+          var c = (mid - rd) * 0.6;
+          for (var j = 1; j <= 4; j++) push[d + j] += c / 4;
+        }
+        next = d + ((opt.recheck && out) ? Math.min(interval, 7) : interval);
+      }
+    }
+    // true time in range
+    var inr = 0;
+    x.forEach(function (v) { if (v >= lo && v <= hi) inr++; });
+    // Rosendaal: linear interpolation between consecutive readings
+    var est = null, interp = [];
+    if (reads.length >= 2) {
+      var days = 0, inD = 0;
+      for (var k = 0; k < reads.length - 1; k++) {
+        var p = reads[k], q = reads[k + 1], span = q.d - p.d;
+        if (span > 56) continue;
+        for (var t = 0; t < span; t++) {
+          var iv = p.v + (q.v - p.v) * t / span;
+          days++; if (iv >= lo && iv <= hi) inD++;
+        }
+      }
+      if (days) est = inD / days;
+      interp = reads;
+    }
+    // out-of-range stretches (3+ days) and which no test landed on
+    var readDays = {};
+    reads.forEach(function (r) { readDays[r.d] = true; });
+    var runs = [], cur = null;
+    for (var e = 0; e < D; e++) {
+      var o = x[e] < lo || x[e] > hi;
+      if (o) { if (!cur) cur = { s: e, e: e, hit: false }; cur.e = e; if (readDays[e]) cur.hit = true; }
+      if ((!o || e === D - 1) && cur) { if (cur.e - cur.s + 1 >= 3) runs.push(cur); cur = null; }
+    }
+    return {
+      x: x, reads: reads, interp: interp,
+      ttr: inr / D, est: est,
+      runs: runs, missed: runs.filter(function (r) { return !r.hit; })
+    };
+  }
+
+  function sx(d) { return L + (W - L - R) * d / (D - 1); }
+  function sy(v) { return T + (H - T - B) * (1 - (v - YMIN) / (YMAX - YMIN)); }
+  var NS = "http://www.w3.org/2000/svg";
+  function el(name, attrs, parent) {
+    var n = document.createElementNS(NS, name);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+
+  function draw(svg, res, opt) {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    for (var d = 0; d < D; d += 7) {
+      el("line", { x1: sx(d), x2: sx(d), y1: T, y2: H - B, "class": d % 28 === 0 ? "gm" : "g" }, svg);
+    }
+    for (var v = 1; v <= 5; v += 0.5) {
+      el("line", { x1: L, x2: W - R, y1: sy(v), y2: sy(v), "class": v % 1 === 0 ? "gm" : "g" }, svg);
+      if (v % 1 === 0) { var t = el("text", { x: 4, y: sy(v) + 3 }, svg); t.textContent = v.toFixed(1); }
+    }
+    for (var m = 0; m < D; m += 28) {
+      var tx = el("text", { x: sx(m) + 2, y: H - 8 }, svg); tx.textContent = "day " + m;
+    }
+    el("rect", { x: L, y: sy(opt.hi), width: W - L - R, height: sy(opt.lo) - sy(opt.hi), "class": "band" }, svg);
+    el("line", { x1: L, x2: W - R, y1: sy(opt.hi), y2: sy(opt.hi), "class": "edge" }, svg);
+    el("line", { x1: L, x2: W - R, y1: sy(opt.lo), y2: sy(opt.lo), "class": "edge" }, svg);
+    res.missed.forEach(function (r) {
+      el("rect", { x: sx(r.s), y: H - B + 2, width: Math.max(3, sx(r.e) - sx(r.s)), height: 5, "class": "miss" }, svg);
+    });
+    var pts = res.x.map(function (v, i) { return sx(i).toFixed(1) + "," + sy(Math.min(YMAX, v)).toFixed(1); }).join(" ");
+    el("polyline", { points: pts, "class": "trace" }, svg);
+    if (opt.showI && res.interp.length >= 2) {
+      var ip = res.interp.map(function (r) { return sx(r.d).toFixed(1) + "," + sy(Math.min(YMAX, r.v)).toFixed(1); }).join(" ");
+      el("polyline", { points: ip, "class": "interp" }, svg);
+    }
+    res.reads.forEach(function (r) {
+      el("line", { x1: sx(r.d), x2: sx(r.d), y1: T, y2: T + 5, "class": "tick" }, svg);
+      el("circle", { cx: sx(r.d), cy: sy(Math.min(YMAX, r.v)), r: res.reads.length > 60 ? 1.6 : 3, "class": "rd" }, svg);
+    });
+  }
+
+  function pct(v) { return v == null ? "n/a" : Math.round(v * 100) + "%"; }
+  function stats(box, res) {
+    box.innerHTML = "";
+    [["Tests", res.reads.length],
+     ["True time in range", pct(res.ttr)],
+     ["Estimated from tests", pct(res.est)],
+     ["Stretches missed", res.missed.length + " of " + res.runs.length]
+    ].forEach(function (p) {
+      var g = document.createElement("div"); g.className = "gauge";
+      var k = document.createElement("div"); k.className = "k"; k.textContent = p[0];
+      var v = document.createElement("div"); v.className = "v"; v.textContent = p[1];
+      g.appendChild(k); g.appendChild(v); box.appendChild(g);
+    });
+  }
+
+  var state = { seed: 20261019, a: 28, b: 7, band: "2,3", wob: "1", act: true, recheck: true, showI: true };
+  try {
+    var saved = JSON.parse(localStorage.getItem("tidepool-time-in-range") || "null");
+    if (saved && typeof saved === "object") for (var k in state) if (k in saved) state[k] = saved[k];
+  } catch (e) { /* storage unavailable: use defaults */ }
+  function save() {
+    try { localStorage.setItem("tidepool-time-in-range", JSON.stringify(state)); } catch (e) { /* ignore */ }
+  }
+
+  var strips = [["stripA", "a"], ["stripB", "b"]].map(function (p) {
+    var root = $(p[0]);
+    return { key: p[1], root: root, input: root.querySelector(".iv-in"), label: root.querySelector(".ivV"), svg: root.querySelector("svg"), stats: root.querySelector(".stats") };
+  });
+
+  function render() {
+    var b = state.band.split(",").map(Number);
+    var opt = { lo: b[0], hi: b[1], act: state.act, recheck: state.recheck, showI: state.showI };
+    var s = shared(state.seed, +state.wob);
+    var out = strips.map(function (st) {
+      var iv = state[st.key];
+      st.input.value = iv; st.label.textContent = iv;
+      var res = simulate(s, iv, opt);
+      draw(st.svg, res, opt);
+      stats(st.stats, res);
+      return res;
+    });
+    var A = out[0], Bv = out[1];
+    var msg = "A ran " + A.reads.length + " tests and B ran " + Bv.reads.length + ". ";
+    function gap(r) { return r.est == null ? null : Math.round((r.est - r.ttr) * 100); }
+    var ga = gap(A), gb = gap(Bv);
+    function say(name, g) {
+      if (g == null) return name + " had too few tests to estimate. ";
+      if (Math.abs(g) <= 3) return name + "'s estimate was within " + (Math.abs(g) <= 1 ? "a point" : Math.abs(g) + " points") + " of the truth. ";
+      return name + "'s estimate was " + Math.abs(g) + " points too " + (g > 0 ? "rosy" : "gloomy") + ". ";
+    }
+    msg += say("A", ga) + say("B", gb);
+    if (state.act) {
+      var diff = Math.round((Bv.ttr - A.ttr) * 100);
+      msg += diff === 0 ? "Their true time in range came out the same." :
+        "B's true time in range was " + Math.abs(diff) + " points " + (diff > 0 ? "higher" : "lower") + " than A's, because acting on readings changed its line.";
+    } else {
+      msg += "With nobody acting on the readings, both lines are identical; only the views of them differ.";
+    }
+    $("verdict").textContent = msg;
+    $("band").value = state.band; $("wob").value = state.wob;
+    $("act").checked = state.act; $("recheck").checked = state.recheck; $("showI").checked = state.showI;
+    save();
+  }
+
+  strips.forEach(function (st) {
+    st.input.addEventListener("input", function () { state[st.key] = +st.input.value; render(); });
+  });
+  $("band").addEventListener("change", function () { state.band = this.value; render(); });
+  $("wob").addEventListener("change", function () { state.wob = this.value; render(); });
+  ["act", "recheck", "showI"].forEach(function (id) {
+    $(id).addEventListener("change", function () { state[id] = this.checked; render(); });
+  });
+  $("reroll").addEventListener("click", function () { state.seed = Math.floor(Math.random() * 1e9); render(); });
+  render();
+})();
+</script>
+</body>
+</html>

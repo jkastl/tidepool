@@ -89,5 +89,15 @@
     "style": "walnut console and ivory drawknobs",
     "summary": "A playable pipe organ console: draw stops, start the blower, and watch which pipes open in the wind chest and which harmonics each stop adds, with the reason organ stops are measured in feet.",
     "source": "idea-tank#38"
+  },
+  {
+    "slug": "2026-10-19-time-in-range",
+    "title": "Time in Range: A Sampling Lab for Home INR Testing",
+    "date": "2026-10-19",
+    "kind": "idea",
+    "form": "interactive lab",
+    "style": "chart-recorder graph paper",
+    "summary": "How the INR is built from a clotting time, what a home test strip does with a drop of blood, and a lab where two testing schedules watch the same wandering line and estimate its time in range.",
+    "source": "idea-tank#40"
   }
 ]
