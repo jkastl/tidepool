@@ -119,9 +119,16 @@ for something bigger.
 
 - `index.html` at the folder root, no build step. Plain HTML, CSS, and JS
   (ES modules are fine). Libraries only from a CDN (jsdelivr, cdnjs, unpkg),
-  pinned to an exact version. The one other outside script is GoatCounter's
-  counter, which `stats.js` loads; a build never loads it, or any other
-  analytics, itself.
+  pinned to an exact version.
+- **No backend.** A build runs entirely in the browser. Nothing a visitor
+  enters, records, or plays is sent to a server.
+- **Outside calls are optional and reputable.** A CDN library, a public API,
+  or the visit counter may fail to load, so the build still works, or says
+  plainly what is missing, when one does. Only from sources you can place: the
+  CDNs above, an API's own documented endpoint, GoatCounter. No ad or tracking
+  scripts. The counter is loaded only by `stats.js`; a build never loads it,
+  or any other analytics, itself. "Nothing leaves your device" in a build
+  means no backend, and is true with these calls.
 - Every path relative: Pages serves the build under `/tidepool/<slug>/`.
 - **The head block**, in every page's `<head>` right after `<title>`, between
   `<!-- site:head -->` and `<!-- /site:head -->`: the search and sharing tags
@@ -206,9 +213,13 @@ there". Other people's work is theirs, so:
 ## Tone
 
 A build is a first try at something interesting, shared the way a hobbyist
-shares notes: "this caught my eye, here's what I tried." It is not an expert
+shares notes with a friend: curious, modest, and plain. It is not an expert
 arriving to fix a field, and it should never read like one.
 
+- **No first person.** A build has no narrator: no "I", "me", "my", or
+  "we", and no asides like "the part that caught my eye". Talk about the
+  topic, "this page", or "you". The hobbyist above is an attitude, not a
+  character on the page.
 - **No grand framing.** Not "what X really needs", "what X is really
   about", "the real problem is", "the missing piece", "what nobody talks
   about", or "finally". Say what the build does.
