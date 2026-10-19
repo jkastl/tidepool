@@ -119,9 +119,16 @@ for something bigger.
 
 - `index.html` at the folder root, no build step. Plain HTML, CSS, and JS
   (ES modules are fine). Libraries only from a CDN (jsdelivr, cdnjs, unpkg),
-  pinned to an exact version. The one other outside script is GoatCounter's
-  counter, which `stats.js` loads; a build never loads it, or any other
-  analytics, itself.
+  pinned to an exact version.
+- **No backend.** A build runs entirely in the browser. Nothing a visitor
+  enters, records, or plays is sent to a server.
+- **Outside calls are optional and reputable.** A CDN library, a public API,
+  or the visit counter may fail to load, so the build still works, or says
+  plainly what is missing, when one does. Only from sources you can place: the
+  CDNs above, an API's own documented endpoint, GoatCounter. No ad or tracking
+  scripts. The counter is loaded only by `stats.js`; a build never loads it,
+  or any other analytics, itself. "Nothing leaves your device" in a build
+  means no backend, and is true with these calls.
 - Every path relative: Pages serves the build under `/tidepool/<slug>/`.
 - **The head block**, in every page's `<head>` right after `<title>`, between
   `<!-- site:head -->` and `<!-- /site:head -->`: the search and sharing tags
