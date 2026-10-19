@@ -213,9 +213,13 @@ there". Other people's work is theirs, so:
 ## Tone
 
 A build is a first try at something interesting, shared the way a hobbyist
-shares notes: "this caught my eye, here's what I tried." It is not an expert
+shares notes with a friend: curious, modest, and plain. It is not an expert
 arriving to fix a field, and it should never read like one.
 
+- **No first person.** A build has no narrator: no "I", "me", "my", or
+  "we", and no asides like "the part that caught my eye". Talk about the
+  topic, "this page", or "you". The hobbyist above is an attitude, not a
+  character on the page.
 - **No grand framing.** Not "what X really needs", "what X is really
   about", "the real problem is", "the missing piece", "what nobody talks
   about", or "finally". Say what the build does.
