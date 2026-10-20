@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One in Twenty: What a Blood Test's Reference Range Means</title>
+<!-- site:head -->
+<meta name="description" content="The common blood panels and what each looks at, where a reference range comes from, and a printer that runs panels on made-up healthy people to show how often they get flagged anyway.">
+<link rel="canonical" href="https://jkastl.github.io/tidepool/2026-10-20-one-in-twenty/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="tidepool">
+<meta property="og:title" content="One in Twenty: What a Blood Test&#x27;s Reference Range Means">
+<meta property="og:description" content="The common blood panels and what each looks at, where a reference range comes from, and a printer that runs panels on made-up healthy people to show how often they get flagged anyway.">
+<meta property="og:url" content="https://jkastl.github.io/tidepool/2026-10-20-one-in-twenty/">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{
+ "@context": "https://schema.org",
+ "@type": "CreativeWork",
+ "name": "One in Twenty: What a Blood Test's Reference Range Means",
+ "description": "The common blood panels and what each looks at, where a reference range comes from, and a printer that runs panels on made-up healthy people to show how often they get flagged anyway.",
+ "url": "https://jkastl.github.io/tidepool/2026-10-20-one-in-twenty/",
+ "datePublished": "2026-10-20",
+ "inLanguage": "en",
+ "isPartOf": {
+  "@type": "WebSite",
+  "name": "tidepool",
+  "url": "https://jkastl.github.io/tidepool/"
+ }
+}</script>
+<script src="../stats.js" defer></script>
+<!-- /site:head -->
+<style>
+  :root {
+    --paper: #fdfdf8;
+    --bar: #dcefdc;
+    --bar-edge: #c4e2c4;
+    --ink: #22262a;
+    --ink-soft: #4d5459;
+    --muted: #6f767b;
+    --flag: #b3261e;
+    --hole: #e9e9e2;
+    --hole-edge: #c9c9c0;
+    --rule: #9aa39a;
+    --band: rgba(56, 128, 72, 0.18);
+    --tail: rgba(179, 38, 30, 0.22);
+    --curve: #22262a;
+    --bg: #e7e6df;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #1d201d;
+      --bar: #233325;
+      --bar-edge: #2c402e;
+      --ink: #e3e8e0;
+      --ink-soft: #c2cabf;
+      --muted: #949d92;
+      --flag: #ff8a80;
+      --hole: #121412;
+      --hole-edge: #3a3f3a;
+      --rule: #5f6a5f;
+      --band: rgba(120, 200, 130, 0.20);
+      --tail: rgba(255, 138, 128, 0.25);
+      --curve: #e3e8e0;
+      --bg: #0f110f;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Courier New", Courier, "Liberation Mono", monospace;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  /* The continuous form: a strip of paper with sprocket holes down both edges
+     and green bars every three lines. */
+  .form {
+    max-width: 860px;
+    margin: 24px auto;
+    background:
+      radial-gradient(circle at 50% 50%, var(--hole) 0 6px, var(--hole-edge) 6px 7px, transparent 7.5px) left 8px top 0 / 18px 32px repeat-y,
+      radial-gradient(circle at 50% 50%, var(--hole) 0 6px, var(--hole-edge) 6px 7px, transparent 7.5px) right 8px top 0 / 18px 32px repeat-y,
+      repeating-linear-gradient(to bottom, var(--bar) 0 4.8em, var(--paper) 4.8em 9.6em);
+    padding: 28px 52px 40px;
+    box-shadow: 0 1px 0 var(--bar-edge), 0 6px 18px rgba(0,0,0,0.12);
+    position: relative;
+  }
+  .form::before, .form::after {
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 0;
+    border-left: 1px dashed var(--rule);
+  }
+  .form::before { left: 36px; }
+  .form::after { right: 36px; }
+  .top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .top a { color: var(--muted); }
+  h1 {
+    font-size: 30px;
+    line-height: 1.2;
+    margin: 18px 0 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .sub { color: var(--ink-soft); margin: 0 0 8px; }
+  h2 {
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 40px 0 8px;
+    padding-top: 10px;
+    border-top: 2px dashed var(--rule);
+  }
+  h2 .no { color: var(--muted); margin-right: 0.6em; }
+  p { margin: 0 0 1em; }
+  a { color: inherit; }
+  .muted { color: var(--muted); }
+  .note { font-size: 14px; color: var(--ink-soft); }
+  .flag { color: var(--flag); font-weight: bold; }
+
+  /* Requisition: tick panels */
+  .req { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 22px; margin: 12px 0; }
+  .req label {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 10px;
+    align-items: start;
+    cursor: pointer;
+    padding: 6px 0;
+  }
+  .req input { width: 18px; height: 18px; margin: 4px 0 0; accent-color: var(--ink); }
+  .req b { text-transform: uppercase; }
+  .req .what { grid-column: 2; font-size: 14px; color: var(--ink-soft); }
+  .req .tests { grid-column: 2; font-size: 13px; color: var(--muted); }
+  .tally { margin: 8px 0 0; }
+
+  /* Bell curve */
+  .curvebox { margin: 14px 0; }
+  svg { display: block; width: 100%; height: auto; }
+  .ctl { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; margin: 10px 0; }
+  .ctl label { display: flex; gap: 8px; align-items: center; }
+  select, button {
+    font: inherit;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    padding: 6px 12px;
+    border-radius: 0;
+  }
+  button { cursor: pointer; text-transform: uppercase; letter-spacing: 0.06em; }
+  button:hover { background: var(--bar); }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px dashed var(--ink); outline-offset: 2px; }
+
+  /* Printout */
+  pre.print {
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre;
+    overflow-x: auto;
+    margin: 10px 0;
+    padding: 8px 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    min-height: 3em;
+  }
+  .big { font-size: 22px; font-weight: bold; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px 24px; margin: 10px 0; }
+  .stats div { border-left: 3px solid var(--ink); padding-left: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 10px 0; }
+  th, td { text-align: left; padding: 4px 8px 4px 0; vertical-align: top; border-bottom: 1px dotted var(--rule); }
+  th { text-transform: uppercase; font-size: 12px; letter-spacing: 0.08em; color: var(--muted); }
+  ul { padding-left: 1.2em; }
+  li { margin: 0 0 0.5em; }
+  footer { margin-top: 40px; font-size: 13px; color: var(--muted); border-top: 2px dashed var(--rule); padding-top: 10px; }
+
+  @media (max-width: 600px) {
+    .form { margin: 0; padding: 18px 30px 30px; }
+    .form::before { left: 22px; }
+    .form::after { right: 22px; }
+    .form {
+      background:
+        radial-gradient(circle at 50% 50%, var(--hole) 0 4px, var(--hole-edge) 4px 5px, transparent 5.5px) left 2px top 0 / 14px 26px repeat-y,
+        radial-gradient(circle at 50% 50%, var(--hole) 0 4px, var(--hole-edge) 4px 5px, transparent 5.5px) right 2px top 0 / 14px 26px repeat-y,
+        repeating-linear-gradient(to bottom, var(--bar) 0 4.8em, var(--paper) 4.8em 9.6em);
+    }
+    h1 { font-size: 23px; }
+    body { font-size: 15px; }
+    pre.print { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<main class="form">
+  <div class="top">
+    <span><a href="../">tidepool</a></span>
+    <span>Report: reference ranges</span>
+    <span>Page 1 of 1</span>
+  </div>
+
+  <h1>One in twenty</h1>
+  <p class="sub">The common blood panels, and what the range printed next to each result means. With a printer that runs panels on made-up healthy people and counts how often they get flagged.</p>
+  <p class="note">General information about how lab reports work. Not advice about anyone's results: a report's own range, and whoever ordered the test, are the ones to go by.</p>
+
+  <h2><span class="no">01</span>What is in a panel</h2>
+  <p>A routine blood draw usually runs one or more <em>panels</em>: bundles of tests ordered together because they look at the same part of the body. Tick the ones to put on the requisition. The rest of the page uses the tick marks.</p>
+  <div class="req" id="req"></div>
+  <p class="tally" id="tally"></p>
+  <p class="note">Panel contents follow MedlinePlus's pages; labs vary a little in what they include. A CBC is sometimes run with a "differential" that splits white cells into five types, left out here.</p>
+
+  <h2><span class="no">02</span>Where the range comes from</h2>
+  <p>For most tests, the range is not a line drawn at "healthy" and "sick". A lab measures a group of healthy people, often at least 120 of them, and keeps the middle 95% of their results. The lowest 2.5% and the highest 2.5% fall outside, even though those people were picked for being healthy.</p>
+  <p>So, by design, about one healthy person in twenty lands outside the range on any single test. That is why many labs say "reference range" rather than "normal range".</p>
+  <div class="curvebox">
+    <svg id="curve" viewBox="0 0 640 220" role="img" aria-label="Bell curve of a healthy group's results with the middle share shaded as the reference range and the two tails shaded as flagged"></svg>
+  </div>
+  <div class="ctl">
+    <label>Range keeps the middle
+      <select id="cover">
+        <option value="0.90">90%</option>
+        <option value="0.95" selected>95%</option>
+        <option value="0.99">99%</option>
+      </select>
+    </label>
+    <span id="coverText"></span>
+  </div>
+  <p class="note">95% is a convention, not a law of biology. A wider range flags fewer healthy people, and also lets more real problems through unflagged. The 90% and 99% options are here to show that trade, not because labs commonly use them.</p>
+
+  <h2><span class="no">03</span>The printer</h2>
+  <p>Each result below is a draw from a healthy group, shown as where it sits against the range, not in real units. The bar is the range; <b>*</b> is the result. Results past either end get flagged H or L.</p>
+  <div class="ctl">
+    <button id="one" type="button">Print one person</button>
+    <button id="many" type="button">Run 1,000 people</button>
+  </div>
+  <pre class="print" id="print" aria-live="polite"></pre>
+  <div id="manyOut"></div>
+  <p class="note">The simulation treats every test as independent. Real tests are not: hemoglobin and hematocrit, for example, move together, which tends to pull the real share of flagged people down a bit. Treat the numbers as the shape of the effect, not a forecast.</p>
+
+  <h2><span class="no">04</span>Tests judged by cutoffs instead</h2>
+  <p>A few tests are not read against the middle 95% of healthy people. Cholesterol and A1c are compared with cutoffs set by clinical guidelines, chosen from what predicts later disease. MedlinePlus, for example, lists an A1c below 5.7% as normal, 5.7% to 6.4% as prediabetes, and 6.5% or higher as diabetes.</p>
+  <p>Plenty of people who feel fine sit past those cutoffs, so the one-in-twenty arithmetic does not apply to them. That is why the printer leaves the lipid panel and A1c out of its count, even when they are ticked.</p>
+
+  <h2><span class="no">05</span>Why two labs print different ranges</h2>
+  <table>
+    <thead><tr><th>Reason</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td>Reference group</td><td>Each lab's range comes from the healthy people it (or the test's maker) measured. Ranges can be split by age and sex, and children often get their own.</td></tr>
+      <tr><td>Method</td><td>Different machines and chemistry can read the same sample a little differently.</td></tr>
+      <tr><td>Units</td><td>Glucose, for example, can be reported in mg/dL or mmol/L. The same blood gives very different-looking numbers.</td></tr>
+    </tbody>
+  </table>
+  <p>So the range printed on a report is the one that goes with that result. A range copied from somewhere else can be off.</p>
+
+  <h2><span class="no">06</span>What a flag is, and is not</h2>
+  <ul>
+    <li>MedlinePlus notes that it is common for healthy people to sometimes have results outside the range, and that a result inside it is not always a guarantee of good health.</li>
+    <li>Results get read alongside symptoms, history, an exam, and other tests, not one number at a time.</li>
+    <li>A lone flag that is just past the edge is exactly what section 03 makes on healthy people every few runs.</li>
+  </ul>
+
+  <h2><span class="no">07</span>Already out there</h2>
+  <ul>
+    <li><a href="https://medlineplus.gov/lab-tests/">MedlinePlus medical tests</a>: the NIH's plain-language pages on each test, including <a href="https://medlineplus.gov/lab-tests/how-to-understand-your-lab-results/">how to understand lab results</a>.</li>
+    <li><a href="https://www.kenzai.com/pulse/bloodwork">The Kenzai bloodwork guide</a>: a long plain-English reference, one biomarker at a time.</li>
+    <li><a href="https://www.solvhealth.com/health/blood-test-results-explained">Solv Health's blood test results explainer</a>: covers the CBC and metabolic panel.</li>
+    <li><a href="https://en.wikipedia.org/wiki/Complete_blood_count">Wikipedia on the complete blood count</a>.</li>
+    <li>Reference apps such as <a href="https://apps.apple.com/app/id1546740381">Blood Test Results: Lab Values</a>: lookup tables of ranges.</li>
+  </ul>
+  <p>Those explain each test well. This page tries something narrower: making the 95% convention visible by running it on made-up healthy people.</p>
+
+  <h2><span class="no">08</span>Where this is rough</h2>
+  <ul>
+    <li>Results are drawn from a bell curve. Many real tests are skewed (triglycerides, some liver enzymes), and labs handle that with other methods.</li>
+    <li>Tests are treated as independent; see the note under section 03.</li>
+    <li>No real units or real ranges are used in the printer, on purpose.</li>
+  </ul>
+
+  <h2><span class="no">09</span>Sources</h2>
+  <ul class="note">
+    <li><a href="https://medlineplus.gov/lab-tests/how-to-understand-your-lab-results/">MedlinePlus: How to understand your lab results</a></li>
+    <li><a href="https://medlineplus.gov/ency/article/003642.htm">MedlinePlus: CBC blood test</a>, <a href="https://medlineplus.gov/ency/article/003468.htm">comprehensive metabolic panel</a>, <a href="https://medlineplus.gov/ency/patientinstructions/000386.htm">cholesterol testing</a>, <a href="https://medlineplus.gov/lab-tests/hemoglobin-a1c-hba1c-test/">hemoglobin A1C</a>, <a href="https://medlineplus.gov/ency/article/003684.htm">TSH</a></li>
+    <li><a href="https://med.libretexts.org/Bookshelves/Allied_Health/Book%3A_Clinical_Chemistry_-_Theory_Analysis_Correlation_(Kaplan_and_Pesce)/01%3A_Questions_and_Answers/1.16%3A_Statistics_and_Reference_Ranges">Clinical Chemistry (Kaplan and Pesce), statistics and reference ranges</a>, on LibreTexts</li>
+    <li><a href="https://myadlm.org/science-and-research/academy-guidance/lipids-and-lipoproteins">ADLM guidance on lipids and lipoproteins</a>, on labs reporting guideline thresholds for lipids</li>
+    <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4975204">A review on reference intervals and decision limits</a>, on PubMed Central</li>
+  </ul>
+
+  <footer>
+    <a href="../">Back to tidepool</a> &middot; A first try at the topic, simplified where noted.
+  </footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+
+  // Panels. "range" tests are read against a 95% reference range; "cutoff"
+  // tests against guideline thresholds, so the printer does not count them.
+  var PANELS = [
+    { key: "cbc", name: "CBC", full: "Complete blood count", what: "Blood cells: red cells, white cells, platelets.", mode: "range",
+      tests: ["WBC", "RBC", "Hemoglobin", "Hematocrit", "MCV", "MCH", "MCHC", "RDW", "Platelets"] },
+    { key: "bmp", name: "BMP", full: "Basic metabolic panel", what: "Kidneys, fluid and salts, blood sugar.", mode: "range",
+      tests: ["Glucose", "Calcium", "Sodium", "Potassium", "Chloride", "CO2", "BUN", "Creatinine"] },
+    { key: "liver", name: "CMP extras", full: "Rest of the comprehensive panel", what: "A CMP is the BMP plus these, mostly a look at the liver.", mode: "range",
+      tests: ["Albumin", "Total protein", "ALP", "ALT", "AST", "Bilirubin"] },
+    { key: "tsh", name: "TSH", full: "Thyroid-stimulating hormone", what: "The thyroid, through the hormone that drives it.", mode: "range",
+      tests: ["TSH"] },
+    { key: "lipid", name: "Lipids", full: "Lipid panel", what: "Fat transport: cholesterol and triglycerides.", mode: "cutoff",
+      tests: ["Total chol.", "LDL", "HDL", "Triglycerides"] },
+    { key: "a1c", name: "A1c", full: "Hemoglobin A1c", what: "Average blood sugar over roughly two to three months.", mode: "cutoff",
+      tests: ["A1c"] }
+  ];
+  var ticked = { cbc: true, bmp: true, liver: true, tsh: false, lipid: true, a1c: false };
+  try {
+    var saved = JSON.parse(localStorage.getItem("one-in-twenty") || "null");
+    if (saved && typeof saved === "object") {
+      if (saved.ticked) PANELS.forEach(function (p) { if (typeof saved.ticked[p.key] === "boolean") ticked[p.key] = saved.ticked[p.key]; });
+      if (saved.cover) $("cover").value = saved.cover;
+    }
+  } catch (e) { /* storage unavailable; defaults are fine */ }
+  function save() {
+    try { localStorage.setItem("one-in-twenty", JSON.stringify({ ticked: ticked, cover: $("cover").value })); } catch (e) {}
+  }
+
+  var req = $("req");
+  PANELS.forEach(function (p) {
+    var l = document.createElement("label");
+    var box = document.createElement("input");
+    box.type = "checkbox";
+    box.checked = ticked[p.key];
+    box.addEventListener("change", function () { ticked[p.key] = box.checked; save(); update(); });
+    var head = document.createElement("span");
+    head.innerHTML = "<b></b> <span class=\"muted\"></span>";
+    head.querySelector("b").textContent = p.name;
+    head.querySelector(".muted").textContent = p.full + (p.mode === "cutoff" ? " (cutoffs)" : "");
+    var what = document.createElement("span"); what.className = "what"; what.textContent = p.what;
+    var tests = document.createElement("span"); tests.className = "tests"; tests.textContent = p.tests.join(", ");
+    l.appendChild(box); l.appendChild(head); l.appendChild(what); l.appendChild(tests);
+    req.appendChild(l);
+  });
+
+  function rangeTests() {
+    var out = [];
+    PANELS.forEach(function (p) { if (ticked[p.key] && p.mode === "range") out = out.concat(p.tests); });
+    return out;
+  }
+  function cutoffCount() {
+    var n = 0;
+    PANELS.forEach(function (p) { if (ticked[p.key] && p.mode === "cutoff") n += p.tests.length; });
+    return n;
+  }
+  function cover() { return parseFloat($("cover").value); }
+
+  // Inverse normal CDF (Acklam's approximation), for the range edges.
+  function probit(p) {
+    var a = [-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.357751867269, -30.66479806614716, 2.506628277459239];
+    var b = [-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771972, -13.28068155288572];
+    var c = [-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783];
+    var d = [0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416];
+    var q, r;
+    if (p < 0.02425) {
+      q = Math.sqrt(-2 * Math.log(p));
+      return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+    }
+    if (p > 1 - 0.02425) return -probit(1 - p);
+    q = p - 0.5; r = q * q;
+    return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q / (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+  }
+  function edge() { return probit(1 - (1 - cover()) / 2); }
+  function normal() {
+    var u = 0, v = 0;
+    while (u === 0) u = Math.random();
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  // Bell curve with the kept middle shaded and the tails marked.
+  function drawCurve() {
+    var svg = $("curve");
+    var W = 640, H = 220, base = 180, left = 20, right = 620, top = 20;
+    var xmin = -3.6, xmax = 3.6;
+    function X(z) { return left + (z - xmin) / (xmax - xmin) * (right - left); }
+    function Y(z) { return base - Math.exp(-z * z / 2) * (base - top); }
+    var e = edge();
+    function area(a, b) {
+      var d = "M" + X(a).toFixed(1) + " " + base;
+      for (var z = a; z <= b + 1e-9; z += 0.05) d += " L" + X(z).toFixed(1) + " " + Y(z).toFixed(1);
+      d += " L" + X(b).toFixed(1) + " " + base + " Z";
+      return d;
+    }
+    var line = "";
+    for (var z = xmin; z <= xmax + 1e-9; z += 0.05) line += (line ? " L" : "M") + X(z).toFixed(1) + " " + Y(z).toFixed(1);
+    var tail = ((1 - cover()) / 2 * 100).toFixed(1).replace(/\.0$/, "");
+    var mid = (cover() * 100).toFixed(0);
+    svg.innerHTML =
+      '<path d="' + area(xmin, -e) + '" fill="var(--tail)"/>' +
+      '<path d="' + area(e, xmax) + '" fill="var(--tail)"/>' +
+      '<path d="' + area(-e, e) + '" fill="var(--band)"/>' +
+      '<path d="' + line + '" fill="none" stroke="var(--curve)" stroke-width="2"/>' +
+      '<line x1="' + left + '" y1="' + base + '" x2="' + right + '" y2="' + base + '" stroke="var(--curve)" stroke-width="1"/>' +
+      '<line x1="' + X(-e) + '" y1="' + (top - 6) + '" x2="' + X(-e) + '" y2="' + base + '" stroke="var(--curve)" stroke-dasharray="4 3"/>' +
+      '<line x1="' + X(e) + '" y1="' + (top - 6) + '" x2="' + X(e) + '" y2="' + base + '" stroke="var(--curve)" stroke-dasharray="4 3"/>' +
+      '<text x="320" y="' + (base - 40) + '" text-anchor="middle" font-family="Courier New, monospace" font-size="16" font-weight="bold" fill="var(--curve)">reference range: middle ' + mid + '%</text>' +
+      '<text x="' + X(-e - 0.55) + '" y="' + (base - 30) + '" text-anchor="middle" font-family="Courier New, monospace" font-size="14" fill="var(--flag)">L ' + tail + '%</text>' +
+      '<text x="' + X(e + 0.55) + '" y="' + (base - 30) + '" text-anchor="middle" font-family="Courier New, monospace" font-size="14" fill="var(--flag)">H ' + tail + '%</text>' +
+      '<text x="' + left + '" y="' + (base + 28) + '" font-family="Courier New, monospace" font-size="13" fill="var(--curve)">lower results</text>' +
+      '<text x="' + right + '" y="' + (base + 28) + '" text-anchor="end" font-family="Courier New, monospace" font-size="13" fill="var(--curve)">higher results</text>';
+    var one = 1 / (1 - cover());
+    $("coverText").textContent = "About 1 healthy person in " + Math.round(one) + " is flagged on any one test.";
+  }
+
+  function pct(x) { return (x * 100).toFixed(x < 0.1 ? 1 : 0) + "%"; }
+
+  function update() {
+    var n = rangeTests().length;
+    var c = cutoffCount();
+    var p = 1 - Math.pow(cover(), n);
+    $("tally").innerHTML = "";
+    var t = $("tally");
+    t.appendChild(document.createTextNode(n + " range-based test" + (n === 1 ? "" : "s") + " on the requisition" +
+      (c ? " (plus " + c + " judged by cutoffs, not counted)" : "") + ". If they were independent, a healthy person would have about "));
+    var b = document.createElement("b"); b.textContent = pct(p); t.appendChild(b);
+    t.appendChild(document.createTextNode(" odds of at least one flag."));
+    drawCurve();
+    $("one").disabled = n === 0;
+    $("many").disabled = n === 0;
+    if (n === 0) { $("print").textContent = "No range-based tests ticked. Tick a panel in section 01."; $("manyOut").innerHTML = ""; }
+  }
+
+  // One printed report: each result placed on a 21-column strip, the range
+  // being the middle 15 columns.
+  function bar(z, e) {
+    var cols = 21, inner = 15, pad = (cols - inner) / 2;
+    var pos = Math.round(pad + (z + e) / (2 * e) * (inner - 1));
+    if (z > e) pos = Math.max(pos, pad + inner);
+    else if (z < -e) pos = Math.min(pos, pad - 1);
+    else pos = Math.max(pad, Math.min(pad + inner - 1, pos));
+    pos = Math.max(0, Math.min(cols - 1, pos));
+    var s = "";
+    for (var i = 0; i < cols; i++) {
+      var ch = (i < pad || i >= pad + inner) ? " " : "-";
+      if (i === pad) ch = "[";
+      if (i === pad + inner - 1) ch = "]";
+      if (i === pos) ch = "*";
+      s += ch;
+    }
+    return s;
+  }
+  function printOne() {
+    var tests = rangeTests(), e = edge();
+    var pre = $("print");
+    pre.textContent = "";
+    var flags = 0;
+    var head = "TEST          " + " " + "   [    range    ]   " + " FLAG\n";
+    pre.appendChild(document.createTextNode(head));
+    tests.forEach(function (name) {
+      var z = normal();
+      var f = z > e ? "H" : (z < -e ? "L" : "");
+      if (f) flags++;
+      var row = (name + "              ").slice(0, 14) + " " + bar(z, e) + "  ";
+      pre.appendChild(document.createTextNode(row));
+      if (f) {
+        var s = document.createElement("span"); s.className = "flag"; s.textContent = f;
+        pre.appendChild(s);
+      }
+      pre.appendChild(document.createTextNode("\n"));
+    });
+    var foot = document.createElement("span");
+    foot.textContent = "\n" + tests.length + " tests, " + flags + " flagged.\nEveryone here was drawn from\nthe healthy group.";
+    if (flags) foot.className = "flag";
+    pre.appendChild(foot);
+  }
+
+  function runMany() {
+    var tests = rangeTests().length, e = edge(), N = 1000;
+    var counts = [0, 0, 0, 0, 0];
+    for (var i = 0; i < N; i++) {
+      var f = 0;
+      for (var j = 0; j < tests; j++) { var z = normal(); if (z > e || z < -e) f++; }
+      counts[Math.min(f, 4)]++;
+    }
+    var any = (N - counts[0]) / N;
+    var expect = 1 - Math.pow(cover(), tests);
+    var out = $("manyOut");
+    out.innerHTML = "";
+    var stats = document.createElement("div"); stats.className = "stats";
+    function stat(label, value) {
+      var d = document.createElement("div");
+      var v = document.createElement("div"); v.className = "big"; v.textContent = value;
+      var l = document.createElement("div"); l.className = "note"; l.textContent = label;
+      d.appendChild(v); d.appendChild(l); stats.appendChild(d);
+    }
+    stat("of 1,000 healthy people got at least one flag in this run", pct(any));
+    stat("the arithmetic: 1 - " + cover().toFixed(2) + "^" + tests, pct(expect));
+    out.appendChild(stats);
+    var pre = document.createElement("pre"); pre.className = "print";
+    var labels = ["0 flags", "1 flag ", "2 flags", "3 flags", "4+     "];
+    var max = Math.max.apply(null, counts);
+    var txt = "FLAGS    PEOPLE\n";
+    counts.forEach(function (c, k) {
+      var w = max ? Math.round(c / max * 20) : 0;
+      txt += labels[k] + "  " + ("    " + c).slice(-4) + "  " + new Array(w + 1).join("#") + "\n";
+    });
+    pre.textContent = txt;
+    out.appendChild(pre);
+  }
+
+  $("cover").addEventListener("change", function () { save(); update(); $("print").textContent = ""; $("manyOut").innerHTML = ""; });
+  $("one").addEventListener("click", printOne);
+  $("many").addEventListener("click", runMany);
+  update();
+})();
+</script>
+</body>
+</html>

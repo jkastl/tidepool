@@ -99,5 +99,15 @@
     "style": "chart-recorder graph paper",
     "summary": "How the INR is built from a clotting time, what a home test strip does with a drop of blood, and a lab where two testing schedules watch the same wandering line and estimate its time in range.",
     "source": "idea-tank#40"
+  },
+  {
+    "slug": "2026-10-20-one-in-twenty",
+    "title": "One in Twenty: What a Blood Test's Reference Range Means",
+    "date": "2026-10-20",
+    "kind": "idea",
+    "form": "explainer",
+    "style": "green-bar tractor-feed printout",
+    "summary": "The common blood panels and what each looks at, where a reference range comes from, and a printer that runs panels on made-up healthy people to show how often they get flagged anyway.",
+    "source": "idea-tank#39"
   }
 ]
