@@ -109,5 +109,15 @@
     "style": "green-bar tractor-feed printout",
     "summary": "The common blood panels and what each looks at, where a reference range comes from, and a printer that runs panels on made-up healthy people to show how often they get flagged anyway.",
     "source": "idea-tank#39"
+  },
+  {
+    "slug": "2026-10-21-touch-bench",
+    "title": "Touch Bench: Switch Off a Worm's Neurons and Tap",
+    "date": "2026-10-21",
+    "kind": "idea",
+    "form": "puzzle game",
+    "style": "darkfield microscope",
+    "summary": "A small model of the roundworm's touch reflex: switch off neurons with a pretend laser, tap the head or tail, and check each result against what the lab ablation studies reported.",
+    "source": "idea-tank#44"
   }
 ]
