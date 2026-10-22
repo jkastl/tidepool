@@ -119,5 +119,15 @@
     "style": "darkfield microscope",
     "summary": "A small model of the roundworm's touch reflex: switch off neurons with a pretend laser, tap the head or tail, and check each result against what the lab ablation studies reported.",
     "source": "idea-tank#44"
+  },
+  {
+    "slug": "2026-10-22-up-and-down",
+    "title": "Up and Down Only: Flying a Hot Air Balloon",
+    "date": "2026-10-22",
+    "kind": "question",
+    "form": "toy",
+    "style": "copperplate engraving broadside",
+    "summary": "How a hot air balloon is flown with only a burner and a vent: a flight toy where you steer by picking the height whose wind goes your way, and a sum for how hot the envelope has to be to float.",
+    "source": "idea-tank#47"
   }
 ]
