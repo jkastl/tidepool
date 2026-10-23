@@ -26,7 +26,8 @@
   "@type": "WebSite",
   "name": "tidepool",
   "url": "https://jkastl.github.io/tidepool/"
- }
+ },
+ "dateModified": "2026-10-23"
 }</script>
 <script src="../stats.js" defer></script>
 <!-- /site:head -->
@@ -221,6 +222,13 @@
   .s-held { background: var(--held); }
   .s-wrong { background: var(--wrong); }
   .s-down { background: var(--down); }
+  /* Chip text and fills chosen for 4.5:1 contrast at chip size. */
+  .s-delay { color: #111111; }
+  @media (prefers-color-scheme: dark) {
+    .s-good { color: #111111; }
+    .s-held { background: #7a50b8; }
+    .s-wrong { background: #c0392b; }
+  }
 
   .matrix-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--rule); background: var(--panel); }
   table.matrix { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px; }
@@ -297,7 +305,7 @@
     <h2 id="h-status">Service status, every stop</h2>
     <p>The same six nights at every stage. Read down a column to watch one kind of trouble get handled. Pick any cell to load it above.</p>
     <div class="matrix-wrap"><table class="matrix" id="matrix"></table></div>
-    <p class="note">Status is how things stand at 8:00 a.m., when people start reading the report.</p>
+    <p class="note">Each status sums up one night as it stands at 8:00 a.m., when people start reading the report. <b>Good service</b>: nothing went wrong. <b>Delays</b>: something went wrong and cost time, but the report was complete and right by 8:00. <b>Part held back</b>: right, apart from rows set aside for a person to check. <b>Wrong data</b>: there is a report, but some of its numbers are wrong or missing. <b>Suspended</b>: no fresh report at 8:00.</p>
   </section>
 
   <section aria-labelledby="h-names">
@@ -583,6 +591,7 @@
   let layerDots = null, layerFlash = null;
 
   function drawMap() {
+    let scriptLabel = null;
     G = geom();
     const s = state.stage;
     svg.setAttribute("viewBox", `0 0 ${G.w} ${G.h}`);
@@ -614,6 +623,11 @@
       el("rect", { x, y, width: Math.abs(b.x - a.x), height: Math.abs(b.y - a.y), rx: 14, fill: "none", stroke: css("--ink"), "stroke-width": 2, "stroke-dasharray": "8 6" }, svg);
       const t = el("text", portrait ? { x: x + 10, y: y - 8, "font-size": 13, "font-weight": 700 } : { x: x + 12, y: y - 10, "font-size": 13, "font-weight": 700 }, svg);
       t.textContent = "nightly.py: one script, runs at 2:00 a.m.";
+      t.setAttribute("paint-order", "stroke");
+      t.setAttribute("stroke", css("--panel"));
+      t.setAttribute("stroke-width", "5");
+      t.setAttribute("stroke-linejoin", "round");
+      scriptLabel = t;
     }
 
     // Tracks
@@ -623,6 +637,7 @@
     };
     track(ROUTE_P, css("--partner"));
     track(ROUTE_O, css("--orders"));
+    if (scriptLabel) svg.appendChild(scriptLabel);
     // Quarantine spur
     const cq1 = nodePt("check", 1), cq2 = nodePt("quar");
     el("line", { x1: cq1.x, y1: cq1.y, x2: cq2.x, y2: cq2.y, stroke: on("quar") ? css("--bad") : css("--track-off"), "stroke-width": lineW * 0.6, "stroke-dasharray": on("quar") ? "" : "2 7", "stroke-linecap": "round" }, svg);

@@ -138,6 +138,7 @@
     "form": "stepped simulation",
     "style": "transit map and service board",
     "summary": "A made-up data pipeline drawn as a transit line, growing from one nightly script to steps, checks, and save points, with six kinds of bad night to throw at each stage.",
-    "source": "idea-tank#46"
+    "source": "idea-tank#46",
+    "revised": "2026-10-23"
   }
 ]
