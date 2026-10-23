@@ -91,6 +91,25 @@ The kind of idea sets what the build is for:
 | `musing` | Explore it |
 | `follow-up` | Research it, then build from what turned up |
 
+### Keep it small
+
+A build is for a curious newcomer: someone bright, with no background in
+the topic, who has a few minutes. It is a first look, not a course or a
+reference.
+
+- **One idea.** One question answered, one mechanism shown, one tool doing
+  one job, said in a sentence before building. Other interesting threads
+  wait for a later build; the idea's note keeps them.
+- **Few moving parts.** As a guide: one main interaction, about five
+  choices on screen at a time, three to five sections, and around 900
+  words or fewer. Fewer is often better. A grid of every combination, a
+  glossary, a second track or storyline, or a panel of advanced options
+  usually means the build is doing two things.
+- **A handful of new words**, each explained in plain words where it first
+  appears.
+- **Cut before adding.** When a build feels thin, make the one thing
+  clearer before adding a second.
+
 ### Form and style
 
 Read the last three entries in `builds.json` and pick a form and a style
@@ -108,8 +127,8 @@ flashcards about X, or a generic landing page, tend to say less.
 
 An interactive part earns its place by showing what text alone cannot:
 cause and effect, where in a process something happens, how a change
-moves through, what a number does when you push it. Draw the mechanism
-and let the visitor watch it work. Controls that only reveal a ready-made
+moves through, what a number does when you push it. Draw one mechanism,
+plainly, and let the visitor watch it work. Controls that only reveal a ready-made
 answer the text could have stated work more like a lookup table.
 
 **Styles**, also a menu: blueprint, newspaper front page, terminal,
@@ -249,9 +268,11 @@ screenshots outside the repo. Locally `stats.js` does nothing, so tests
 never count as visits.
 
 Idea-tank's `tools/lint_build.py` checks the build rules a script can
-check, and `tools/site.py check` checks the head blocks and sitemap. Runs
-also send each build past a small review team (facts, reading, privacy,
-testing) before it is published; idea-tank's `CLAUDE.md` describes it.
+check, `tools/design_check.js` takes screenshots and checks accessibility
+and size, and `tools/site.py check` checks the head blocks and sitemap.
+Runs also send each build past a small review team (facts, reading, design,
+privacy, testing) before it is published; idea-tank's `CLAUDE.md`
+describes it.
 Everything in this file is what that team reads the build against.
 
 ## Revising a build
