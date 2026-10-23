@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One Script to a Pipeline: Six Stages of a Data Pipeline Growing</title>
+<!-- site:head -->
+<meta name="description" content="A made-up data pipeline drawn as a transit line, growing from one nightly script to steps, checks, and save points, with six kinds of bad night to throw at each stage.">
+<link rel="canonical" href="https://jkastl.github.io/tidepool/2026-10-23-pipeline-grows/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="tidepool">
+<meta property="og:title" content="One Script to a Pipeline: Six Stages of a Data Pipeline Growing">
+<meta property="og:description" content="A made-up data pipeline drawn as a transit line, growing from one nightly script to steps, checks, and save points, with six kinds of bad night to throw at each stage.">
+<meta property="og:url" content="https://jkastl.github.io/tidepool/2026-10-23-pipeline-grows/">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{
+ "@context": "https://schema.org",
+ "@type": "CreativeWork",
+ "name": "One Script to a Pipeline: Six Stages of a Data Pipeline Growing",
+ "description": "A made-up data pipeline drawn as a transit line, growing from one nightly script to steps, checks, and save points, with six kinds of bad night to throw at each stage.",
+ "url": "https://jkastl.github.io/tidepool/2026-10-23-pipeline-grows/",
+ "datePublished": "2026-10-23",
+ "inLanguage": "en",
+ "isPartOf": {
+  "@type": "WebSite",
+  "name": "tidepool",
+  "url": "https://jkastl.github.io/tidepool/"
+ }
+}</script>
+<script src="../stats.js" defer></script>
+<!-- /site:head -->
+<style>
+  :root {
+    --bg: #f4f3ee;
+    --panel: #ffffff;
+    --ink: #111111;
+    --ink-soft: #3d3d3d;
+    --muted: #6b6b6b;
+    --rule: #d3d1c8;
+    --band: #111111;
+    --band-ink: #ffffff;
+    --orders: #d1301f;
+    --partner: #0b6bbf;
+    --track-off: #c9c7bf;
+    --station: #ffffff;
+    --bad: #e29d00;
+    --sched: #8a8a8a;
+    --ok: #157a3a;
+    --delay: #c98a00;
+    --held: #6b3fa0;
+    --wrong: #c22a1d;
+    --down: #222222;
+    --chip-ink: #ffffff;
+    --focus: #0b6bbf;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1012;
+      --panel: #17191c;
+      --ink: #f1f1ee;
+      --ink-soft: #c9c9c4;
+      --muted: #9a9a95;
+      --rule: #34363b;
+      --band: #000000;
+      --band-ink: #f1f1ee;
+      --orders: #ff5a45;
+      --partner: #4aa3ff;
+      --track-off: #3b3d42;
+      --station: #0f1012;
+      --bad: #ffc233;
+      --sched: #8d8f94;
+      --ok: #2e9e55;
+      --delay: #d79a12;
+      --held: #8e62c9;
+      --wrong: #e0402f;
+      --down: #55575c;
+      --chip-ink: #ffffff;
+      --focus: #4aa3ff;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-size: 17px;
+    line-height: 1.5;
+  }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .band {
+    background: var(--band);
+    color: var(--band-ink);
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.25);
+  }
+  .topbar a { text-decoration: none; }
+  .topbar a:hover { text-decoration: underline; }
+  header h1 {
+    margin: 0; padding: 22px 0 6px;
+    font-size: clamp(30px, 6vw, 54px); line-height: 1.02; font-weight: 700; letter-spacing: -0.02em;
+  }
+  header .dek { margin: 0; padding: 0 0 22px; font-size: 18px; max-width: 46em; color: var(--band-ink); opacity: 0.85; }
+  .bullets { display: inline-flex; gap: 6px; vertical-align: middle; }
+  .bullet {
+    display: inline-grid; place-items: center;
+    width: 1.55em; height: 1.55em; border-radius: 50%;
+    font-weight: 700; font-size: 0.8em; color: #fff; line-height: 1;
+  }
+  .b-o { background: var(--orders); }
+  .b-p { background: var(--partner); }
+  main { padding: 26px 0 40px; }
+  section { margin: 0 0 34px; }
+  h2 {
+    font-size: 15px; letter-spacing: 0.1em; text-transform: uppercase;
+    margin: 0 0 12px; padding: 7px 10px; background: var(--band); color: var(--band-ink); display: inline-block;
+  }
+  h3 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.01em; }
+  p { margin: 0 0 12px; max-width: 48em; }
+  .intro p { font-size: 18px; }
+
+  /* Stage strip: a line diagram of stops */
+  .strip {
+    position: relative; display: grid; grid-template-columns: repeat(6, 1fr);
+    margin: 4px 0 14px; padding: 0; list-style: none;
+  }
+  .strip::before {
+    content: ""; position: absolute; left: 8.3%; right: 8.3%; top: 19px; height: 8px;
+    background: var(--ink); border-radius: 4px;
+  }
+  .strip li { position: relative; text-align: center; }
+  .strip button {
+    font: inherit; background: none; border: 0; color: inherit; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; padding: 0 2px;
+  }
+  .strip .dot {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: var(--station); border: 6px solid var(--ink);
+    display: grid; place-items: center; font-weight: 700; font-size: 17px; position: relative; z-index: 1;
+  }
+  .strip .lab { font-size: 13px; font-weight: 700; line-height: 1.2; color: var(--ink-soft); }
+  .strip button[aria-pressed="true"] .dot { background: var(--ink); color: var(--bg); }
+  .strip button[aria-pressed="true"] .lab { color: var(--ink); }
+  .strip button[aria-pressed="true"] .lab::after {
+    content: "You are here"; display: block; margin-top: 4px; font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--orders);
+  }
+
+  .stagecard {
+    background: var(--panel); border: 1px solid var(--rule); border-left: 10px solid var(--ink);
+    padding: 16px 18px; margin: 0 0 16px;
+  }
+  .stagecard .kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .stagecard .answers { font-size: 15px; color: var(--ink-soft); margin: 0; }
+  .stagecard .answers b { color: var(--ink); }
+
+  .mapbox { background: var(--panel); border: 1px solid var(--rule); padding: 8px; }
+  #map { display: block; width: 100%; height: auto; }
+  #map text { font-family: inherit; fill: var(--ink); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-soft); padding: 8px 6px 2px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+
+  .controls { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 16px; }
+  @media (min-width: 820px) { .controls { grid-template-columns: 1.1fr 1fr; } }
+  fieldset { border: 1px solid var(--rule); background: var(--panel); margin: 0; padding: 12px 14px 14px; }
+  legend { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 0 6px; }
+  .faults { display: grid; gap: 6px; }
+  .faults label {
+    display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: start;
+    padding: 7px 8px; border: 1px solid transparent; cursor: pointer;
+  }
+  .faults label:hover { border-color: var(--rule); }
+  .faults input { margin: 4px 0 0; accent-color: var(--ink); width: 17px; height: 17px; }
+  .faults .fname { font-weight: 700; }
+  .faults .fdesc { grid-column: 2; font-size: 14px; color: var(--muted); }
+  .faults label:has(input:checked) { border-color: var(--ink); }
+  .btnrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  button.go {
+    font: inherit; font-weight: 700; font-size: 16px; padding: 10px 16px; cursor: pointer;
+    background: var(--ink); color: var(--bg); border: 2px solid var(--ink); border-radius: 0;
+  }
+  button.go.alt { background: transparent; color: var(--ink); }
+  button.go:disabled { opacity: 0.5; cursor: default; }
+
+  .board { background: var(--band); color: var(--band-ink); padding: 14px 16px; font-variant-numeric: tabular-nums; }
+  .board h4 { margin: 0 0 8px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #ffd23f; }
+  .board .status { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .board .when { font-size: 13px; opacity: 0.75; }
+  .nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 10px; }
+  .nums div { border-top: 3px solid rgba(255,255,255,0.35); padding-top: 4px; }
+  .nums b { display: block; font-size: 26px; line-height: 1.1; }
+  .nums small { font-size: 12px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.06em; }
+  .board dl { margin: 0; font-size: 14px; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; }
+  .board dt { font-weight: 700; opacity: 0.75; }
+  .board dd { margin: 0; }
+  .board.pending .nums b { opacity: 0.35; }
+  .log {
+    list-style: none; margin: 12px 0 0; padding: 10px 0 0; border-top: 1px solid rgba(255,255,255,0.25);
+    font-size: 14px; max-height: 260px; overflow-y: auto;
+  }
+  .log li { display: grid; grid-template-columns: 4.2em 1fr; gap: 8px; padding: 3px 0; }
+  .log .t { color: #ffd23f; font-weight: 700; }
+  .log li.warn .m { color: #ffb4a8; }
+  .log li.good .m { color: #a8f0c0; }
+
+  .chip {
+    display: inline-block; padding: 3px 9px; font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+    color: var(--chip-ink); white-space: nowrap;
+  }
+  .s-good { background: var(--ok); }
+  .s-delay { background: var(--delay); }
+  .s-held { background: var(--held); }
+  .s-wrong { background: var(--wrong); }
+  .s-down { background: var(--down); }
+
+  .matrix-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--rule); background: var(--panel); }
+  table.matrix { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px; }
+  .matrix th, .matrix td { border-bottom: 1px solid var(--rule); padding: 6px 8px; text-align: left; vertical-align: middle; }
+  .matrix thead th { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .matrix tbody th { font-weight: 700; white-space: nowrap; }
+  .matrix td button {
+    font: inherit; border: 0; padding: 0; background: none; cursor: pointer; display: block; width: 100%; text-align: left;
+  }
+  .matrix td button .chip { width: 100%; text-align: center; }
+  .matrix td.cur { outline: 3px solid var(--ink); outline-offset: -3px; }
+  .note { font-size: 14px; color: var(--muted); }
+
+  .notes-list { margin: 0; padding-left: 1.2em; max-width: 48em; }
+  .notes-list li { margin-bottom: 8px; }
+  footer { border-top: 8px solid var(--ink); padding: 16px 0 40px; font-size: 14px; color: var(--muted); }
+
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    .strip .dot { width: 38px; height: 38px; border-width: 5px; font-size: 15px; }
+    .strip::before { top: 15px; height: 6px; }
+    .strip .lab { font-size: 11px; }
+    .strip button[aria-pressed="true"] .lab::after { font-size: 9px; }
+    .nums b { font-size: 21px; }
+  }
+</style>
+</head>
+<body>
+<header class="band">
+  <div class="wrap">
+    <div class="topbar"><a href="../">tidepool</a><span>Data line &middot; six stops</span></div>
+    <h1>One Script to a Pipeline</h1>
+    <p class="dek">A made-up data pipeline, watched as it grows from one nightly script into something with steps, checks, and save points. At each stop you can cause a bad night and see what the pipeline does with it.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="intro" aria-labelledby="h-intro">
+    <h2 id="h-intro">How to ride</h2>
+    <p>Two kinds of data travel this line every night. The <span class="bullets"><span class="bullet b-o" aria-hidden="true">O</span></span> <b>orders line</b> pulls the day's orders from a web API. The <span class="bullets"><span class="bullet b-p" aria-hidden="true">P</span></span> <b>partner line</b> picks up a file a partner company drops off. They meet at a join and end at a report that people read in the morning.</p>
+    <p>Pick a stop below to see the pipeline at that stage. Then pick a bad night and run it. Each stop adds the piece that answers one kind of trouble, which is roughly how many real pipelines grow: something breaks, and the fix becomes part of the design. The numbers are invented and the order of stops is one common path, not the only one.</p>
+  </section>
+
+  <section aria-labelledby="h-line">
+    <h2 id="h-line">The line</h2>
+    <ol class="strip" id="strip"></ol>
+
+    <div class="stagecard" id="stagecard" aria-live="polite"></div>
+
+    <div class="mapbox">
+      <svg id="map" role="img" aria-labelledby="map-title"><title id="map-title">Map of the pipeline at the chosen stage</title></svg>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--orders)"></i>Orders (a batch of rows)</span>
+        <span><i class="sw" style="background:var(--partner)"></i>Partner rows</span>
+        <span><i class="sw" style="background:var(--panel);border:3px solid var(--bad)"></i>Bad rows</span>
+        <span><i class="sw" style="background:var(--track-off);border-radius:2px"></i>Not built yet</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <fieldset>
+        <legend>Tonight's trouble</legend>
+        <div class="faults" id="faults"></div>
+        <div class="btnrow">
+          <button class="go" id="run" type="button">Run tonight</button>
+          <button class="go alt" id="skip" type="button">Skip to morning</button>
+        </div>
+      </fieldset>
+      <div class="board pending" id="board" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-status">
+    <h2 id="h-status">Service status, every stop</h2>
+    <p>The same six nights at every stage. Read down a column to watch one kind of trouble get handled. Pick any cell to load it above.</p>
+    <div class="matrix-wrap"><table class="matrix" id="matrix"></table></div>
+    <p class="note">Status is how things stand at 8:00 a.m., when people start reading the report.</p>
+  </section>
+
+  <section aria-labelledby="h-names">
+    <h2 id="h-names">What these pieces are called</h2>
+    <ul class="notes-list">
+      <li><b>Scheduler, or orchestrator.</b> A program that runs steps in order, knows which step waits on which, and retries or alerts when one fails. <a href="https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/tasks.html">Apache Airflow's task docs</a> describe per-task retries with a wait between tries (five minutes by default). Dagster and Prefect are other open-source examples.</li>
+      <li><b>ETL and ELT.</b> Extract, transform, load cleans data before it reaches the warehouse. Extract, load, transform lands the raw data first and cleans it inside the warehouse, which keeps the raw copy around for reprocessing. <a href="https://aws.amazon.com/compare/the-difference-between-etl-and-elt">AWS has a plain comparison</a>.</li>
+      <li><b>Data tests.</b> Checks that run on the data, not the code. <a href="https://docs.getdbt.com/docs/build/data-tests">dbt ships four built-in ones</a>: unique, not_null, accepted_values, and relationships.</li>
+      <li><b>Sensors.</b> In Airflow, a <a href="https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/sensors.html">sensor</a> is a step whose only job is to wait for something, such as a file showing up, and fail if it does not happen before a timeout.</li>
+      <li><b>Partitions and backfills.</b> Splitting a table by day (or another key) so each slice can be rebuilt on its own. <a href="https://docs.dagster.io/guides/build/partitions-and-backfills">Dagster's docs</a> say a backfill over many partitions launches one run per partition by default.</li>
+      <li><b>Idempotent.</b> A step you can run twice and get the same result as running it once. A day that is rebuilt replaces itself instead of showing up twice.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="h-out">
+    <h2 id="h-out">Already out there</h2>
+    <p>Plenty of tools draw real pipelines. <a href="https://docs.kedro.org/projects/kedro-viz/">Kedro-Viz</a> shows pipelines written with the Kedro framework, with filtering and a focus mode. <a href="https://www.astronomer.io/docs/learn/airflow-3/marquez">Marquez with OpenLineage</a> is an open-source lineage store and graph view, often used next to Airflow. <a href="https://docs.datadoghq.com/observability_pipelines/configuration/pipeline_simulation/">Datadog's Pipeline Simulation</a> runs sample records through a configured observability pipeline to show what each step does to them.</p>
+    <p>Those show a pipeline as it is. This page tries something smaller and made-up: one pipeline across time, with each new piece tied to the bad night that tends to bring it in.</p>
+  </section>
+
+  <section aria-labelledby="h-rough">
+    <h2 id="h-rough">Where this is rough</h2>
+    <ul class="notes-list">
+      <li>Every number, time, and row count is invented to make the differences easy to see.</li>
+      <li>Real teams add these pieces in many orders. Some start with a scheduler on day one; some add data tests before anything else.</li>
+      <li>Stage 2 assumes its steps still hand data along in memory, so a rerun starts from the top. Many schedulers can rerun a single failed step if the steps save their output somewhere, which is what stage 6 adds.</li>
+      <li>Plenty is left out: schema changes, access control, costs, streaming instead of nightly batches, and the people who get paged.</li>
+    </ul>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap"><a href="../">Back to tidepool</a> &middot; A first try at the topic, simplified where noted. Nothing you do here leaves your browser.</div>
+</footer>
+
+<script>
+(() => {
+  "use strict";
+
+  const STAGES = [
+    { n: 1, short: "One script", title: "One script on a timer",
+      body: "A single file runs at 2:00 a.m. from a timer such as cron. Top to bottom, it downloads the orders, reads the partner's file, cleans both, joins them, and writes the report table. Plenty of pipelines start this way, and on a quiet night it works fine.",
+      answers: "<b>Weak spot:</b> when anything goes wrong, everything stops at once, and nothing tells anyone." },
+    { n: 2, short: "Scheduler", title: "A scheduler runs the steps",
+      body: "The script is cut into steps: get orders, read the partner file, clean, join, load. A scheduler runs them in order, knows the join waits for both inputs, retries a step that fails, and sends an alert when a step gives up.",
+      answers: "<b>Answers:</b> the API hiccup (retries) and the quiet failure (alerts). <b>Still weak:</b> steps hand data along in memory, so a rerun starts from the top, and the API only keeps a week of history." },
+    { n: 3, short: "Raw landing", title: "Land the raw data first",
+      body: "Before any cleaning, an untouched copy of what came in is saved, day by day. Cleaning then runs on that copy inside the warehouse. Loading first and transforming after is often called ELT.",
+      answers: "<b>Answers:</b> reruns no longer need the source, and a bug in cleaning can be fixed and replayed over every saved day." },
+    { n: 4, short: "Checks", title: "Check the data",
+      body: "Tests run between steps: no missing prices, no duplicate order IDs, prices in a sensible range. Rows that fail go to a quarantine table and someone is told. The report gets only rows that passed.",
+      answers: "<b>Answers:</b> bad rows. <b>Still weak:</b> row checks look at rows that arrived. A file that never came has no rows to fail." },
+    { n: 5, short: "Wait", title: "Wait for the data",
+      body: "A waiting step, often called a sensor, holds the join until the partner file lands, up to a deadline. Steps that do not need the file go ahead. The report says how fresh it is.",
+      answers: "<b>Answers:</b> the late file, which earlier stages loaded around without noticing." },
+    { n: 6, short: "Save points", title: "Days as partitions, steps that save",
+      body: "Each day's data becomes its own slice, or partition, and each step writes its output before the next step starts. A rerun picks up at the step that failed. Rebuilding a day replaces that day rather than adding a second copy.",
+      answers: "<b>Answers:</b> the crash near the end (resume, do not restart) and the month-long fix (many small one-day runs)." }
+  ];
+
+  const FAULTS = [
+    { id: "none", name: "A quiet night", desc: "Nothing goes wrong." },
+    { id: "outage", name: "API hiccup", desc: "The orders API is down from 2:00 to 2:10." },
+    { id: "bad", name: "Bad rows", desc: "50 of the 1,000 orders have a missing price or are duplicates." },
+    { id: "late", name: "Late file", desc: "The partner's file lands at 5:00 instead of before 2:00." },
+    { id: "crash", name: "Crash near the end", desc: "The join runs out of memory at 2:30." },
+    { id: "backfill", name: "Month-long fix", desc: "A bug in cleaning is found. The last 30 days are wrong and need rebuilding." }
+  ];
+
+  const ST = {
+    good: { cls: "s-good", label: "Good service" },
+    delay: { cls: "s-delay", label: "Delays" },
+    held: { cls: "s-held", label: "Part held back" },
+    wrong: { cls: "s-wrong", label: "Wrong data" },
+    down: { cls: "s-down", label: "Suspended" }
+  };
+
+  // Outcomes by fault, then stage 1..6. good/wrong/missing are rows in this
+  // morning's report (1,000 orders + 200 partner rows), except for the backfill,
+  // which counts days.
+  const R = (status, nums, found, cleanup, log) => ({ status, nums, found, cleanup, log });
+  const quiet = (stage) => R("good", [1200, 0, 0], "Nothing to find.", "None.", [
+    ["2:00", stage === 1 ? "nightly.py starts." : "Scheduler starts tonight's run."],
+    ["2:02", "1,000 orders downloaded."],
+    ["2:03", "Partner file read: 200 rows."],
+    ["2:20", "Cleaned and joined."],
+    ["2:35", "Report written: 1,200 rows.", "good"]
+  ]);
+
+  const OUT = {
+    none: [1, 2, 3, 4, 5, 6].map(quiet),
+    outage: [
+      R("down", [0, 0, 1200], "An analyst at 9:15 notices the report still shows yesterday.", "Someone reruns the script by hand after 9:15.", [
+        ["2:00", "nightly.py starts."],
+        ["2:00", "Orders API does not answer. The script exits with an error.", "warn"],
+        ["2:00", "The partner file is never read."],
+        ["2:01", "Nothing else runs. No one is told.", "warn"]
+      ]),
+      ...[2, 3, 4, 5, 6].map(() => R("delay", [1200, 0, 0], "An alert was not needed: the retry worked.", "None.", [
+        ["2:00", "Scheduler starts tonight's run."],
+        ["2:00", "Get orders: API timeout. Retry in 5 minutes.", "warn"],
+        ["2:03", "Partner file read: 200 rows. It waits at the join."],
+        ["2:05", "Retry 1: API still down.", "warn"],
+        ["2:10", "Retry 2: 1,000 orders downloaded.", "good"],
+        ["2:30", "Cleaned and joined."],
+        ["2:45", "Report written, ten minutes late.", "good"]
+      ]))
+    ],
+    bad: [
+      R("wrong", [1150, 50, 0], "Someone reading the dashboard, maybe days later, when totals look odd.", "Find and patch the bad rows by hand in the report table.", [
+        ["2:00", "nightly.py starts."],
+        ["2:02", "1,000 orders downloaded. 50 are bad, nothing looks."],
+        ["2:20", "Cleaned and joined. Missing prices count as zero; duplicates count twice.", "warn"],
+        ["2:35", "Report written: 1,200 rows, 50 of them wrong.", "warn"]
+      ]),
+      R("wrong", [1150, 50, 0], "Someone reading the dashboard, maybe days later. Every step succeeded, so no alert fired.", "Find and patch the bad rows by hand.", [
+        ["2:00", "Scheduler starts tonight's run."],
+        ["2:02", "Get orders: success. 50 rows are bad."],
+        ["2:20", "Clean: success. Join: success.", "warn"],
+        ["2:35", "Report written. Every step green, 50 rows wrong.", "warn"]
+      ]),
+      R("wrong", [1150, 50, 0], "Someone reading the dashboard, later.", "Fix the clean step, then rerun it from the raw copy. Easier than patching by hand.", [
+        ["2:00", "Scheduler starts tonight's run."],
+        ["2:02", "Raw copy saved: 1,000 orders, as they came."],
+        ["2:20", "Clean and join: success.", "warn"],
+        ["2:35", "Report written. 50 rows wrong, but the raw copy can rebuild them.", "warn"]
+      ]),
+      ...[4, 5, 6].map(() => R("held", [1150, 0, 50], "The data owner, by alert at 2:22.", "Fix or drop the 50 quarantined rows; they rejoin the report on the next run.", [
+        ["2:00", "Scheduler starts tonight's run."],
+        ["2:02", "Raw copy saved: 1,000 orders."],
+        ["2:20", "Checks: 40 rows with no price, 10 duplicate order IDs.", "warn"],
+        ["2:22", "50 rows moved to quarantine. Alert sent."],
+        ["2:35", "Report written: 1,150 rows, marked as missing 50.", "good"]
+      ]))
+    ],
+    late: [
+      R("wrong", [1000, 0, 200], "Maybe nobody. The report looks complete.", "When someone notices, rerun by hand.", [
+        ["2:00", "nightly.py starts."],
+        ["2:03", "Partner folder is empty. The script reads zero rows and carries on.", "warn"],
+        ["2:35", "Report written: 1,000 rows. 200 are missing and nothing says so.", "warn"],
+        ["5:00", "The partner file lands. Nothing reads it until tomorrow."]
+      ]),
+      R("wrong", [1000, 0, 200], "Maybe nobody. Reading an empty folder is not an error.", "Rerun tonight's steps by hand once someone notices.", [
+        ["2:00", "Scheduler starts tonight's run."],
+        ["2:03", "Read partner file: success, zero rows.", "warn"],
+        ["2:35", "Report written: 1,000 rows. Every step green.", "warn"],
+        ["5:00", "The partner file lands."]
+      ]),
+      R("wrong", [1000, 0, 200], "Maybe nobody.", "Rerun from the raw copy once the file is saved there.", [
+        ["2:00", "Scheduler starts tonight's run."],
+        ["2:03", "Raw copy of the partner file: zero rows.", "warn"],
+        ["2:35", "Report written: 1,000 rows.", "warn"],
+        ["5:00", "The partner file lands."]
+      ]),
+      R("wrong", [1000, 0, 200], "Maybe nobody. Every row that arrived passed its checks.", "Rerun once someone notices. A row-count check on the file would catch it.", [
+        ["2:00", "Scheduler starts tonight's run."],
+        ["2:03", "Partner rows: zero. Zero rows have zero problems.", "warn"],
+        ["2:22", "Checks pass."],
+        ["2:35", "Report written: 1,000 rows.", "warn"],
+        ["5:00", "The partner file lands."]
+      ]),
+      ...[5, 6].map(() => R("delay", [1200, 0, 0], "Nobody needs to: the report says it is waiting on the partner file until 5:30.", "None.", [
+        ["2:00", "Scheduler starts tonight's run."],
+        ["2:03", "Wait for partner file: not there yet. Checking every 15 minutes, until 7:00.", "warn"],
+        ["2:20", "Orders saved, cleaned, and checked. They wait at the join."],
+        ["5:00", "The partner file lands.", "good"],
+        ["5:15", "Partner rows saved, cleaned, and checked."],
+        ["5:30", "Report written: 1,200 rows, three hours late and complete.", "good"]
+      ]))
+    ],
+    crash: [
+      R("down", [0, 0, 1200], "An analyst at 9:15.", "Rerun the whole script by hand from the top: download everything again, about 40 minutes.", [
+        ["2:00", "nightly.py starts."],
+        ["2:20", "Cleaned."],
+        ["2:30", "Join: out of memory. The script dies. Nothing was written.", "warn"],
+        ["2:30", "No one is told.", "warn"]
+      ]),
+      R("delay", [1200, 0, 0], "The on-call engineer, by alert at 2:41.", "At 7:00, more memory for the join and a rerun from the top. Done 7:40.", [
+        ["2:00", "Scheduler starts tonight's run."],
+        ["2:30", "Join: out of memory.", "warn"],
+        ["2:35", "Retry: out of memory again. More tries will not add memory.", "warn"],
+        ["2:41", "Join gave up. Alert sent."],
+        ["7:00", "Memory raised. Rerun starts from the top: orders downloaded again."],
+        ["7:40", "Report written.", "good"]
+      ]),
+      ...[3, 4, 5].map(() => R("delay", [1200, 0, 0], "The on-call engineer, by alert at 2:41.", "At 7:00, more memory and a rerun from the raw copy. No downloads; done 7:25.", [
+        ["2:00", "Scheduler starts tonight's run."],
+        ["2:30", "Join: out of memory.", "warn"],
+        ["2:41", "Retry failed too. Alert sent."],
+        ["7:00", "Memory raised. Rerun starts from the raw copy."],
+        ["7:25", "Report written.", "good"]
+      ])),
+      R("delay", [1200, 0, 0], "The on-call engineer, by alert at 2:41.", "At 7:00, more memory and a rerun of the join alone. Done 7:08.", [
+        ["2:00", "Scheduler starts tonight's run."],
+        ["2:22", "Clean and checks saved their output."],
+        ["2:30", "Join: out of memory.", "warn"],
+        ["2:41", "Retry failed too. Alert sent."],
+        ["7:00", "Memory raised. Only the join reruns, from its saved inputs."],
+        ["7:08", "Report written.", "good"]
+      ])
+    ],
+    backfill: [
+      R("wrong", [7, 0, 23], "Known: this is the fix.", "The API only keeps 7 days. Someone edits the date in the script and runs it 7 times; 23 days stay wrong.", [
+        ["2:00", "Bug in cleaning fixed. Rebuild the last 30 days."],
+        ["2:01", "The script only knows how to do yesterday. Edit, run, repeat.", "warn"],
+        ["2:02", "Orders API: only the last 7 days are available.", "warn"],
+        ["5:30", "7 days rebuilt. 23 days stay wrong.", "warn"]
+      ]),
+      R("wrong", [7, 0, 23], "Known: this is the fix.", "The scheduler can run past dates, but the API still only keeps 7 days.", [
+        ["2:00", "Bug fixed. Backfill the last 30 days."],
+        ["2:01", "Scheduler queues 30 past runs."],
+        ["2:02", "Orders API: only 7 days are available. 23 runs fail.", "warn"],
+        ["4:00", "7 days rebuilt. 23 days stay wrong.", "warn"]
+      ]),
+      ...[3, 4, 5].map(() => R("delay", [30, 0, 0], "Known: this is the fix.", "All 30 days rebuild from the raw copy, as one big job. The report is offline until it finishes.", [
+        ["2:00", "Bug fixed. Rebuild the last 30 days from the raw copy."],
+        ["2:01", "One job: clear the report table, rebuild everything.", "warn"],
+        ["2:01", "Report offline while it runs.", "warn"],
+        ["5:10", "All 30 days rebuilt. Report back.", "good"]
+      ])),
+      R("good", [30, 0, 0], "Known: this is the fix.", "30 one-day runs, four at a time. Each day swaps in when it is done; one that fails retries alone.", [
+        ["2:00", "Bug fixed. Backfill 30 day-partitions from the raw copy."],
+        ["2:01", "Runs start, four days at a time."],
+        ["2:40", "Day 9 hits a timeout and retries on its own. The other days carry on.", "warn"],
+        ["3:50", "All 30 days replaced, one at a time. The report never went offline.", "good"]
+      ])
+    ]
+  };
+
+  // ----- Map geometry -----
+  // Abstract coordinates: c along the flow, r = 0 for orders, 1 for partner.
+  const NODES = {
+    api: { c: 0, r: 0, name: "Orders API", from: 1 },
+    part: { c: 0, r: 1, name: "Partner file", from: 1 },
+    wait: { c: 0.75, r: 1, name: "Wait for file", from: 5 },
+    raw: { c: 1.5, r: [0, 1], name: "Raw landing", from: 3 },
+    clean: { c: 2.5, r: [0, 1], name: "Clean", from: 1 },
+    check: { c: 3.5, r: [0, 1], name: "Checks", from: 4 },
+    join: { c: 4.6, r: 0.5, name: "Join", from: 1 },
+    report: { c: 5.6, r: 0.5, name: "Report", from: 1 },
+    quar: { c: 3.5, r: 1.8, name: "Quarantine", from: 4 }
+  };
+  const ROUTE_O = [["api", 0], ["raw", 0], ["clean", 0], ["check", 0], ["bendO", 0], ["join"], ["report"]];
+  const ROUTE_P = [["part", 1], ["wait", 1], ["raw", 1], ["clean", 1], ["check", 1], ["bendP", 1], ["join"], ["report"]];
+  const BENDS = { bendO: { c: 4.1, r: 0 }, bendP: { c: 4.1, r: 1 } };
+
+  const svg = document.getElementById("map");
+  const NS = "http://www.w3.org/2000/svg";
+  let portrait = false;
+  let G = null;
+
+  function geom() {
+    if (portrait) {
+      return { w: 360, h: 800, pt: (c, r) => ({ x: 120 + r * 110, y: 92 + c * 112 }) };
+    }
+    return { w: 1000, h: 480, pt: (c, r) => ({ x: 70 + c * 158, y: 110 + r * 170 }) };
+  }
+
+  function nodePt(id, r) {
+    const n = NODES[id] || BENDS[id];
+    const rr = Array.isArray(n.r) ? (r === undefined ? n.r[0] : r) : n.r;
+    return G.pt(n.c, rr);
+  }
+
+  function routePts(route, startId) {
+    let pts = route.map(([id, r]) => ({ id, ...nodePt(id, r) }));
+    if (startId) {
+      const i = pts.findIndex(p => p.id === startId);
+      if (i > 0) pts = pts.slice(i);
+    }
+    return pts;
+  }
+
+  function el(tag, attrs, parent) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+  let layerDots = null, layerFlash = null;
+
+  function drawMap() {
+    G = geom();
+    const s = state.stage;
+    svg.setAttribute("viewBox", `0 0 ${G.w} ${G.h}`);
+    [...svg.querySelectorAll(":scope > :not(title)")].forEach(n => n.remove());
+
+    const on = (id) => NODES[id].from <= s;
+    const lineW = portrait ? 12 : 14;
+
+    // Scheduler
+    if (s >= 2) {
+      if (portrait) {
+        el("rect", { x: 16, y: 14, width: G.w - 32, height: 30, fill: "none", stroke: css("--sched"), "stroke-width": 2, "stroke-dasharray": "6 5" }, svg);
+        const t = el("text", { x: G.w / 2, y: 34, "text-anchor": "middle", "font-size": 13, "font-weight": 700 }, svg);
+        t.textContent = "SCHEDULER: order, retries, alerts";
+      } else {
+        const y = 38;
+        el("line", { x1: G.pt(0, 0).x, y1: y, x2: G.pt(5.6, 0).x, y2: y, stroke: css("--sched"), "stroke-width": 4 }, svg);
+        const t = el("text", { x: G.pt(0, 0).x, y: y - 10, "font-size": 13, "font-weight": 700 }, svg);
+        t.textContent = "SCHEDULER: runs each step in order, retries, sends alerts";
+        ["api", "raw", "clean", "check", "join", "report"].filter(on).forEach(id => {
+          const p = nodePt(id, 0);
+          el("line", { x1: p.x, y1: y, x2: p.x, y2: p.y - 26, stroke: css("--sched"), "stroke-width": 1.5, "stroke-dasharray": "3 4" }, svg);
+        });
+      }
+    } else {
+      // One-script enclosure
+      const a = G.pt(0.55, -0.32), b = G.pt(5.05, 1.32);
+      const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y);
+      el("rect", { x, y, width: Math.abs(b.x - a.x), height: Math.abs(b.y - a.y), rx: 14, fill: "none", stroke: css("--ink"), "stroke-width": 2, "stroke-dasharray": "8 6" }, svg);
+      const t = el("text", portrait ? { x: x + 10, y: y - 8, "font-size": 13, "font-weight": 700 } : { x: x + 12, y: y - 10, "font-size": 13, "font-weight": 700 }, svg);
+      t.textContent = "nightly.py: one script, runs at 2:00 a.m.";
+    }
+
+    // Tracks
+    const track = (route, color) => {
+      const pts = routePts(route);
+      el("polyline", { points: pts.map(p => `${p.x},${p.y}`).join(" "), fill: "none", stroke: color, "stroke-width": lineW, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+    };
+    track(ROUTE_P, css("--partner"));
+    track(ROUTE_O, css("--orders"));
+    // Quarantine spur
+    const cq1 = nodePt("check", 1), cq2 = nodePt("quar");
+    el("line", { x1: cq1.x, y1: cq1.y, x2: cq2.x, y2: cq2.y, stroke: on("quar") ? css("--bad") : css("--track-off"), "stroke-width": lineW * 0.6, "stroke-dasharray": on("quar") ? "" : "2 7", "stroke-linecap": "round" }, svg);
+
+    // Stations
+    const R0 = portrait ? 11 : 13;
+    const label = (txt, x, y, anchor, off) => {
+      const t = el("text", { x, y, "text-anchor": anchor, "font-size": portrait ? 13 : 15, "font-weight": 700 }, svg);
+      t.textContent = txt;
+      if (off) { t.setAttribute("fill", css("--muted")); t.setAttribute("font-weight", 400); t.setAttribute("font-style", "italic"); }
+      return t;
+    };
+    for (const id in NODES) {
+      const n = NODES[id];
+      const active = on(id);
+      const stroke = active ? css("--ink") : css("--track-off");
+      const nm = active || portrait ? n.name : n.name + " (stop " + n.from + ")";
+      if (Array.isArray(n.r)) {
+        const p0 = nodePt(id, 0), p1 = nodePt(id, 1);
+        const x = Math.min(p0.x, p1.x) - R0, y = Math.min(p0.y, p1.y) - R0;
+        el("rect", { x, y, width: Math.abs(p1.x - p0.x) + 2 * R0, height: Math.abs(p1.y - p0.y) + 2 * R0, rx: R0, fill: active ? css("--station") : "none", stroke, "stroke-width": active ? 5 : 2, "stroke-dasharray": active ? "" : "3 5" }, svg);
+        if (portrait) label(nm, p0.x - R0 - 8, p0.y + 5, "end", !active);
+        else if (id === "check") label(nm, p1.x - 12, p1.y + R0 + 24, "end", !active);
+        else label(nm, p1.x, p1.y + R0 + 24, "middle", !active);
+        if (s >= 6 && active) {
+          const q = portrait ? { x: p1.x + R0 + 4, y: p1.y - 4 } : { x: p1.x + R0 + 6, y: p1.y + R0 + 4 };
+          el("rect", { x: q.x, y: q.y, width: 9, height: 9, fill: css("--ink") }, svg);
+        }
+      } else {
+        const p = nodePt(id);
+        el("circle", { cx: p.x, cy: p.y, r: id === "report" ? R0 + 5 : R0, fill: active ? css("--station") : "none", stroke, "stroke-width": active ? 5 : 2, "stroke-dasharray": active ? "" : "3 5" }, svg);
+        let txt = nm;
+        if (id === "report" && s >= 6) txt = "Report (by day)";
+        if (portrait) {
+          if (n.r === 0) label(txt, p.x - R0 - 10, p.y + 5, "end", !active);
+          else if (id === "quar") label(txt, p.x, p.y + R0 + 20, "middle", !active);
+          else if (id === "join" || id === "report") label(txt, p.x + R0 + 12, p.y + 5, "start", !active);
+          else label(txt, p.x + R0 + 10, p.y + 5, "start", !active);
+        } else {
+          if (n.r === 0) label(txt, p.x, p.y - R0 - 14, "middle", !active);
+          else if (id === "report") label(txt, p.x + R0 + 6, p.y + R0 + 28, "end", !active);
+          else if (id === "join") label(txt, p.x, p.y + R0 + 28, "middle", !active);
+          else if (id === "wait") label(txt, p.x, p.y - R0 - 14, "middle", !active);
+          else label(txt, p.x, p.y + R0 + 24, "middle", !active);
+        }
+        if (s >= 6 && active && id === "join") {
+          el("rect", { x: p.x + R0 + 4, y: p.y + R0, width: 9, height: 9, fill: css("--ink") }, svg);
+        }
+      }
+    }
+    if (s >= 6) {
+      const t = el("text", portrait ? { x: 16, y: G.h - 14, "font-size": 12 } : { x: G.pt(0, 0).x - 20, y: G.h - 14, "font-size": 13 }, svg);
+      t.textContent = "Small black squares: steps that save their output";
+      t.setAttribute("fill", css("--muted"));
+    }
+
+    layerDots = el("g", {}, svg);
+    layerFlash = el("g", {}, svg);
+  }
+
+  // ----- Animation -----
+  // A group of dots follows a route. Pauses hold every dot at a stop for a
+  // while; "vanish" removes dots at their last stop.
+  function plan(stage, fault) {
+    const g = [];
+    const o = { route: ROUTE_O, kind: "o", n: 10, gap: 120, t0: 0, pauses: {}, end: "arrive" };
+    const p = { route: ROUTE_P, kind: "p", n: 4, gap: 160, t0: 200, pauses: {}, end: "arrive" };
+    const flashes = [];
+    if (fault === "none") { g.push(o, p); }
+    if (fault === "outage") {
+      if (stage === 1) {
+        g.push({ ...o, stopAt: "api", end: "vanish", n: 6 });
+        flashes.push({ at: "api", t: 400, text: "API down: script exits", tone: "warn" });
+        flashes.push({ at: "part", t: 1400, text: "never read", tone: "warn" });
+      } else {
+        o.pauses = { api: 2200 };
+        p.pauses = { join: 2200 };
+        g.push(o, p);
+        flashes.push({ at: "api", t: 300, text: "retry 1", tone: "warn" });
+        flashes.push({ at: "api", t: 1300, text: "retry 2", tone: "warn" });
+        flashes.push({ at: "api", t: 2300, text: "back up", tone: "good" });
+      }
+    }
+    if (fault === "bad") {
+      o.bad = [2, 5, 8];
+      g.push(o, p);
+      if (stage >= 4) flashes.push({ at: "check", t: 1700, text: "50 rows held", tone: "warn" });
+      else flashes.push({ at: "report", t: 3300, text: "50 wrong rows", tone: "warn" });
+    }
+    if (fault === "late") {
+      if (stage < 5) {
+        g.push(o);
+        flashes.push({ at: "part", t: 300, text: "folder empty", tone: "warn" });
+        flashes.push({ at: "report", t: 3300, text: "short 200 rows", tone: "warn" });
+        g.push({ ...p, t0: 4200, stopAt: "part", end: "vanish" });
+        flashes.push({ at: "part", t: 4300, text: "5:00 file lands", tone: "" });
+      } else {
+        o.pauses = { join: 3800 };
+        p.t0 = 2800; p.pauses = {};
+        g.push(o, p);
+        flashes.push({ at: "wait", t: 400, text: "waiting...", tone: "warn" });
+        flashes.push({ at: "wait", t: 2800, text: "5:00 file lands", tone: "good" });
+      }
+    }
+    if (fault === "crash") {
+      g.push({ ...o, stopAt: "join", end: "vanish" }, { ...p, stopAt: "join", end: "vanish" });
+      flashes.push({ at: "join", t: 1900, text: "out of memory", tone: "warn" });
+      if (stage === 1) {
+        flashes.push({ at: "report", t: 2600, text: "nothing written", tone: "warn" });
+      } else {
+        const from = stage === 2 ? null : stage < 6 ? "raw" : "join";
+        const t0 = 3600;
+        flashes.push({ at: from || "api", t: t0 - 200, text: stage === 2 ? "rerun from the top" : stage < 6 ? "rerun from raw" : "rerun the join", tone: "good" });
+        g.push({ ...o, t0, start: from, n: from === "join" ? 6 : 10 });
+        if (from !== "join") g.push({ ...p, t0: t0 + 100, start: from });
+      }
+    }
+    if (fault === "backfill") {
+      if (stage < 3) {
+        g.push({ ...o, n: 7, gap: 260 });
+        flashes.push({ at: "api", t: 200, text: "only 7 days kept", tone: "warn" });
+        flashes.push({ at: "report", t: 3600, text: "23 days still wrong", tone: "warn" });
+      } else if (stage < 6) {
+        g.push({ ...o, n: 15, gap: 90, start: "raw", pauses: { join: 1700 } });
+        flashes.push({ at: "report", t: 600, text: "offline while it rebuilds", tone: "warn" });
+        flashes.push({ at: "report", t: 3400, text: "back", tone: "good" });
+      } else {
+        g.push({ ...o, n: 15, gap: 220, start: "raw" });
+        flashes.push({ at: "report", t: 1500, text: "stays up, day by day", tone: "good" });
+      }
+    }
+    return { groups: g, flashes };
+  }
+
+  function buildDots(spec) {
+    const dots = [];
+    const pxPerMs = (portrait ? 112 : 158) / 420; // one column every 0.42 s
+    for (const grp of spec.groups) {
+      let pts = routePts(grp.route, grp.start);
+      if (grp.stopAt) {
+        const i = pts.findIndex(q => q.id === grp.stopAt);
+        if (i >= 0) pts = pts.slice(0, i + 1);
+      }
+      for (let k = 0; k < grp.n; k++) {
+        const bad = grp.bad && grp.bad.includes(k);
+        let path = pts;
+        if (bad && state.stage >= 4) {
+          const i = pts.findIndex(q => q.id === "check");
+          if (i >= 0) path = [...pts.slice(0, i + 1), { id: "checkB", ...nodePt("check", 1) }, { id: "quar", ...nodePt("quar") }];
+        }
+        // Build a timeline of [t, x, y] keyframes.
+        const kf = [];
+        let t = grp.t0 + k * grp.gap;
+        kf.push([t, path[0].x, path[0].y]);
+        for (let i = 1; i < path.length; i++) {
+          const a = path[i - 1], b = path[i];
+          if (grp.pauses[a.id]) { t += grp.pauses[a.id] - k * grp.gap * 0.6; kf.push([t, a.x, a.y]); }
+          t += Math.hypot(b.x - a.x, b.y - a.y) / pxPerMs;
+          kf.push([t, b.x, b.y]);
+        }
+        const r = portrait ? 5 : 6;
+        const c = el("circle", { r, cx: path[0].x, cy: path[0].y, opacity: 0 }, layerDots);
+        const color = grp.kind === "o" ? css("--orders") : css("--partner");
+        if (bad) { c.setAttribute("fill", css("--panel")); c.setAttribute("stroke", css("--bad")); c.setAttribute("stroke-width", 3); }
+        else { c.setAttribute("fill", "#fff"); c.setAttribute("stroke", color); c.setAttribute("stroke-width", 3); }
+        const jitter = ((k * 37) % 11) - 5;
+        dots.push({ c, kf, end: grp.end, jitter });
+      }
+    }
+    return dots;
+  }
+
+  function flashAt(f) {
+    const p = f.at === "check" || f.at === "raw" || f.at === "clean" ? nodePt(f.at, 0) : nodePt(f.at);
+    const g = el("g", { opacity: 1 }, layerFlash);
+    const fs = portrait ? 12 : 14;
+    const w = f.text.length * fs * 0.56 + 16;
+    let x = p.x - w / 2, y = p.y - (portrait ? 44 : 62);
+    if (portrait) { x = Math.max(6, Math.min(G.w - w - 6, x)); }
+    else { x = Math.max(6, Math.min(G.w - w - 6, x)); }
+    const bg = f.tone === "warn" ? css("--wrong") : f.tone === "good" ? css("--ok") : css("--band");
+    el("rect", { x, y, width: w, height: fs + 12, fill: bg }, g);
+    const t = el("text", { x: x + w / 2, y: y + fs + 3, "text-anchor": "middle", "font-size": fs, "font-weight": 700 }, g);
+    t.setAttribute("style", "fill:#fff");
+    t.textContent = f.text;
+    return g;
+  }
+
+  let anim = null;
+  function stopAnim() {
+    if (anim) cancelAnimationFrame(anim.raf);
+    anim = null;
+    if (layerDots) layerDots.replaceChildren();
+    if (layerFlash) layerFlash.replaceChildren();
+    runBtn.disabled = false;
+  }
+
+  function runNight(instant) {
+    stopAnim();
+    const out = OUT[state.fault][state.stage - 1];
+    renderBoard(out, instant ? out.log.length : 0, !instant);
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (instant || reduce) { renderBoard(out, out.log.length, false); return; }
+    const spec = plan(state.stage, state.fault);
+    const dots = buildDots(spec);
+    const flashes = spec.flashes.map(f => ({ ...f, g: null }));
+    const endT = Math.max(...dots.map(d => d.kf[d.kf.length - 1][0])) + 900;
+    const t0 = performance.now();
+    runBtn.disabled = true;
+    const logSteps = out.log.length;
+    anim = { raf: 0 };
+    const tick = (now) => {
+      const t = now - t0;
+      for (const d of dots) {
+        const kf = d.kf;
+        if (t < kf[0][0]) { d.c.setAttribute("opacity", 0); continue; }
+        const last = kf[kf.length - 1];
+        if (t >= last[0]) {
+          const since = t - last[0];
+          if (d.end === "vanish") {
+            d.c.setAttribute("opacity", Math.max(0, 1 - since / 400));
+            d.c.setAttribute("r", (portrait ? 5 : 6) + since / 40);
+          } else {
+            d.c.setAttribute("opacity", Math.max(0, 1 - since / 700));
+          }
+          d.c.setAttribute("cx", last[1] + d.jitter * 0.6);
+          d.c.setAttribute("cy", last[2] + d.jitter * 0.6);
+          continue;
+        }
+        let i = 1;
+        while (kf[i][0] < t) i++;
+        const a = kf[i - 1], b = kf[i];
+        const u = b[0] === a[0] ? 1 : (t - a[0]) / (b[0] - a[0]);
+        const hold = a[1] === b[1] && a[2] === b[2];
+        d.c.setAttribute("opacity", 1);
+        d.c.setAttribute("cx", a[1] + (b[1] - a[1]) * u + (hold ? d.jitter : 0));
+        d.c.setAttribute("cy", a[2] + (b[2] - a[2]) * u + (hold ? d.jitter * 0.5 : 0));
+      }
+      for (const f of flashes) {
+        if (!f.g && t >= f.t) f.g = flashAt(f);
+        if (f.g) f.g.setAttribute("opacity", Math.max(0, 1 - Math.max(0, t - f.t - 1500) / 400));
+      }
+      const shown = Math.min(logSteps, 1 + Math.floor((t / endT) * logSteps));
+      renderBoard(out, shown, true);
+      if (t < endT) anim.raf = requestAnimationFrame(tick);
+      else { renderBoard(out, logSteps, false); runBtn.disabled = false; anim = null; }
+    };
+    anim.raf = requestAnimationFrame(tick);
+  }
+
+  // ----- Board, controls, matrix -----
+  const board = document.getElementById("board");
+  let boardKey = "";
+  function renderBoard(out, shown, pending) {
+    const key = state.stage + state.fault + shown + pending;
+    if (key === boardKey) return;
+    boardKey = key;
+    const st = ST[out.status];
+    const days = state.fault === "backfill";
+    const unit = days ? ["Days right", "Days wrong", "Days missing"] : ["Rows right", "Rows wrong", "Rows missing"];
+    let nums = out.nums;
+    if (days) nums = out.status === "wrong" ? [7, 23, 0] : [30, 0, 0];
+    board.classList.toggle("pending", pending);
+    board.innerHTML = `
+      <h4>Morning report &middot; stop ${state.stage}</h4>
+      <div class="status">${pending ? '<span class="chip s-down">Running</span>' : `<span class="chip ${st.cls}">${st.label}</span>`}<span class="when">as of 8:00 a.m.</span></div>
+      <div class="nums">
+        <div><b>${pending ? "-" : nums[0].toLocaleString()}</b><small>${unit[0]}</small></div>
+        <div><b>${pending ? "-" : nums[1].toLocaleString()}</b><small>${unit[1]}</small></div>
+        <div><b>${pending ? "-" : nums[2].toLocaleString()}</b><small>${unit[2]}</small></div>
+      </div>
+      ${pending ? "" : `<dl><dt>Who found out</dt><dd>${out.found}</dd><dt>Cleanup</dt><dd>${out.cleanup}</dd></dl>`}
+      <ol class="log" aria-label="Service updates">${out.log.slice(0, shown).map(([t, m, tone]) => `<li class="${tone || ""}"><span class="t">${t}</span><span class="m">${m}</span></li>`).join("")}</ol>`;
+  }
+
+  const state = { stage: 1, fault: "none" };
+  const strip = document.getElementById("strip");
+  const card = document.getElementById("stagecard");
+  const faultsBox = document.getElementById("faults");
+  const runBtn = document.getElementById("run");
+  const matrix = document.getElementById("matrix");
+
+  STAGES.forEach(s => {
+    const li = document.createElement("li");
+    li.innerHTML = `<button type="button" data-stage="${s.n}" aria-pressed="false"><span class="dot">${s.n}</span><span class="lab">${s.short}</span></button>`;
+    strip.appendChild(li);
+  });
+  strip.addEventListener("click", e => {
+    const b = e.target.closest("button[data-stage]");
+    if (b) setStage(+b.dataset.stage);
+  });
+
+  FAULTS.forEach(f => {
+    const l = document.createElement("label");
+    l.innerHTML = `<input type="radio" name="fault" value="${f.id}"${f.id === state.fault ? " checked" : ""}><span class="fname">${f.name}</span><span class="fdesc">${f.desc}</span>`;
+    faultsBox.appendChild(l);
+  });
+  faultsBox.addEventListener("change", e => {
+    if (e.target.name === "fault") { state.fault = e.target.value; save(); refresh(); }
+  });
+
+  runBtn.addEventListener("click", () => runNight(false));
+  document.getElementById("skip").addEventListener("click", () => runNight(true));
+
+  function buildMatrix() {
+    let h = "<thead><tr><th scope=\"col\">Stop</th>" + FAULTS.map(f => `<th scope="col">${f.name}</th>`).join("") + "</tr></thead><tbody>";
+    STAGES.forEach(s => {
+      h += `<tr><th scope="row">${s.n}. ${s.short}</th>`;
+      FAULTS.forEach(f => {
+        const o = OUT[f.id][s.n - 1];
+        const st = ST[o.status];
+        h += `<td data-s="${s.n}" data-f="${f.id}"><button type="button" aria-label="Stop ${s.n}, ${f.name}: ${st.label}"><span class="chip ${st.cls}">${st.label}</span></button></td>`;
+      });
+      h += "</tr>";
+    });
+    matrix.innerHTML = h + "</tbody>";
+  }
+  matrix.addEventListener("click", e => {
+    const td = e.target.closest("td[data-s]");
+    if (!td) return;
+    state.fault = td.dataset.f;
+    faultsBox.querySelector(`input[value="${state.fault}"]`).checked = true;
+    setStage(+td.dataset.s);
+    document.getElementById("h-line").scrollIntoView({ behavior: "smooth", block: "start" });
+    runNight(false);
+  });
+
+  function setStage(n) {
+    state.stage = n;
+    save();
+    refresh();
+  }
+
+  function refresh() {
+    stopAnim();
+    strip.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.stage === state.stage)));
+    const s = STAGES[state.stage - 1];
+    card.innerHTML = `<div class="kicker">Stop ${s.n} of 6</div><h3>${s.title}</h3><p>${s.body}</p><p class="answers">${s.answers}</p>`;
+    card.style.borderLeftColor = state.stage === 1 ? "var(--ink)" : "var(--orders)";
+    matrix.querySelectorAll("td").forEach(td => td.classList.toggle("cur", +td.dataset.s === state.stage && td.dataset.f === state.fault));
+    drawMap();
+    boardKey = "";
+    board.classList.add("pending");
+    board.innerHTML = `<h4>Morning report &middot; stop ${state.stage}</h4><p style="margin:0">Pick tonight's trouble, then run the night or skip to the morning.</p>`;
+  }
+
+  // Remember the last stop and trouble in this browser only.
+  function save() {
+    try { localStorage.setItem("pipeline-grows", JSON.stringify(state)); } catch (e) { /* storage off */ }
+  }
+  try {
+    const s = JSON.parse(localStorage.getItem("pipeline-grows") || "null");
+    if (s && s.stage >= 1 && s.stage <= 6 && OUT[s.fault]) { state.stage = s.stage; state.fault = s.fault; }
+  } catch (e) { /* storage off */ }
+  faultsBox.querySelector(`input[value="${state.fault}"]`).checked = true;
+
+  const mq = window.matchMedia("(max-width: 640px)");
+  portrait = mq.matches;
+  const onMq = () => { portrait = mq.matches; stopAnim(); drawMap(); };
+  if (mq.addEventListener) mq.addEventListener("change", onMq); else mq.addListener(onMq);
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => { stopAnim(); drawMap(); });
+
+  buildMatrix();
+  refresh();
+})();
+</script>
+</body>
+</html>

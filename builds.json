@@ -129,5 +129,15 @@
     "style": "copperplate engraving broadside",
     "summary": "How a hot air balloon is flown with only a burner and a vent: a flight toy where you steer by picking the height whose wind goes your way, and a sum for how hot the envelope has to be to float.",
     "source": "idea-tank#47"
+  },
+  {
+    "slug": "2026-10-23-pipeline-grows",
+    "title": "One Script to a Pipeline: Six Stages of a Data Pipeline Growing",
+    "date": "2026-10-23",
+    "kind": "idea",
+    "form": "stepped simulation",
+    "style": "transit map and service board",
+    "summary": "A made-up data pipeline drawn as a transit line, growing from one nightly script to steps, checks, and save points, with six kinds of bad night to throw at each stage.",
+    "source": "idea-tank#46"
   }
 ]
