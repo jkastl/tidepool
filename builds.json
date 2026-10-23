@@ -140,5 +140,15 @@
     "summary": "A made-up data pipeline drawn as a transit line, growing from one nightly script to steps, checks, and save points, with six kinds of bad night to throw at each stage.",
     "source": "idea-tank#46",
     "revised": "2026-10-23"
+  },
+  {
+    "slug": "2026-10-23-five-stations",
+    "title": "Five Stations for One Slide: A Pathology Data Pipeline, Run on the Page",
+    "date": "2026-10-23",
+    "kind": "idea",
+    "form": "interactive lab",
+    "style": "photographer's contact sheet and grease pencil",
+    "summary": "One drawn pathology slide run through five stations of a data pipeline: find the tissue, cross out blurred, folded and inked tiles, even out stain colour, and count the tiles that come out.",
+    "source": "idea-tank#50"
   }
 ]

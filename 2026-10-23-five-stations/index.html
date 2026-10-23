@@ -1,0 +1,1286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Five Stations for One Slide: A Pathology Data Pipeline, Run on the Page</title>
+<!-- site:head -->
+<meta name="description" content="One drawn pathology slide run through five stations of a data pipeline: find the tissue, cross out blurred, folded and inked tiles, even out stain colour, and count the tiles that come out.">
+<link rel="canonical" href="https://jkastl.github.io/tidepool/2026-10-23-five-stations/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="tidepool">
+<meta property="og:title" content="Five Stations for One Slide: A Pathology Data Pipeline, Run on the Page">
+<meta property="og:description" content="One drawn pathology slide run through five stations of a data pipeline: find the tissue, cross out blurred, folded and inked tiles, even out stain colour, and count the tiles that come out.">
+<meta property="og:url" content="https://jkastl.github.io/tidepool/2026-10-23-five-stations/">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{
+ "@context": "https://schema.org",
+ "@type": "CreativeWork",
+ "name": "Five Stations for One Slide: A Pathology Data Pipeline, Run on the Page",
+ "description": "One drawn pathology slide run through five stations of a data pipeline: find the tissue, cross out blurred, folded and inked tiles, even out stain colour, and count the tiles that come out.",
+ "url": "https://jkastl.github.io/tidepool/2026-10-23-five-stations/",
+ "datePublished": "2026-10-23",
+ "inLanguage": "en",
+ "isPartOf": {
+  "@type": "WebSite",
+  "name": "tidepool",
+  "url": "https://jkastl.github.io/tidepool/"
+ }
+}</script>
+<script src="../stats.js" defer></script>
+<!-- /site:head -->
+<style>
+  :root {
+    --paper: #f2efe8;
+    --panel: #fbfaf6;
+    --ink: #161412;
+    --ink-soft: #3f3a35;
+    --muted: #6d665e;
+    --rule: #cfc8bc;
+    --film: #141210;
+    --film-edge: #2a2622;
+    --edge-print: #d8a23a;
+    --grease: #c8201f;
+    --grease-soft: rgba(200, 32, 31, 0.12);
+    --keep: #2f6b3a;
+    --focus: #1d5fa8;
+    --sans: "Helvetica Neue", Helvetica, Arial, "Nimbus Sans", "Liberation Sans", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #140d0c;
+      --panel: #1d1413;
+      --ink: #efe3dc;
+      --ink-soft: #d7c7bf;
+      --muted: #a8968d;
+      --rule: #3d2c29;
+      --film: #050404;
+      --film-edge: #2b1f1d;
+      --edge-print: #e0a845;
+      --grease: #ff5b4f;
+      --grease-soft: rgba(255, 91, 79, 0.14);
+      --keep: #7fc48a;
+      --focus: #8fb8ff;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 17px/1.55 var(--sans);
+  }
+  a { color: inherit; text-decoration-color: var(--grease); text-underline-offset: 2px; }
+  a:hover { color: var(--grease); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  /* film strip bands */
+  .strip {
+    background:
+      radial-gradient(circle at 50% 50%, var(--paper) 0 3.5px, transparent 4px) 0 4px / 22px 14px repeat-x,
+      radial-gradient(circle at 50% 50%, var(--paper) 0 3.5px, transparent 4px) 0 calc(100% - 4px) / 22px 14px repeat-x,
+      var(--film);
+    color: var(--edge-print);
+    font: 600 12px/1 var(--mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 24px 16px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .strip span:last-child { opacity: 0.8; }
+
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+  header.top { padding: 34px 0 10px; }
+  .kicker {
+    font: 600 12px/1.3 var(--mono);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-stretch: condensed;
+    font-size: clamp(34px, 7vw, 64px);
+    line-height: 0.98;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    margin: 0 0 12px;
+  }
+  h1 .sub {
+    display: block;
+    font-weight: 400;
+    font-size: 0.42em;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    margin-top: 10px;
+    color: var(--ink-soft);
+  }
+  .lede { font-size: 19px; max-width: 46em; }
+  p { max-width: 46em; }
+
+  .contact {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    background: var(--film);
+    padding: 10px 10px 22px;
+    margin: 22px 0 10px;
+    position: relative;
+  }
+  .contact a {
+    display: block;
+    background: var(--film-edge);
+    color: var(--edge-print);
+    text-decoration: none;
+    font: 600 11px/1.25 var(--mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 10px 8px 12px;
+    min-height: 64px;
+  }
+  .contact a b { display: block; font-size: 18px; color: #f4ece0; margin-bottom: 4px; }
+  .contact a:hover, .contact a:focus-visible { background: #3a332c; color: #f4ece0; }
+  .contact::after {
+    content: "SLIDE 001 \2192  TILES";
+    position: absolute; left: 12px; bottom: 5px;
+    font: 600 10px/1 var(--mono); letter-spacing: 0.14em; color: var(--edge-print);
+  }
+
+  section.station { padding: 8px 0 30px; }
+  .station h2 {
+    font-weight: 800;
+    font-stretch: condensed;
+    text-transform: uppercase;
+    font-size: clamp(26px, 4.6vw, 40px);
+    line-height: 1;
+    margin: 26px 0 14px;
+  }
+  .station h2 .no {
+    display: inline-block;
+    font: 700 0.5em/1 var(--mono);
+    color: var(--paper);
+    background: var(--ink);
+    padding: 6px 8px;
+    margin-right: 10px;
+    vertical-align: middle;
+    letter-spacing: 0.08em;
+  }
+  h3 { font-size: 17px; margin: 22px 0 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border: 2px solid var(--ink);
+    margin: 18px 0;
+    max-width: 860px;
+  }
+  .facts div { padding: 12px 14px; border-right: 1px solid var(--rule); background: var(--panel); }
+  .facts div:last-child { border-right: 0; }
+  .facts b { display: block; font: 800 26px/1.1 var(--sans); font-stretch: condensed; }
+  .facts small { display: block; color: var(--muted); font-size: 13px; line-height: 1.35; margin-top: 4px; }
+
+  /* the frame around a canvas */
+  .frame {
+    background: var(--film);
+    padding: 20px 10px;
+    position: relative;
+    margin: 14px 0 0;
+  }
+  .frame::before, .frame::after {
+    position: absolute; left: 12px; right: 12px;
+    font: 600 10px/1 var(--mono); letter-spacing: 0.14em; color: var(--edge-print);
+    display: flex; justify-content: space-between; white-space: nowrap; overflow: hidden;
+  }
+  .frame::before { content: attr(data-top); top: 6px; }
+  .frame::after { content: attr(data-bottom); bottom: 5px; }
+  .frame canvas { display: block; width: 100%; height: auto; background: #ddd; touch-action: manipulation; }
+
+  .bench { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-top: 4px solid var(--ink);
+    padding: 14px 16px 16px;
+  }
+  .panel + .panel { margin-top: 14px; }
+  .ctl { margin: 0 0 14px; }
+  .ctl label, .ctl .lbl { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: 700; }
+  .ctl output, .val { font: 600 14px/1.3 var(--mono); }
+  input[type=range] { width: 100%; height: 28px; accent-color: var(--grease); margin: 2px 0 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  button, .seg label {
+    font: 600 13px/1.2 var(--sans);
+    background: transparent;
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    padding: 7px 10px;
+    cursor: pointer;
+    border-radius: 0;
+  }
+  button:hover { background: var(--ink); color: var(--paper); }
+  .seg { display: flex; flex-wrap: wrap; gap: 0; margin-top: 6px; border: 0; padding: 0; }
+  .seg legend { font-size: 14px; font-weight: 700; padding: 0; margin-bottom: 6px; }
+  .seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .seg label { margin: 0 -2px 0 0; font-weight: 600; }
+  .seg input:checked + label { background: var(--ink); color: var(--paper); }
+  .seg input:focus-visible + label { outline: 3px solid var(--focus); outline-offset: 2px; position: relative; z-index: 1; }
+  .check { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; margin: 8px 0; }
+  .check input { margin-top: 3px; accent-color: var(--grease); width: 16px; height: 16px; }
+
+  .tally { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .tally td { padding: 5px 0; border-bottom: 1px dotted var(--rule); }
+  .tally td:last-child { text-align: right; font: 700 15px/1.2 var(--mono); }
+  .tally tr.total td { border-bottom: 0; border-top: 2px solid var(--ink); font-weight: 700; }
+
+  .grease-note {
+    border-left: 4px solid var(--grease);
+    background: var(--grease-soft);
+    padding: 10px 14px;
+    margin: 14px 0 0;
+    font-size: 15px;
+    max-width: 46em;
+  }
+  .grease-note b { color: var(--grease); text-transform: uppercase; letter-spacing: 0.05em; font-size: 13px; }
+  .simplify {
+    font-size: 14px;
+    color: var(--ink-soft);
+    border-top: 1px solid var(--rule);
+    padding-top: 8px;
+    margin-top: 14px;
+    max-width: 52em;
+  }
+  .simplify::before { content: "Simplified: "; font-weight: 700; color: var(--ink); }
+
+  .hist { margin-top: 8px; }
+  .hist canvas { width: 100%; height: auto; display: block; background: var(--panel); border: 1px solid var(--rule); }
+  .hist .axis { display: flex; justify-content: space-between; font: 12px/1.4 var(--mono); color: var(--muted); }
+
+  .loupe-panel, .result-panel { margin-top: 14px; }
+  .loupe-wrap { display: grid; grid-template-columns: 156px minmax(0, 1fr); gap: 16px; align-items: start; }
+  .loupe { background: var(--film); padding: 6px; }
+  .loupe canvas { display: block; width: 144px; height: 144px; image-rendering: pixelated; }
+  .lbl-inline { font-size: 13px; font-weight: 700; align-self: center; }
+  .loupe-scores { font-size: 13px; }
+  .loupe-scores div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dotted var(--rule); padding: 2px 0; }
+  .loupe-scores .res { display: block; border-bottom: 0; padding-top: 6px; }
+  .loupe-scores .v { font-family: var(--mono); font-weight: 700; }
+  .flag { color: var(--grease); font-weight: 700; }
+
+  .triptych { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; background: var(--film); padding: 22px 10px 24px; position: relative; }
+  .triptych figure { margin: 0; }
+  .triptych canvas { width: 100%; height: auto; display: block; }
+  .triptych figcaption { font: 600 10px/1.3 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--edge-print); margin-top: 6px; }
+  .triptych::before { content: "TILE 4A \00B7  40X \00B7  220 PX"; position: absolute; top: 6px; left: 12px; font: 600 10px/1 var(--mono); letter-spacing: 0.14em; color: var(--edge-print); }
+  .big-count { font: 800 44px/1 var(--sans); font-stretch: condensed; margin: 4px 0 2px; }
+  .big-count small { font-size: 18px; font-weight: 600; color: var(--muted); }
+
+  .calc-out { font: 800 34px/1.05 var(--sans); font-stretch: condensed; margin: 4px 0; }
+  .calc-line { font: 14px/1.5 var(--mono); color: var(--ink-soft); }
+
+  ul.out { padding-left: 20px; max-width: 46em; }
+  ul.out li { margin: 6px 0; }
+  ol.src { font-size: 14px; padding-left: 22px; max-width: 56em; }
+  ol.src li { margin: 5px 0; }
+  footer { padding: 20px 0 40px; font-size: 14px; color: var(--muted); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (max-width: 860px) {
+    .bench { grid-template-columns: 1fr; }
+    .loupe-wrap { grid-template-columns: 108px minmax(0, 1fr); gap: 12px; }
+    .loupe canvas { width: 96px; height: 96px; }
+    .contact { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 8px 8px 22px; }
+    .contact a { padding: 8px 5px 10px; font-size: 9.5px; min-height: 56px; letter-spacing: 0.02em; }
+    .contact a b { font-size: 15px; }
+  }
+  @media (max-width: 560px) {
+    body { font-size: 16px; }
+    .lede { font-size: 17px; }
+    .facts { grid-template-columns: 1fr; }
+    .facts div { border-right: 0; border-bottom: 1px solid var(--rule); }
+    .facts div:last-child { border-bottom: 0; }
+    .triptych { grid-template-columns: 1fr 1fr 1fr; gap: 5px; padding: 22px 6px 22px; }
+    .triptych figcaption { font-size: 8.5px; letter-spacing: 0.04em; }
+    .frame { padding: 18px 6px; }
+    .frame::before, .frame::after { font-size: 8.5px; letter-spacing: 0.08em; left: 8px; right: 8px; }
+    .strip { font-size: 10px; }
+    .contact a span { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="strip" aria-hidden="true"><span>Frame 0 &middot; contact sheet</span><span>H&amp;E &middot; drawn by code</span></div>
+
+<div class="wrap">
+<header class="top">
+  <p class="kicker">Interactive lab &middot; digital pathology &middot; data</p>
+  <h1>Five stations for one slide<span class="sub">A digital pathology data pipeline, run on the page</span></h1>
+  <p class="lede">A scanned pathology slide is one very large picture. A data pipeline for slides does the jobs any pipeline does (move files, check them, pass them on), but most of its checks look at pixels. This page follows one slide through five stations and runs a small version of each station's job right here, on a slide drawn by code.</p>
+  <p>The slide is made up and much smaller than a real one, and each station uses the simplest version of a real method. A note under each station says where it simplifies. Two other pages on this site sit on either side of this one: <a href="../2026-10-14-slide-to-screen/">Slide to Screen</a> follows tissue from the specimen to the scanner, and <a href="../2026-10-23-pipeline-grows/">One Script to a Pipeline</a> grows a general data pipeline stage by stage. This one starts at the scanned file.</p>
+  <p>Each station has controls. Move them and watch what changes, there and in the stations after it.</p>
+  <nav class="contact" aria-label="Stations">
+    <a href="#s1"><b>1</b><span>The </span>file</a>
+    <a href="#s2"><b>2</b><span>Find the </span>tissue</a>
+    <a href="#s3"><b>3</b><span>Check the </span>pixels</a>
+    <a href="#s4"><b>4</b><span>Even out the </span>colour</a>
+    <a href="#s5"><b>5</b><span>Cut the </span>tiles</a>
+  </nav>
+</header>
+
+<!-- STATION 1 -->
+<section class="station" id="s1" aria-labelledby="h-s1">
+  <h2 id="h-s1"><span class="no">01</span>The file</h2>
+  <p>The scanner writes the slide out as one file, usually holding the full-resolution image plus smaller copies of it for zooming out <a href="#src-openslide">[23]</a>. These files are big:</p>
+  <div class="facts">
+    <div><b>1&ndash;2 GB</b><small>a typical slide file, per Databricks <a href="#src-databricks">[1]</a></small></div>
+    <div><b>100,000 px</b><small>on a side, about as large as images get at one scanning facility <a href="#src-ubc">[2]</a></small></div>
+    <div><b>0.25 &micro;m</b><small>per pixel at 40x on common scanners; 0.5 &micro;m at 20x <a href="#src-vumc">[3]</a></small></div>
+  </div>
+  <p>Each scanner maker also has its own file layout: Aperio's SVS, Hamamatsu's NDPI, Philips' TIFF, and others. A pipeline that takes slides from more than one kind of scanner either reads all of them or converts them to one format first. DICOM, the medical imaging standard, has a format for whole-slide images, and open-source converters such as wsidicomizer turn vendor files into it <a href="#src-wsidicomizer">[4]</a>. The Imaging Data Commons project has been testing that converter as a replacement for the PixelMed tools it converts with now, and in 2026 reported gaps still to fix before switching <a href="#src-namic">[5]</a>.</p>
+  <p>Moving and converting files of this size is ordinary pipeline work, the kind the <a href="../2026-10-23-pipeline-grows/">general pipeline page</a> covers. The stations after this one are where slides differ.</p>
+</section>
+
+<!-- STATION 2 -->
+<section class="station" id="s2" aria-labelledby="h-s2">
+  <h2 id="h-s2"><span class="no">02</span>Find the tissue</h2>
+  <p>Most of a slide is empty glass. Cutting the glass into tiles would waste storage and computing, so the first pixel job is a tissue mask. A common recipe, used by libraries such as histolab and TIAToolbox, turns a small overview of the slide to grey and splits it with Otsu's method <a href="#src-histolab">[6]</a> <a href="#src-tia-mask">[7]</a>: it picks the grey level that best splits the picture into a light group and a dark group. Anything darker counts as tissue. Analysis usually works on small square tiles cut from the slide rather than on the whole picture at once (more at station 5), so the mask decides which tiles are worth cutting. The grid on the drawn slide stands in for those tiles; ones with enough tissue go on to the next station.</p>
+
+  <div class="bench">
+    <div>
+      <div class="frame" data-top="SLIDE 001 &middot; 40 &times; 24 TILES &middot; OVERVIEW" data-bottom="2 &middot; 2A">
+        <canvas id="c2" width="960" height="576" role="img" aria-label="The drawn slide, with tiles that the tissue mask drops shaded dark."></canvas>
+      </div>
+      <div class="panel result-panel" aria-live="polite">
+        <table class="tally">
+          <tr><td>Otsu's pick</td><td id="r2otsu"></td></tr>
+          <tr><td>Tiles kept</td><td id="r2kept"></td></tr>
+          <tr><td>Kept tiles with pen ink in them</td><td id="r2ink"></td></tr>
+          <tr><td>Tissue tiles dropped</td><td id="r2lost"></td></tr>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <fieldset class="seg ctl">
+          <legend>Show</legend>
+          <input type="radio" name="v2" id="v2a" value="slide" checked><label for="v2a">Slide</label>
+          <input type="radio" name="v2" id="v2b" value="mask"><label for="v2b">Mask</label>
+        </fieldset>
+        <div class="ctl">
+          <label for="t2">Grey cutoff <output id="t2o"></output></label>
+          <input type="range" id="t2" min="40" max="250" step="1">
+          <div class="row"><button type="button" id="otsu2">Back to Otsu's pick</button></div>
+        </div>
+        <div class="ctl">
+          <label for="f2">Tissue needed per tile <output id="f2o"></output></label>
+          <input type="range" id="f2" min="5" max="95" step="5" value="50">
+        </div>
+        <div class="hist">
+          <canvas id="h2" width="320" height="110" role="img" aria-label="Histogram of grey levels on the slide, with the cutoff marked."></canvas>
+          <div class="axis"><span>0 dark</span><span>grey level</span><span>255 light</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="grease-note" id="n2"><b>Watch the pen mark.</b> Ink is dark, so a grey cutoff calls it tissue. This is a known weak spot: one study found that Otsu thresholding on its own removed none of the artefacts in its 30 test slides <a href="#src-heotsu">[8]</a>. Pushing the cutoff low enough to drop the ink drops the tissue with it. The next station looks for ink on purpose.</div>
+  <p class="simplify">Real masks are usually made on a small overview image and then cleaned up: histolab's, for example, grows the mask outward and removes small holes and specks <a href="#src-histolab">[6]</a>. This one only applies the cutoff, so lone specks of dust show up in the mask view, though they rarely fill enough of a tile to keep it.</p>
+</section>
+
+<!-- STATION 3 -->
+<section class="station" id="s3" aria-labelledby="h-s3">
+  <h2 id="h-s3"><span class="no">03</span>Check the pixels</h2>
+  <p>A scan can be out of focus in places. Tissue can fold over on itself when it is laid on the glass, and slides often carry pen marks. HistoQC, an open-source quality-control tool, has separate parts for these: a trained classifier that can find pen markings, one that finds tissue and folded tissue by how light or dark it is, and one for blur <a href="#src-histoqc">[9]</a> <a href="#src-histoqc-table">[10]</a>. This station runs three simple checks of the same kinds on every tile station 2 kept, and crosses out the ones that fail.</p>
+
+  <div class="bench">
+    <div>
+      <div class="frame" data-top="SLIDE 001 &middot; KEPT TILES &middot; TAP ONE TO LOOK CLOSER" data-bottom="3 &middot; 3A">
+        <canvas id="c3" width="960" height="576" tabindex="0" role="img" aria-label="The slide with failed tiles crossed out in red. Tap a tile, or focus here and use the arrow keys, to see its scores."></canvas>
+      </div>
+      <div class="panel loupe-panel">
+        <div class="loupe-wrap">
+          <div class="loupe"><canvas id="l3" width="24" height="24" aria-label="The selected tile, enlarged."></canvas></div>
+          <div>
+            <div class="loupe-scores" id="l3s" aria-live="polite"></div>
+            <div class="row">
+              <span class="lbl-inline">Jump to:</span>
+              <button type="button" data-pick="sharp">A sharp tile</button>
+              <button type="button" data-pick="blur">A blurred one</button>
+              <button type="button" data-pick="ink">Ink</button>
+              <button type="button" data-pick="fold">A fold</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="ctl">
+          <label for="b3">Sharpness needed (this page's scale) <output id="b3o"></output></label>
+          <input type="range" id="b3" min="0" max="100" step="1" value="36">
+        </div>
+        <label class="check"><input type="checkbox" id="k3blur" checked><span><b>Blur</b>: sharpness score below the cutoff</span></label>
+        <label class="check"><input type="checkbox" id="k3ink" checked><span><b>Ink</b>: more than 2% of the tile is ink-coloured</span></label>
+        <label class="check"><input type="checkbox" id="k3fold" checked><span><b>Fold</b>: the tissue is darker on average than a single layer gets</span></label>
+      </div>
+      <div class="panel" aria-live="polite">
+        <table class="tally">
+          <tr><td>Tiles in from station 2</td><td id="r3in"></td></tr>
+          <tr><td>Crossed out for blur</td><td id="r3blur"></td></tr>
+          <tr><td>Crossed out for ink</td><td id="r3ink"></td></tr>
+          <tr><td>Crossed out for a fold</td><td id="r3fold"></td></tr>
+          <tr class="total"><td>Passed</td><td id="r3pass"></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <h3>How each check works</h3>
+  <p><b>Blur.</b> The sharpness score is the variance of the Laplacian. The Laplacian responds to sudden changes in brightness, like the edge of a nucleus. A sharp tile has many of them and scores high; a blurred one scores low <a href="#src-blur">[11]</a>. Pipelines set the cutoff for their own scanner, magnification, and tile size. One study, for example, drew its line between sharp and blurred tiles at a score of 500 <a href="#src-blur">[11]</a>. The scores here are on this page's own scale. Slide the cutoff up and the crosses spread from the blurred patch into sharp tissue with few nuclei, which has few edges too.</p>
+  <p><b>Ink.</b> A pixel counts as ink if it is much greener than it is red, a colour neither stain on this drawn slide makes. That rule is this page's own; real tools use colour rules or trained classifiers.</p>
+  <p><b>Fold.</b> Where tissue folds over, light passes through two layers, and the tile comes out darker. A tile is flagged when its tissue pixels average darker than a cutoff set between one layer and two on this slide.</p>
+  <p class="simplify">The drawn slide has one blurred patch, one fold, and one pen mark, each put there on purpose so the checks have something to find. Real artefacts are messier, and tools like HistoQC look at each slide at several scales. Checks that look at the whole tile, as these do, also catch good tissue at the edge of a bad patch.</p>
+</section>
+
+<!-- STATION 4 -->
+<section class="station" id="s4" aria-labelledby="h-s4">
+  <h2 id="h-s4"><span class="no">04</span>Even out the colour</h2>
+  <p>Stain colour varies. Labs stain a little differently, and scanners see colour differently, so the same kind of tissue comes out a different pink from one place to the next. Models trained on one lab's slides often do worse on another lab's <a href="#src-tellez">[12]</a> <a href="#src-stacke">[13]</a>. One study, across 9 labs and 4 organs, compared two fixes: varying the colours while training (augmentation) and shifting new slides toward the training colours (normalization) <a href="#src-tellez">[12]</a>. This station tries the second.</p>
+  <p>The model here is much simpler than a real one: a nucleus finder that marks any pixel darker than a fixed grey level as nucleus, then counts the blobs. Its cutoff was set on lab A's slides. The tile is drawn from known amounts of two stains, so the true count is known.</p>
+
+  <div class="bench">
+    <div>
+      <div class="triptych">
+        <figure><canvas id="c4a" width="220" height="220" role="img" aria-label="The tile as scanned."></canvas><figcaption>As scanned</figcaption></figure>
+        <figure><canvas id="c4b" width="220" height="220" role="img" aria-label="The tile as the finder gets it."></canvas><figcaption id="c4bcap">Into the finder</figcaption></figure>
+        <figure><canvas id="c4c" width="220" height="220" role="img" aria-label="What the finder marked: found nuclei circled, missed ones crossed."></canvas><figcaption>What it found</figcaption></figure>
+      </div>
+      <div class="panel result-panel" aria-live="polite">
+        <div class="big-count" id="r4count"></div>
+        <table class="tally">
+          <tr><td>Nuclei in the tile</td><td id="r4true"></td></tr>
+          <tr><td>Found</td><td id="r4hit"></td></tr>
+          <tr><td>Missed</td><td id="r4miss"></td></tr>
+          <tr><td>Blobs that are not one nucleus</td><td id="r4extra"></td></tr>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <fieldset class="seg ctl">
+          <legend>Where the slide came from</legend>
+          <input type="radio" name="lab" id="labA" value="A" checked><label for="labA">Lab A</label>
+          <input type="radio" name="lab" id="labB" value="B"><label for="labB">Lab B</label>
+          <input type="radio" name="lab" id="labC" value="C"><label for="labC">Scanner C</label>
+        </fieldset>
+        <p id="labNote" style="font-size:14px;margin:0 0 8px"></p>
+        <label class="check"><input type="checkbox" id="norm4"><span>Normalize the colour to lab A first (Reinhard's method)</span></label>
+        <div class="row"><button type="button" id="new4">Draw another tile</button></div>
+      </div>
+    </div>
+  </div>
+  <p><b>Reinhard's method</b> converts the picture to Lab colour (one lightness axis and two colour axes), then shifts and stretches each axis so its average and spread match a reference image from the lab the model knows <a href="#src-staintools">[14]</a> <a href="#src-tia-norm">[15]</a>. Other methods, such as Macenko's, first separate the two stains in optical density space <a href="#src-macenko2009">[22]</a>, and papers on stain normalization compare several of them side by side <a href="#src-macenko">[16]</a>. Reinhard's has known weak spots: it struggles when the amount of empty background changes a lot between images <a href="#src-stainnet">[17]</a>. The tile here is all tissue, which suits it: on these tiles it brings the count back almost every time, close to its best case.</p>
+  <p class="simplify">The labs and the scanner are made up, and the stain colours are chosen to look roughly like H&amp;E. Colour is drawn with the Beer&ndash;Lambert idea that colour deconvolution rests on: each stain absorbs light in proportion to how much is there <a href="#src-landini">[18]</a>. Real models learn far more than a grey cutoff, and their failures on new colours are subtler than this one's.</p>
+</section>
+
+<!-- STATION 5 -->
+<section class="station" id="s5" aria-labelledby="h-s5">
+  <h2 id="h-s5"><span class="no">05</span>Cut the tiles</h2>
+  <p>What leaves the pipeline is a set of tiles: small squares, often 224 or 512 pixels on a side, cut from the full-resolution image <a href="#src-compay">[19]</a> <a href="#src-tilgenpro">[20]</a>. The drawn slide stands for about 24 by 14 mm of glass, so each of its overview tiles covers a square 0.6 mm on a side. Scaled up to a real scan, the tiles that passed station 3 become:</p>
+  <div class="bench">
+    <div class="panel" aria-live="polite">
+      <div class="calc-out" id="r5tiles"></div>
+      <div class="calc-line" id="r5math"></div>
+      <div class="calc-line" id="r5bytes"></div>
+    </div>
+    <div class="panel">
+      <fieldset class="seg ctl">
+        <legend>Scan</legend>
+        <input type="radio" name="mag" id="m20" value="0.5"><label for="m20">20x &middot; 0.5 &micro;m</label>
+        <input type="radio" name="mag" id="m40" value="0.25" checked><label for="m40">40x &middot; 0.25 &micro;m</label>
+      </fieldset>
+      <fieldset class="seg ctl">
+        <legend>Tile size</legend>
+        <input type="radio" name="ts" id="ts224" value="224"><label for="ts224">224 px</label>
+        <input type="radio" name="ts" id="ts256" value="256"><label for="ts256">256 px</label>
+        <input type="radio" name="ts" id="ts512" value="512" checked><label for="ts512">512 px</label>
+      </fieldset>
+    </div>
+  </div>
+  <p>Each of those tiles is a read from storage, often more than once while a model trains. A study of analysis runs over whole-slide images found that the slow part is often reading the data rather than computing on it. Reading tiles in parallel with an I/O library roughly doubled the I/O speed on CPUs in its tests <a href="#src-adios">[21]</a>.</p>
+  <p class="simplify">The count assumes the tissue fills each passed tile and ignores the overlap some pipelines leave between tiles. Real slides carry more or less tissue than this one, so their counts differ. Change the cutoff at station 2 or the checks at station 3 and the count here moves with them.</p>
+</section>
+
+<section class="station" id="out" aria-labelledby="h-out">
+  <h2 id="h-out"><span class="no">+</span>Already out there</h2>
+  <p>This page runs toy versions of each stage to show what it is for. The tools below are open-source projects that cover these stages for real slides.</p>
+  <ul class="out">
+    <li><a href="https://github.com/imi-bigpicture/wsidicomizer">wsidicomizer</a>: converts vendor slide files to DICOM.</li>
+    <li><a href="https://histolab.readthedocs.io/en/latest/api/masks.html">histolab</a>: tissue masks, tile extraction, and dataset preparation for slides.</li>
+    <li><a href="https://github.com/choosehappy/HistoQC">HistoQC</a>: automated quality control that flags pen, folds, blur, and more, with a report per slide.</li>
+    <li><a href="https://tia-toolbox.readthedocs.io/">TIAToolbox</a>: slide reading, patch extraction, stain normalization, and model inference in one library.</li>
+    <li><a href="https://slideflow.dev/">Slideflow</a>: a deep-learning library for pathology, from slide processing through model training and heatmaps.</li>
+    <li><a href="https://github.com/MiriamAng/TilGenPro">TilGenPro</a>: tiles annotated regions, drops background tiles, and normalizes stain with Macenko's method.</li>
+  </ul>
+</section>
+
+<section class="station" id="sources" aria-labelledby="h-src">
+  <h2 id="h-src"><span class="no">&sect;</span>Sources</h2>
+  <ol class="src">
+    <li id="src-databricks"><a href="https://www.databricks.com/p/webinar/automating-the-analysis-of-digital-pathology-images-with-deep-learning">Databricks, "Automating the Analysis of Digital Pathology Images with Deep Learning"</a> (webinar page): image files of about 1&ndash;2 GB per slide.</li>
+    <li id="src-ubc"><a href="https://www.hli.ubc.ca/facility/digital-slide-scanning">UBC Centre for Heart Lung Innovation, digital slide scanning</a>: images up to 100,000 by 100,000 pixels.</li>
+    <li id="src-vumc"><a href="https://www.vumc.org/dhsr/brightfield-whole-slide-imaging">Vanderbilt Digital Histology Shared Resource, brightfield whole slide imaging</a>: about 0.5 &micro;m per pixel at 20x and 0.25 at 40x on common scanners; other models differ.</li>
+    <li id="src-wsidicomizer"><a href="https://github.com/imi-bigpicture/wsidicomizer">wsidicomizer</a> on GitHub: formats it reads and converts.</li>
+    <li id="src-namic"><a href="https://projectweek.na-mic.org/PW44_2026_GranCanaria/Projects/WsidicomizerBasedConversionIntoDicomWsiFormatForImagingDataCommons/">NA-MIC Project Week 44 (2026), wsidicomizer-based conversion for Imaging Data Commons</a>.</li>
+    <li id="src-histolab"><a href="https://histolab.readthedocs.io/en/latest/api/masks.html">histolab documentation, masks</a>: grey conversion, Otsu threshold, then dilation and removal of small holes and objects.</li>
+    <li id="src-tia-mask"><a href="https://tia-toolbox.readthedocs.io/en/latest/_notebooks/jnb/03-tissue-masking.html">TIAToolbox, "Masking tissue region in whole slide images"</a>.</li>
+    <li id="src-heotsu"><a href="https://arxiv.org/abs/2308.13304v1">"H&amp;E Otsu thresholding" preprint (arXiv 2308.13304)</a>: Otsu alone removed none of the artefacts in 30 slides.</li>
+    <li id="src-histoqc"><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6552675">Janowczyk et al., "HistoQC: An Open-Source Quality Control Tool for Digital Pathology Slides"</a>, JCO Clinical Cancer Informatics (2019).</li>
+    <li id="src-histoqc-table"><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8392148">A later review listing HistoQC's modules</a>: classification (used for pen), light and dark (tissue and folds), and blur.</li>
+    <li id="src-blur"><a href="https://arxiv.org/abs/2405.09298">Xiang, Liu and Rantalainen, "Deep Blur Multi-Model (DeepBlurMM)" (arXiv 2405.09298)</a>: variance of the Laplacian as a tile blur score, with a line at 500.</li>
+    <li id="src-tellez"><a href="https://arxiv.org/abs/1902.06543">Tellez et al., "Quantifying the effects of data augmentation and stain color normalization in convolutional neural networks for computational pathology"</a> (2019): 4 organs, 9 labs.</li>
+    <li id="src-stacke"><a href="https://arxiv.org/abs/1909.11575">Stacke et al., "A Closer Look at Domain Shift for Deep Learning in Histopathology"</a>: CAMELYON17 slides from three scanners and five medical centres.</li>
+    <li id="src-staintools"><a href="https://staintools.readthedocs.io/en/latest/normalization.html">StainTools documentation, normalization</a>: Reinhard's method, after Reinhard et al., "Color transfer between images" (2001).</li>
+    <li id="src-tia-norm"><a href="https://tia-toolbox.readthedocs.io/en/v1.5.0/_modules/tiatoolbox/tools/stainnorm.html">TIAToolbox stain normalization source</a>: Reinhard's method matches the mean and standard deviation of each Lab channel to a target.</li>
+    <li id="src-macenko"><a href="https://arxiv.org/pdf/1804.01601">StainGAN paper (arXiv 1804.01601)</a>: compares Reinhard's, Macenko's and other methods.</li>
+    <li id="src-stainnet"><a href="https://arxiv.org/pdf/2012.12535">StainNet paper (arXiv 2012.12535)</a>: Reinhard's method does poorly when the amount of blank background varies.</li>
+    <li id="src-landini"><a href="https://blog.bham.ac.uk/intellimic/g-landini-software/colour-deconvolution-2/">Landini, Colour Deconvolution 2</a>: the Beer&ndash;Lambert basis of colour deconvolution, after Ruifrok and Johnston (2001).</li>
+    <li id="src-compay"><a href="https://pypi.org/project/compay-syntax/">compay-syntax on PyPI</a>: quick start with 224-pixel tiles.</li>
+    <li id="src-tilgenpro"><a href="https://github.com/MiriamAng/TilGenPro">TilGenPro on GitHub</a>: 512 by 512 pixel tiles.</li>
+    <li id="src-adios"><a href="https://arxiv.org/abs/2308.05784v2">"High-performance Data Management for Whole Slide Image Analysis in Digital Pathology" (arXiv 2308.05784)</a>: I/O as the bottleneck; about a two-fold I/O speed-up on CPUs with ADIOS2.</li>
+    <li id="src-macenko2009"><a href="https://www.cs.unc.edu/~mn/sites/default/files/macenko2009.pdf">Macenko et al., "A Method for Normalizing Histology Slides for Quantitative Analysis"</a> (2009).</li>
+    <li id="src-openslide"><a href="https://openslide.org/api/python/">OpenSlide Python documentation</a>: slide levels, from level 0 at full resolution down to lower-resolution copies.</li>
+  </ol>
+</section>
+
+<footer>
+  <p>An explainer about how slide data is handled, not advice for any lab or clinical decision. Everything runs in this page; nothing is sent anywhere. <a href="../">&larr; tidepool</a></p>
+</footer>
+</div>
+
+<div class="strip" aria-hidden="true"><span>End of roll</span><span>5 stations &middot; 1 slide</span></div>
+
+<script>
+"use strict";
+(() => {
+  // ---------- small helpers ----------
+  const $ = (id) => document.getElementById(id);
+  const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+  const fmt = (n) => Math.round(n).toLocaleString("en-US");
+  function mulberry(seed) {
+    return function () {
+      seed = (seed + 0x6D2B79F5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function hash2(ix, iy, s) {
+    let h = Math.imul(ix, 374761393) + Math.imul(iy, 668265263) + Math.imul(s, 982451653);
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+  }
+  function noise(s) {
+    return (x, y) => {
+      const ix = Math.floor(x), iy = Math.floor(y);
+      const fx = x - ix, fy = y - iy;
+      const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+      const a = hash2(ix, iy, s), b = hash2(ix + 1, iy, s);
+      const c = hash2(ix, iy + 1, s), d = hash2(ix + 1, iy + 1, s);
+      return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
+    };
+  }
+  function fbm(n, x, y) {
+    return 0.55 * n(x, y) + 0.3 * n(x * 2.03, y * 2.03) + 0.15 * n(x * 4.1, y * 4.1);
+  }
+  function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  // grease pencil marks, with a little wobble
+  function greaseX(ctx, x, y, s, r) {
+    const j = () => (r() - 0.5) * s * 0.12;
+    ctx.beginPath();
+    ctx.moveTo(x + s * 0.16 + j(), y + s * 0.16 + j());
+    ctx.quadraticCurveTo(x + s * 0.5 + j(), y + s * 0.5 + j(), x + s * 0.84 + j(), y + s * 0.84 + j());
+    ctx.moveTo(x + s * 0.84 + j(), y + s * 0.16 + j());
+    ctx.quadraticCurveTo(x + s * 0.5 + j(), y + s * 0.5 + j(), x + s * 0.16 + j(), y + s * 0.84 + j());
+    ctx.stroke();
+  }
+  function greaseRing(ctx, cx, cy, rx, ry, r) {
+    ctx.beginPath();
+    const turns = 1.12, steps = 48, start = r() * Math.PI * 2;
+    for (let i = 0; i <= steps; i++) {
+      const a = start + (i / steps) * Math.PI * 2 * turns;
+      const k = 1 + (r() - 0.5) * 0.05 + (i / steps) * 0.06;
+      const px = cx + Math.cos(a) * rx * k, py = cy + Math.sin(a) * ry * k;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+
+  // ---------- the drawn slide ----------
+  const W = 960, H = 576, TS = 24, COLS = W / TS, ROWS = H / TS, NT = COLS * ROWS;
+  // stain colours as optical density per channel (R, G, B); made up, roughly H&E-looking
+  const STAIN_H = [0.65, 0.70, 0.29];
+  const STAIN_E = [0.08, 0.90, 0.28];
+  const INK = [1.25, 0.42, 0.14];
+
+  function makeSlide() {
+    const N = W * H;
+    const rnd = mulberry(20261023);
+    const nEdge = noise(11), nFib = noise(23), nDen = noise(37), nHole = noise(51), nBlur = noise(61);
+    const hA = new Float32Array(N), eA = new Float32Array(N), ink = new Float32Array(N);
+    const tis = new Float32Array(N), foldM = new Uint8Array(N), dust = new Float32Array(N);
+    const pieces = [
+      { x: 300, y: 300, rx: 235, ry: 185 },
+      { x: 700, y: 250, rx: 165, ry: 190 },
+      { x: 805, y: 492, rx: 62, ry: 44 },
+    ];
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        let best = -1e9;
+        const wob = 1 + 0.42 * (fbm(nEdge, x / 75, y / 75) - 0.5);
+        for (const p of pieces) {
+          const dx = (x - p.x) / p.rx, dy = (y - p.y) / p.ry;
+          const r = Math.sqrt(dx * dx + dy * dy);
+          if (r > 1.4) continue;
+          const v = (wob - r) * Math.min(p.rx, p.ry) / 3;
+          if (v > best) best = v;
+        }
+        const i = y * W + x;
+        let t = clamp(best, 0, 1);
+        tis[i] = t;
+        if (t <= 0) continue;
+        let e = 0.25 + 0.18 * (fbm(nFib, x / 7, y / 22) - 0.5) + 0.07 * (nDen(x / 40, y / 40) - 0.5);
+        const hole = fbm(nHole, x / 20, y / 20);
+        if (hole > 0.66) e *= clamp(1 - (hole - 0.66) * 9, 0.12, 1);
+        eA[i] = e * t;
+        hA[i] = 0.05 * t;
+      }
+    }
+    // nuclei: small blobs of hematoxylin, denser in some areas
+    const nuclei = 5600;
+    for (let k = 0; k < nuclei; k++) {
+      const x = rnd() * W, y = rnd() * H;
+      const i0 = (y | 0) * W + (x | 0);
+      if (tis[i0] < 0.95) continue;
+      if (fbm(nHole, x / 20, y / 20) > 0.64) continue;
+      if (rnd() > 0.4 + 0.75 * Math.pow(nDen(x / 85, y / 85), 1.6)) continue;
+      const r = 1.2 + rnd() * 1.1, ar = 0.75 + rnd() * 0.5, ang = rnd() * Math.PI;
+      const ca = Math.cos(ang), sa = Math.sin(ang);
+      const R = Math.ceil(r * 1.4 + 1);
+      for (let yy = -R; yy <= R; yy++) for (let xx = -R; xx <= R; xx++) {
+        const px = (x | 0) + xx, py = (y | 0) + yy;
+        if (px < 0 || py < 0 || px >= W || py >= H) continue;
+        const u = (xx * ca + yy * sa) / (r * ar), v = (-xx * sa + yy * ca) / r;
+        const d = Math.sqrt(u * u + v * v);
+        const a = clamp(1.3 - d, 0, 1);
+        if (a <= 0) continue;
+        const j = py * W + px;
+        hA[j] = Math.min(1.15, hA[j] + 0.95 * a);
+      }
+    }
+    // a fold in the first piece: two layers of tissue, so twice the stain
+    const fx0 = 150, fy0 = 210, fx1 = 420, fy1 = 420;
+    const fdx = fx1 - fx0, fdy = fy1 - fy0, fl2 = fdx * fdx + fdy * fdy;
+    for (let y = 150; y < 480; y++) for (let x = 100; x < 480; x++) {
+      const i = y * W + x;
+      if (tis[i] < 0.5) continue;
+      const t = clamp(((x - fx0) * fdx + (y - fy0) * fdy) / fl2, 0, 1);
+      const qx = fx0 + t * fdx, qy = fy0 + t * fdy;
+      const d = Math.hypot(x - qx, y - qy);
+      if (d < 22 + 4 * (nEdge(x / 30, y / 30) - 0.5)) {
+        foldM[i] = 1;
+        const edge = d > 18 ? 1.25 : 1;
+        hA[i] = hA[i] * 1.9 * edge + 0.04;
+        eA[i] = eA[i] * 1.95 * edge;
+      }
+    }
+    // a pen ring drawn on the glass around the small piece, plus a tick mark
+    const pcx = 805, pcy = 492, pr = 98;
+    for (let y = 360; y < H; y++) for (let x = 640; x < W; x++) {
+      const a = Math.atan2(y - pcy, x - pcx);
+      if (a > -0.15 && a < 1.25) continue; // gap in the ring
+      const d = Math.abs(Math.hypot(x - pcx, y - pcy) - pr * (1 + 0.04 * Math.sin(a * 3)));
+      const w = 8 + 2 * nBlur(x / 25, y / 25);
+      if (d < w + 1) ink[y * W + x] = Math.max(ink[y * W + x], clamp(w + 1 - d, 0, 1) * (0.85 + 0.15 * nFib(x / 5, y / 5)));
+    }
+    for (let k = 0; k < 2; k++) {
+      const x0 = 56 + k * 30, y0 = 534, x1 = 76 + k * 30, y1 = 498;
+      for (let y = 486; y < 548; y++) for (let x = 44; x < 130; x++) {
+        const dx = x1 - x0, dy = y1 - y0, t = clamp(((x - x0) * dx + (y - y0) * dy) / (dx * dx + dy * dy), 0, 1);
+        const d = Math.hypot(x - (x0 + t * dx), y - (y0 + t * dy));
+        if (d < 7) ink[y * W + x] = Math.max(ink[y * W + x], clamp(7 - d, 0, 1) * 0.9);
+      }
+    }
+    // dust on the glass
+    for (let k = 0; k < 14; k++) {
+      const x = rnd() * W, y = rnd() * H, r = 0.8 + rnd() * 1.8, a = 0.25 + rnd() * 0.5;
+      for (let yy = -3; yy <= 3; yy++) for (let xx = -3; xx <= 3; xx++) {
+        const px = (x | 0) + xx, py = (y | 0) + yy;
+        if (px < 0 || py < 0 || px >= W || py >= H) continue;
+        const d = Math.hypot(xx, yy);
+        if (d < r) dust[py * W + px] = Math.max(dust[py * W + px], a);
+      }
+    }
+    // compose: background light through the stains (Beer-Lambert), plus a little sensor noise
+    const sharp = new Float32Array(N * 3);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      const bg = 247 - 4 * ((x - W / 2) ** 2 + (y - H / 2) ** 2) / (W * W / 4);
+      for (let c = 0; c < 3; c++) {
+        const od = hA[i] * STAIN_H[c] + eA[i] * STAIN_E[c] + ink[i] * INK[c] + dust[i] * 0.9;
+        const bgc = bg - (c === 2 ? 3 : c === 1 ? 1 : 0);
+        sharp[i * 3 + c] = bgc * Math.pow(10, -od);
+      }
+    }
+    // an out-of-focus patch: blur the image there
+    const blurred = boxBlur3(sharp, W, H, 3, 3);
+    const bcx = 660, bcy = 165, br = 112;
+    const blurW = new Float32Array(N);
+    const img = new Uint8ClampedArray(N * 4);
+    const rn = mulberry(77);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      const d = Math.hypot(x - bcx, y - bcy) * (1 + 0.25 * (nBlur(x / 50, y / 50) - 0.5));
+      const w = clamp((br - d) / 26, 0, 1);
+      blurW[i] = w;
+      for (let c = 0; c < 3; c++) {
+        const v = sharp[i * 3 + c] * (1 - w) + blurred[i * 3 + c] * w;
+        img[i * 4 + c] = v + (rn() - 0.5) * 4;
+      }
+      img[i * 4 + 3] = 255;
+    }
+    // ground truth per tile, for the readouts
+    const truth = [];
+    for (let ty = 0; ty < ROWS; ty++) for (let tx = 0; tx < COLS; tx++) {
+      let inkN = 0, foldN = 0, tisN = 0, bw = 0;
+      for (let y = ty * TS; y < ty * TS + TS; y++) for (let x = tx * TS; x < tx * TS + TS; x++) {
+        const i = y * W + x;
+        if (ink[i] > 0.3) inkN++;
+        if (foldM[i]) foldN++;
+        if (tis[i] > 0.5) tisN++;
+        bw += blurW[i];
+      }
+      const n = TS * TS;
+      truth.push({ ink: inkN / n, fold: foldN / n, tissue: tisN / n, blur: bw / n });
+    }
+    return { img, truth };
+  }
+
+  function boxBlur3(src, w, h, r, passes) {
+    let a = Float32Array.from(src), b = new Float32Array(src.length);
+    const n = 2 * r + 1;
+    for (let p = 0; p < passes; p++) {
+      for (let y = 0; y < h; y++) for (let c = 0; c < 3; c++) {
+        let s = 0;
+        for (let k = -r; k <= r; k++) s += a[(y * w + clamp(k, 0, w - 1)) * 3 + c];
+        for (let x = 0; x < w; x++) {
+          b[(y * w + x) * 3 + c] = s / n;
+          s += a[(y * w + clamp(x + r + 1, 0, w - 1)) * 3 + c] - a[(y * w + clamp(x - r, 0, w - 1)) * 3 + c];
+        }
+      }
+      for (let x = 0; x < w; x++) for (let c = 0; c < 3; c++) {
+        let s = 0;
+        for (let k = -r; k <= r; k++) s += b[(clamp(k, 0, h - 1) * w + x) * 3 + c];
+        for (let y = 0; y < h; y++) {
+          a[(y * w + x) * 3 + c] = s / n;
+          s += b[(clamp(y + r + 1, 0, h - 1) * w + x) * 3 + c] - b[(clamp(y - r, 0, h - 1) * w + x) * 3 + c];
+        }
+      }
+    }
+    return a;
+  }
+
+  const slide = makeSlide();
+  const IMG = slide.img;
+  const GRAY = new Uint8Array(W * H);
+  const HIST = new Uint32Array(256);
+  for (let i = 0; i < W * H; i++) {
+    const g = Math.round(0.299 * IMG[i * 4] + 0.587 * IMG[i * 4 + 1] + 0.114 * IMG[i * 4 + 2]);
+    GRAY[i] = g; HIST[g]++;
+  }
+  function otsu(hist) {
+    let total = 0, sum = 0;
+    for (let i = 0; i < 256; i++) { total += hist[i]; sum += i * hist[i]; }
+    let wB = 0, sumB = 0, best = 0, t = 0;
+    for (let i = 0; i < 256; i++) {
+      wB += hist[i]; if (!wB) continue;
+      const wF = total - wB; if (!wF) break;
+      sumB += i * hist[i];
+      const mB = sumB / wB, mF = (sum - sumB) / wF;
+      const between = wB * wF * (mB - mF) * (mB - mF);
+      if (between > best) { best = between; t = i; }
+    }
+    return t + 1; // darker than this counts as tissue
+  }
+  const OTSU = otsu(HIST);
+
+  // per-tile scores that do not depend on the settings
+  const LV = new Float32Array(NT), INKF = new Float32Array(NT);
+  for (let ty = 0; ty < ROWS; ty++) for (let tx = 0; tx < COLS; tx++) {
+    let s = 0, s2 = 0, n = 0, ink = 0;
+    for (let y = ty * TS; y < ty * TS + TS; y++) for (let x = tx * TS; x < tx * TS + TS; x++) {
+      const i = y * W + x;
+      const r = IMG[i * 4], g = IMG[i * 4 + 1];
+      if (g - r > 30) ink++;
+      if (x > 0 && y > 0 && x < W - 1 && y < H - 1) {
+        const l = GRAY[i - 1] + GRAY[i + 1] + GRAY[i - W] + GRAY[i + W] - 4 * GRAY[i];
+        s += l; s2 += l * l; n++;
+      }
+    }
+    const k = ty * COLS + tx;
+    LV[k] = n ? s2 / n - (s / n) ** 2 : 0;
+    INKF[k] = ink / (TS * TS);
+  }
+
+  // ---------- shared state ----------
+  const state = { t: OTSU, minFrac: 0.5, view: "slide", blurCut: 0, checks: { blur: true, ink: true, fold: true }, sel: -1 };
+  let tileFrac = new Float32Array(NT), tileMean = new Float32Array(NT), kept = new Uint8Array(NT), fail = new Uint8Array(NT);
+  const FOLD_CUT = 134;
+  // the sharpness slider runs on a log scale between these
+  const LV_LO = 5, LV_HI = 3000;
+  const sliderToLv = (v) => LV_LO * Math.pow(LV_HI / LV_LO, v / 100);
+
+  function computeMask() {
+    for (let ty = 0; ty < ROWS; ty++) for (let tx = 0; tx < COLS; tx++) {
+      let n = 0, sum = 0;
+      for (let y = ty * TS; y < ty * TS + TS; y++) for (let x = tx * TS; x < tx * TS + TS; x++) {
+        const g = GRAY[y * W + x];
+        if (g < state.t) { n++; sum += g; }
+      }
+      const k = ty * COLS + tx;
+      tileFrac[k] = n / (TS * TS);
+      tileMean[k] = n ? sum / n : 255;
+      kept[k] = tileFrac[k] >= state.minFrac ? 1 : 0;
+    }
+  }
+  function computeQC() {
+    for (let k = 0; k < NT; k++) {
+      let f = 0;
+      if (kept[k]) {
+        if (state.checks.ink && INKF[k] > 0.02) f |= 2;
+        if (state.checks.fold && !(f & 2) && tileMean[k] < FOLD_CUT) f |= 4;
+        if (state.checks.blur && !(f & 6) && LV[k] < state.blurCut) f |= 1;
+      }
+      fail[k] = f;
+    }
+  }
+
+  // ---------- station 2 ----------
+  const c2 = $("c2"), x2 = c2.getContext("2d");
+  const baseData = new ImageData(IMG, W, H);
+  const maskData = new ImageData(W, H);
+  function draw2() {
+    if (state.view === "slide") {
+      x2.putImageData(baseData, 0, 0);
+    } else {
+      const d = maskData.data;
+      for (let i = 0; i < W * H; i++) {
+        const on = GRAY[i] < state.t;
+        d[i * 4] = on ? 28 : 236; d[i * 4 + 1] = on ? 24 : 232; d[i * 4 + 2] = on ? 22 : 224; d[i * 4 + 3] = 255;
+      }
+      x2.putImageData(maskData, 0, 0);
+    }
+    x2.fillStyle = state.view === "slide" ? "rgba(16,13,11,0.62)" : "rgba(200,190,175,0.55)";
+    for (let k = 0; k < NT; k++) if (!kept[k]) x2.fillRect((k % COLS) * TS, ((k / COLS) | 0) * TS, TS, TS);
+    // thin frame lines on kept tiles, like frames on a sheet
+    x2.strokeStyle = state.view === "slide" ? "rgba(20,18,16,0.28)" : "rgba(216,162,58,0.5)";
+    x2.lineWidth = 1;
+    for (let k = 0; k < NT; k++) if (kept[k]) x2.strokeRect((k % COLS) * TS + 0.5, ((k / COLS) | 0) * TS + 0.5, TS - 1, TS - 1);
+    // circle each patch of ink that got through
+    const inkTiles = [];
+    for (let k = 0; k < NT; k++) if (kept[k] && slide.truth[k].ink > 0.15) inkTiles.push(k);
+    const group = new Int16Array(NT).fill(-1);
+    const groups = [];
+    for (const k of inkTiles) {
+      if (group[k] >= 0) continue;
+      const g = groups.length, box = [1e9, 1e9, -1, -1], todo = [k];
+      group[k] = g;
+      while (todo.length) {
+        const j = todo.pop(), cx = j % COLS, cy = (j / COLS) | 0;
+        box[0] = Math.min(box[0], cx); box[1] = Math.min(box[1], cy); box[2] = Math.max(box[2], cx); box[3] = Math.max(box[3], cy);
+        for (const o of inkTiles) {
+          if (group[o] >= 0) continue;
+          if (Math.abs(o % COLS - cx) <= 2 && Math.abs(((o / COLS) | 0) - cy) <= 2) { group[o] = g; todo.push(o); }
+        }
+      }
+      groups.push(box);
+    }
+    x2.strokeStyle = "#e0241f"; x2.lineWidth = 4; x2.lineCap = "round";
+    x2.font = "italic 700 26px " + cssVar("--sans");
+    x2.fillStyle = "#e0241f";
+    const rr = mulberry(5);
+    for (const [c0, r0, c1, r1] of groups) {
+      const x0 = c0 * TS, y0 = r0 * TS, x1 = (c1 + 1) * TS, y1 = (r1 + 1) * TS;
+      greaseRing(x2, (x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0) / 2 + 16, (y1 - y0) / 2 + 16, rr);
+      const lx = clamp(x0 - 30, 6, W - 70), ly = y0 - 22 > 26 ? y0 - 22 : y1 + 44;
+      x2.fillText("ink?", lx, ly);
+    }
+    const inkKept = inkTiles.length;
+    return inkKept;
+  }
+  const h2 = $("h2"), hx = h2.getContext("2d");
+  function drawHist() {
+    const w = h2.width, h = h2.height;
+    hx.clearRect(0, 0, w, h);
+    let mx = 0;
+    for (let i = 0; i < 256; i++) mx = Math.max(mx, HIST[i]);
+    const ink = cssVar("--ink"), grease = cssVar("--grease"), muted = cssVar("--muted");
+    for (let i = 0; i < 256; i++) {
+      const v = Math.sqrt(HIST[i] / mx) * (h - 14);
+      hx.fillStyle = i < state.t ? ink : muted;
+      hx.globalAlpha = i < state.t ? 0.9 : 0.45;
+      hx.fillRect(i * w / 256, h - v, w / 256 + 0.6, v);
+    }
+    hx.globalAlpha = 1;
+    const ox = OTSU * w / 256;
+    hx.setLineDash([4, 4]); hx.strokeStyle = muted; hx.lineWidth = 1.5;
+    hx.beginPath(); hx.moveTo(ox, 0); hx.lineTo(ox, h); hx.stroke();
+    hx.setLineDash([]);
+    const tx = state.t * w / 256;
+    hx.strokeStyle = grease; hx.lineWidth = 3;
+    hx.beginPath(); hx.moveTo(tx, 0); hx.lineTo(tx, h); hx.stroke();
+    hx.fillStyle = grease; hx.font = "600 11px " + cssVar("--mono");
+    const label = "cutoff " + state.t;
+    hx.fillText(label, tx + 6 + hx.measureText(label).width > w ? tx - 6 - hx.measureText(label).width : tx + 6, 14);
+    hx.fillStyle = muted;
+    if (Math.abs(ox - tx) > 70) hx.fillText("Otsu", ox + 4 > w - 34 ? ox - 34 : ox + 4, 28);
+    hx.fillStyle = muted; hx.font = "11px " + cssVar("--sans");
+    hx.fillText("tissue and ink", 6, h - 4 - Math.min(80, h * 0.6));
+    hx.fillText("glass", w - 30, h - 4 - Math.min(96, h * 0.72));
+  }
+  function update2() {
+    $("t2").value = state.t;
+    $("t2o").textContent = state.t;
+    $("f2o").textContent = Math.round(state.minFrac * 100) + "%";
+    const inkKept = draw2();
+    drawHist();
+    let k = 0, lost = 0, tissueTiles = 0;
+    for (let i = 0; i < NT; i++) {
+      k += kept[i];
+      if (slide.truth[i].tissue > 0.5) { tissueTiles++; if (!kept[i]) lost++; }
+    }
+    $("r2otsu").textContent = OTSU;
+    $("r2kept").textContent = k + " of " + NT;
+    $("r2ink").textContent = inkKept;
+    $("r2lost").textContent = lost + " of " + tissueTiles;
+    c2.setAttribute("aria-label", "The drawn slide" + (state.view === "mask" ? ", shown as its tissue mask" : "") + ". " + k + " of " + NT + " tiles kept; " + inkKept + " kept tiles have pen ink in them.");
+  }
+
+  // ---------- station 3 ----------
+  const c3 = $("c3"), x3 = c3.getContext("2d");
+  const l3 = $("l3"), lx = l3.getContext("2d");
+  function draw3() {
+    x3.putImageData(baseData, 0, 0);
+    x3.fillStyle = "rgba(16,13,11,0.62)";
+    for (let k = 0; k < NT; k++) if (!kept[k]) x3.fillRect((k % COLS) * TS, ((k / COLS) | 0) * TS, TS, TS);
+    x3.fillStyle = "rgba(224,36,31,0.16)";
+    for (let k = 0; k < NT; k++) if (fail[k]) x3.fillRect((k % COLS) * TS, ((k / COLS) | 0) * TS, TS, TS);
+    x3.strokeStyle = "#e0241f"; x3.lineWidth = 2.6; x3.lineCap = "round";
+    const r = mulberry(9);
+    for (let k = 0; k < NT; k++) if (fail[k]) greaseX(x3, (k % COLS) * TS, ((k / COLS) | 0) * TS, TS, r);
+    if (state.sel >= 0) {
+      const x = (state.sel % COLS) * TS, y = ((state.sel / COLS) | 0) * TS;
+      x3.strokeStyle = "#ffd25a"; x3.lineWidth = 3;
+      x3.strokeRect(x - 1.5, y - 1.5, TS + 3, TS + 3);
+      x3.strokeStyle = "#111"; x3.lineWidth = 1;
+      x3.strokeRect(x - 3.5, y - 3.5, TS + 7, TS + 7);
+    }
+  }
+  function drawLoupe() {
+    const k = state.sel;
+    const box = $("l3s");
+    if (k < 0) { box.textContent = "Tap a tile to see its scores."; lx.clearRect(0, 0, 24, 24); return; }
+    const x = (k % COLS) * TS, y = ((k / COLS) | 0) * TS;
+    lx.putImageData(baseData, -x, -y, x, y, TS, TS);
+    const row = (label, val, bad) => `<div><span>${label}</span><span class="v${bad ? " flag" : ""}">${val}</span></div>`;
+    const why = !kept[k] ? "dropped at station 2" : fail[k] & 2 ? "crossed out: ink" : fail[k] & 4 ? "crossed out: fold" : fail[k] & 1 ? "crossed out: blur" : "passes";
+    box.innerHTML =
+      `<div><span>Column, row</span><span class="v">${k % COLS + 1}, ${((k / COLS) | 0) + 1}</span></div>` +
+      row("Tissue", Math.round(tileFrac[k] * 100) + "%", !kept[k]) +
+      row("Sharpness", fmt(LV[k]), kept[k] && state.checks.blur && LV[k] < state.blurCut) +
+      row("Ink", (INKF[k] * 100).toFixed(1) + "%", kept[k] && state.checks.ink && INKF[k] > 0.02) +
+      row("Mean grey", tileMean[k] < 255 ? Math.round(tileMean[k]) : "n/a", kept[k] && state.checks.fold && tileMean[k] < FOLD_CUT) +
+      `<div class="res"><span class="v${why === "passes" ? "" : " flag"}">${why[0].toUpperCase() + why.slice(1)}</span></div>`;
+  }
+  function update3() {
+    $("b3o").textContent = fmt(state.blurCut);
+    computeQC();
+    draw3();
+    drawLoupe();
+    let inn = 0, b = 0, i = 0, f = 0;
+    for (let k = 0; k < NT; k++) {
+      if (!kept[k]) continue;
+      inn++;
+      if (fail[k] & 1) b++; else if (fail[k] & 2) i++; else if (fail[k] & 4) f++;
+    }
+    $("r3in").textContent = inn;
+    $("r3blur").textContent = b;
+    $("r3ink").textContent = i;
+    $("r3fold").textContent = f;
+    $("r3pass").textContent = inn - b - i - f;
+    c3.setAttribute("aria-label", "The slide after the checks: " + (inn - b - i - f) + " of " + inn + " kept tiles pass. Use the arrow keys to move between tiles.");
+    update5();
+  }
+  function pickTile(kind) {
+    let best = -1, bestScore = -1e9;
+    for (let k = 0; k < NT; k++) {
+      if (!kept[k]) continue;
+      const t = slide.truth[k];
+      let s;
+      if (kind === "sharp") s = t.blur < 0.01 && t.fold === 0 && t.ink === 0 && t.tissue > 0.99 ? LV[k] : -1e9;
+      else if (kind === "blur") s = t.blur > 0.95 && t.tissue > 0.99 ? tileFrac[k] * 1000 - LV[k] : -1e9;
+      else if (kind === "ink") s = t.ink;
+      else s = t.fold > 0.6 && t.ink === 0 ? t.fold - Math.abs(tileMean[k] - 110) / 1000 : -1e9;
+      if (s > bestScore) { bestScore = s; best = k; }
+    }
+    if (best >= 0) { state.sel = best; draw3(); drawLoupe(); }
+  }
+  c3.addEventListener("click", (ev) => {
+    const rect = c3.getBoundingClientRect();
+    const x = ((ev.clientX - rect.left) / rect.width) * W, y = ((ev.clientY - rect.top) / rect.height) * H;
+    state.sel = clamp((y / TS) | 0, 0, ROWS - 1) * COLS + clamp((x / TS) | 0, 0, COLS - 1);
+    draw3(); drawLoupe();
+  });
+  c3.addEventListener("keydown", (ev) => {
+    const moves = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+    const m = moves[ev.key];
+    if (!m) return;
+    ev.preventDefault();
+    if (state.sel < 0) state.sel = (ROWS >> 1) * COLS + (COLS >> 1);
+    else {
+      const cx = clamp((state.sel % COLS) + m[0], 0, COLS - 1), cy = clamp(((state.sel / COLS) | 0) + m[1], 0, ROWS - 1);
+      state.sel = cy * COLS + cx;
+    }
+    draw3(); drawLoupe();
+  });
+  document.querySelectorAll("[data-pick]").forEach((b) => b.addEventListener("click", () => pickTile(b.dataset.pick)));
+
+  // ---------- station 4 ----------
+  const TW = 220;
+  const LABS = {
+    A: { h: 1.0, e: 1.0, H: [0.65, 0.70, 0.29], E: [0.08, 0.90, 0.28], gain: [1, 1, 1], note: "The lab whose slides the finder was tuned on." },
+    B: { h: 0.45, e: 1.4, H: [0.52, 0.72, 0.34], E: [0.05, 0.95, 0.36], gain: [1, 1, 1], note: "Made up: lighter hematoxylin, so paler nuclei, and heavier eosin, so darker pink." },
+    C: { h: 1.0, e: 1.0, H: [0.65, 0.70, 0.29], E: [0.08, 0.90, 0.28], gain: [0.58, 0.64, 0.8], note: "Made up: lab A's stain, but a scanner that renders everything darker and cooler." },
+  };
+  let tileSeed = 4;
+  function makeTile(seed) {
+    const r = mulberry(seed * 7919 + 13);
+    const nF = noise(seed * 3 + 1), nH = noise(seed * 3 + 2);
+    const N = TW * TW, h = new Float32Array(N), e = new Float32Array(N), lab = new Int16Array(N).fill(-1);
+    for (let y = 0; y < TW; y++) for (let x = 0; x < TW; x++) {
+      const i = y * TW + x;
+      let ev = 0.30 + 0.22 * (fbm(nF, x / 9, y / 34) - 0.5);
+      const hole = fbm(nH, x / 40, y / 40);
+      if (hole > 0.68) ev *= clamp(1 - (hole - 0.68) * 7, 0.2, 1);
+      e[i] = ev; h[i] = 0.05;
+    }
+    const nuc = [];
+    for (let tries = 0; tries < 900 && nuc.length < 27 + (seed % 9); tries++) {
+      const rad = 6 + r() * 4, x = rad + 2 + r() * (TW - 2 * rad - 4), y = rad + 2 + r() * (TW - 2 * rad - 4);
+      if (nuc.some((n) => Math.hypot(n.x - x, n.y - y) < n.r + rad + 4)) continue;
+      nuc.push({ x, y, r: rad, ar: 0.7 + r() * 0.45, a: r() * Math.PI, k: 0.85 + r() * 0.3 });
+    }
+    nuc.forEach((n, idx) => {
+      const ca = Math.cos(n.a), sa = Math.sin(n.a), R = Math.ceil(n.r + 2);
+      for (let yy = -R; yy <= R; yy++) for (let xx = -R; xx <= R; xx++) {
+        const px = Math.round(n.x) + xx, py = Math.round(n.y) + yy;
+        if (px < 0 || py < 0 || px >= TW || py >= TW) continue;
+        const u = (xx * ca + yy * sa) / (n.r * n.ar), v = (-xx * sa + yy * ca) / n.r;
+        const d = Math.sqrt(u * u + v * v);
+        if (d > 1.15) continue;
+        const j = py * TW + px;
+        const a = clamp((1.15 - d) * 4, 0, 1);
+        // chromatin texture inside the nucleus
+        const tex = 0.85 + 0.3 * nF(px / 2.5, py / 2.5);
+        h[j] = Math.max(h[j], a * n.k * tex);
+        e[j] *= 1 - 0.6 * a;
+        if (d < 0.9) lab[j] = idx;
+      }
+    });
+    return { h, e, lab, nuc };
+  }
+  function renderTile(t, L) {
+    const out = new Uint8ClampedArray(TW * TW * 4);
+    const rn = mulberry(31);
+    for (let i = 0; i < TW * TW; i++) {
+      for (let c = 0; c < 3; c++) {
+        const od = t.h[i] * L.h * L.H[c] + t.e[i] * L.e * L.E[c];
+        out[i * 4 + c] = 245 * Math.pow(10, -od) * L.gain[c] + (rn() - 0.5) * 3;
+      }
+      out[i * 4 + 3] = 255;
+    }
+    return out;
+  }
+  // sRGB <-> CIE Lab (D65)
+  const toLin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  const toSrgb = (v) => 255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055);
+  const fLab = (t) => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116);
+  const fInv = (t) => (t * t * t > 216 / 24389 ? t * t * t : (116 * t - 16) / (24389 / 27));
+  function rgbToLab(px) {
+    const n = px.length / 4, out = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const r = toLin(px[i * 4]), g = toLin(px[i * 4 + 1]), b = toLin(px[i * 4 + 2]);
+      const X = (0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047, Y = 0.2126 * r + 0.7152 * g + 0.0722 * b, Z = (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883;
+      const fx = fLab(X), fy = fLab(Y), fz = fLab(Z);
+      out[i * 3] = 116 * fy - 16; out[i * 3 + 1] = 500 * (fx - fy); out[i * 3 + 2] = 200 * (fy - fz);
+    }
+    return out;
+  }
+  function labToRgb(lab) {
+    const n = lab.length / 3, out = new Uint8ClampedArray(n * 4);
+    for (let i = 0; i < n; i++) {
+      const fy = (lab[i * 3] + 16) / 116, fx = fy + lab[i * 3 + 1] / 500, fz = fy - lab[i * 3 + 2] / 200;
+      const X = fInv(fx) * 0.95047, Y = fInv(fy), Z = fInv(fz) * 1.08883;
+      const r = 3.2406 * X - 1.5372 * Y - 0.4986 * Z, g = -0.9689 * X + 1.8758 * Y + 0.0415 * Z, b = 0.0557 * X - 0.2040 * Y + 1.0570 * Z;
+      out[i * 4] = toSrgb(clamp(r, 0, 1)); out[i * 4 + 1] = toSrgb(clamp(g, 0, 1)); out[i * 4 + 2] = toSrgb(clamp(b, 0, 1)); out[i * 4 + 3] = 255;
+    }
+    return out;
+  }
+  function labStats(lab) {
+    const n = lab.length / 3, m = [0, 0, 0], s = [0, 0, 0];
+    for (let i = 0; i < n; i++) for (let c = 0; c < 3; c++) m[c] += lab[i * 3 + c];
+    for (let c = 0; c < 3; c++) m[c] /= n;
+    for (let i = 0; i < n; i++) for (let c = 0; c < 3; c++) s[c] += (lab[i * 3 + c] - m[c]) ** 2;
+    for (let c = 0; c < 3; c++) s[c] = Math.sqrt(s[c] / n) || 1;
+    return { m, s };
+  }
+  function reinhard(px, ref) {
+    const lab = rgbToLab(px), st = labStats(lab);
+    for (let i = 0; i < lab.length / 3; i++) for (let c = 0; c < 3; c++) {
+      lab[i * 3 + c] = (lab[i * 3 + c] - st.m[c]) / st.s[c] * ref.s[c] + ref.m[c];
+    }
+    return labToRgb(lab);
+  }
+  // reference: a different lab A tile
+  const REF = labStats(rgbToLab(renderTile(makeTile(101), LABS.A)));
+  // the finder's cutoff, set once on lab A: halfway between nucleus grey and background grey
+  const CUT = (() => {
+    const t = makeTile(202), px = renderTile(t, LABS.A);
+    let sn = 0, nn = 0, sb = 0, nb = 0;
+    for (let i = 0; i < TW * TW; i++) {
+      const g = 0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2];
+      if (t.lab[i] >= 0) { sn += g; nn++; } else if (t.h[i] < 0.1) { sb += g; nb++; }
+    }
+    return Math.round((sn / nn + sb / nb) / 2);
+  })();
+  const MIN_AREA = 25;
+  function finder(px, t) {
+    const N = TW * TW, on = new Uint8Array(N), comp = new Int32Array(N).fill(-1);
+    for (let i = 0; i < N; i++) on[i] = 0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2] < CUT ? 1 : 0;
+    const blobs = [];
+    const stack = [];
+    for (let i = 0; i < N; i++) {
+      if (!on[i] || comp[i] >= 0) continue;
+      const id = blobs.length; let area = 0, sx = 0, sy = 0;
+      const hits = new Set();
+      stack.push(i); comp[i] = id;
+      while (stack.length) {
+        const j = stack.pop(); area++; const x = j % TW, y = (j / TW) | 0; sx += x; sy += y;
+        if (t.lab[j] >= 0) hits.add(t.lab[j]);
+        const nb = [x > 0 ? j - 1 : -1, x < TW - 1 ? j + 1 : -1, y > 0 ? j - TW : -1, y < TW - 1 ? j + TW : -1];
+        for (const q of nb) if (q >= 0 && on[q] && comp[q] < 0) { comp[q] = id; stack.push(q); }
+      }
+      blobs.push({ area, cx: sx / area, cy: sy / area, hits });
+    }
+    const real = blobs.filter((b) => b.area >= MIN_AREA);
+    // a blob counts as a find if it covers exactly one true nucleus and is not much bigger than one
+    const found = new Set();
+    let extra = 0;
+    for (const b of real) {
+      const ids = [...b.hits];
+      const one = ids.length === 1 && b.area < Math.PI * t.nuc[ids[0]].r * t.nuc[ids[0]].r * t.nuc[ids[0]].ar * 2.2;
+      if (one) found.add(ids[0]); else extra++;
+    }
+    return { on, comp, blobs, real, found, extra };
+  }
+  const c4a = $("c4a"), c4b = $("c4b"), c4c = $("c4c");
+  const xa = c4a.getContext("2d"), xb = c4b.getContext("2d"), xc = c4c.getContext("2d");
+  let tile = makeTile(tileSeed);
+  function update4() {
+    const labKey = document.querySelector('input[name="lab"]:checked').value;
+    const L = LABS[labKey];
+    const norm = $("norm4").checked;
+    $("labNote").textContent = L.note;
+    const raw = renderTile(tile, L);
+    const into = norm ? reinhard(raw, REF) : raw;
+    xa.putImageData(new ImageData(raw, TW, TW), 0, 0);
+    xb.putImageData(new ImageData(into, TW, TW), 0, 0);
+    $("c4bcap").textContent = norm ? "Normalized" : "Into the finder (as is)";
+    const res = finder(into, tile);
+    // third panel: faded tile, blobs in ink, marks in grease pencil
+    const show = new Uint8ClampedArray(TW * TW * 4);
+    for (let i = 0; i < TW * TW; i++) {
+      const isBlob = res.on[i] && res.blobs[res.comp[i]] && res.blobs[res.comp[i]].area >= MIN_AREA;
+      for (let c = 0; c < 3; c++) show[i * 4 + c] = isBlob ? [40, 34, 60][c] : 255 - (255 - into[i * 4 + c]) * 0.3;
+      show[i * 4 + 3] = 255;
+    }
+    xc.putImageData(new ImageData(show, TW, TW), 0, 0);
+    xc.lineCap = "round";
+    const r = mulberry(3);
+    tile.nuc.forEach((n, idx) => {
+      if (res.found.has(idx)) {
+        xc.strokeStyle = "#1f8a3a"; xc.lineWidth = 2;
+        greaseRing(xc, n.x, n.y, n.r + 4, n.r + 4, r);
+      } else {
+        xc.strokeStyle = "#e0241f"; xc.lineWidth = 2.4;
+        greaseX(xc, n.x - n.r - 2, n.y - n.r - 2, 2 * n.r + 4, r);
+      }
+    });
+    const nTrue = tile.nuc.length, nHit = res.found.size;
+    $("r4count").innerHTML = `${nHit} <small>of ${nTrue} found</small>`;
+    $("r4true").textContent = nTrue;
+    $("r4hit").textContent = nHit;
+    $("r4miss").textContent = nTrue - nHit;
+    $("r4extra").textContent = res.extra;
+    c4c.setAttribute("aria-label", `What the finder marked: ${nHit} of ${nTrue} nuclei found, ${nTrue - nHit} missed, ${res.extra} blobs that are not one nucleus.`);
+  }
+  document.querySelectorAll('input[name="lab"]').forEach((el) => el.addEventListener("change", update4));
+  $("norm4").addEventListener("change", update4);
+  $("new4").addEventListener("click", () => { tileSeed = tileSeed % 40 + 1; tile = makeTile(tileSeed); update4(); });
+
+  // ---------- station 5 ----------
+  const DRAWN_UM = 600; // each overview tile stands for 0.6 mm of glass
+  function update5() {
+    let pass = 0;
+    for (let k = 0; k < NT; k++) if (kept[k] && !fail[k]) pass++;
+    const mpp = +document.querySelector('input[name="mag"]:checked').value;
+    const ts = +document.querySelector('input[name="ts"]:checked').value;
+    const per = Math.pow(DRAWN_UM / (ts * mpp), 2);
+    const tiles = pass * per;
+    const bytes = tiles * ts * ts * 3;
+    $("r5tiles").textContent = "about " + fmt(tiles) + " tiles from 24 \u00d7 14 mm of glass";
+    $("r5math").textContent = `${pass} tiles passed × (${DRAWN_UM} µm ÷ (${ts} px × ${mpp} µm))² = ${pass} × ${per.toFixed(2)}`;
+    $("r5bytes").textContent = `${ts} × ${ts} px × 3 colours = ${(ts * ts * 3 / 1024).toFixed(0)} KB each before compression, about ${(bytes / 1e9).toFixed(1)} GB in all`;
+  }
+  document.querySelectorAll('input[name="mag"], input[name="ts"]').forEach((el) => el.addEventListener("change", update5));
+
+  // ---------- wiring ----------
+  function all() { computeMask(); update2(); update3(); }
+  $("t2").addEventListener("input", (e) => { state.t = +e.target.value; all(); });
+  $("f2").addEventListener("input", (e) => { state.minFrac = +e.target.value / 100; all(); });
+  $("otsu2").addEventListener("click", () => { state.t = OTSU; all(); });
+  document.querySelectorAll('input[name="v2"]').forEach((el) => el.addEventListener("change", (e) => { state.view = e.target.value; update2(); }));
+  $("b3").addEventListener("input", (e) => { state.blurCut = sliderToLv(+e.target.value); update3(); });
+  ["blur", "ink", "fold"].forEach((k) => $("k3" + k).addEventListener("change", (e) => { state.checks[k] = e.target.checked; update3(); }));
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawHist());
+
+  state.blurCut = sliderToLv(+$("b3").value);
+  all();
+  pickTile("blur");
+  update4();
+})();
+</script>
+</body>
+</html>
