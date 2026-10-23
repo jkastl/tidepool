@@ -106,6 +106,12 @@ first milestones). The forms that work best get hands-on with the topic
 itself. Wrappers around it, like a chatbot about X, a gamified X, a quiz or
 flashcards about X, or a generic landing page, tend to say less.
 
+An interactive part earns its place by showing what text alone cannot:
+cause and effect, where in a process something happens, how a change
+moves through, what a number does when you push it. Draw the mechanism
+and let the visitor watch it work. Controls that only reveal a ready-made
+answer the text could have stated work more like a lookup table.
+
 **Styles**, also a menu: blueprint, newspaper front page, terminal,
 risograph print, field notebook, museum placard, 8-bit, brutalist, Swiss
 poster, botanical plate, nautical chart, pulp magazine, subway signage,
