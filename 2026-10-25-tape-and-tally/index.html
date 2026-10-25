@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tape and Tally: One Day of Scanner Events, Read Live and Read Nightly</title>
+<!-- site:head -->
+<meta name="description" content="One made-up day of slide-scanner events through a partitioned log, a live consumer group with event-time windows, and a nightly batch job: lag, crashes, replays, and late data.">
+<link rel="canonical" href="https://jkastl.github.io/tidepool/2026-10-25-tape-and-tally/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="tidepool">
+<meta property="og:title" content="Tape and Tally: One Day of Scanner Events, Read Live and Read Nightly">
+<meta property="og:description" content="One made-up day of slide-scanner events through a partitioned log, a live consumer group with event-time windows, and a nightly batch job: lag, crashes, replays, and late data.">
+<meta property="og:url" content="https://jkastl.github.io/tidepool/2026-10-25-tape-and-tally/">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{
+ "@context": "https://schema.org",
+ "@type": "CreativeWork",
+ "name": "Tape and Tally: One Day of Scanner Events, Read Live and Read Nightly",
+ "description": "One made-up day of slide-scanner events through a partitioned log, a live consumer group with event-time windows, and a nightly batch job: lag, crashes, replays, and late data.",
+ "url": "https://jkastl.github.io/tidepool/2026-10-25-tape-and-tally/",
+ "datePublished": "2026-10-25",
+ "inLanguage": "en",
+ "isPartOf": {
+  "@type": "WebSite",
+  "name": "tidepool",
+  "url": "https://jkastl.github.io/tidepool/"
+ }
+}</script>
+<script src="../stats.js" defer></script>
+<!-- /site:head -->
+<style>
+  :root {
+    --bg: #e8e0cc;
+    --desk: #5a3a24;
+    --desk-2: #3f2818;
+    --tape: #fbf5e2;
+    --tape-edge: #d9cba4;
+    --ink: #1d1914;
+    --ink-soft: #463e33;
+    --muted: #776d5e;
+    --brass: #b38b3c;
+    --brass-2: #e0c27a;
+    --signal: #b3352b;
+    --panel: #f6f0df;
+    --rule: #c6b892;
+    --sc1: #284a78;
+    --sc2: #6d92c0;
+    --sc3: #34643a;
+    --sc4: #86ad72;
+    --truth: rgba(29, 25, 20, 0.5);
+    --late: #b3352b;
+    --room-text: #fbf5e2;
+    --mono: "American Typewriter", "Courier New", Courier, "Nimbus Mono PS", monospace;
+    --slab: Rockwell, "Rockwell Nova", "Roboto Slab", "DejaVu Serif", Georgia, serif;
+    --body: Georgia, "Times New Roman", serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15120e;
+      --desk: #2b1c11;
+      --desk-2: #1d130b;
+      --tape: #2a251b;
+      --tape-edge: #4a4030;
+      --ink: #efe6cf;
+      --ink-soft: #d3c7ab;
+      --muted: #a39780;
+      --brass: #c9a256;
+      --brass-2: #e3c886;
+      --signal: #ef7f73;
+      --panel: #201c15;
+      --rule: #4b4130;
+      --sc1: #7ea6dc;
+      --sc2: #b7cdea;
+      --sc3: #7fbf7a;
+      --sc4: #c1dfa9;
+      --truth: rgba(239, 230, 207, 0.55);
+      --late: #ef7f73;
+      --room-text: #efe6cf;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.55 var(--body); }
+  a { color: inherit; text-underline-offset: 2px; }
+  a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--brass); outline-offset: 2px; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px 40px; }
+  .home { display: inline-block; margin-top: 14px; font: 13px var(--mono); color: var(--muted); }
+  header.mast { margin: 14px 0 22px; text-align: center; }
+  .tapehead {
+    display: inline-block; max-width: 100%;
+    background: var(--tape); color: var(--ink);
+    padding: 14px 26px 16px;
+    border-top: 2px dotted var(--tape-edge); border-bottom: 2px dotted var(--tape-edge);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.12);
+    transform: rotate(-0.6deg);
+  }
+  h1 { font: 700 clamp(30px, 7vw, 54px)/1 var(--slab); letter-spacing: 0.02em; margin: 0; text-transform: uppercase; }
+  .sub { font: 15px/1.4 var(--mono); margin: 8px 0 0; color: var(--ink-soft); }
+  h2 { font: 700 21px/1.2 var(--slab); text-transform: uppercase; letter-spacing: 0.04em; margin: 40px 0 10px; }
+  h3 { font: 700 17px/1.3 var(--slab); margin: 22px 0 6px; }
+  p { margin: 0 0 12px; max-width: 72ch; }
+  .lede { font-size: 19px; }
+  .small { font-size: 15px; color: var(--ink-soft); }
+  code { font-family: var(--mono); font-size: 0.92em; }
+
+  /* the wire room */
+  .room {
+    background: linear-gradient(180deg, var(--desk), var(--desk-2));
+    border-radius: 6px; padding: 14px; color: var(--room-text);
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,0.25);
+  }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 12px; }
+  .clockface {
+    font: 700 30px/1 var(--mono); color: var(--ink); background: var(--tape);
+    padding: 6px 12px; border: 3px solid var(--brass); border-radius: 4px; min-width: 5.2em; text-align: center;
+  }
+  .dayhint { font: 13px var(--mono); color: var(--brass-2); min-width: 14em; }
+  button {
+    font: 14px var(--mono); color: var(--ink); background: var(--tape);
+    border: 1px solid var(--brass); border-radius: 3px; padding: 6px 10px; cursor: pointer;
+  }
+  button:disabled { opacity: 0.45; cursor: default; }
+  button.primary { background: var(--brass); color: #1d1914; font-weight: 700; }
+  button[aria-pressed="true"] { background: var(--brass-2); color: #1d1914; }
+  .speeds { display: inline-flex; gap: 2px; }
+  .label { font: 12px var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--brass-2); margin: 0 0 6px; }
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 14px; }
+  .panel { background: rgba(0,0,0,0.18); border: 1px solid rgba(224, 194, 122, 0.35); border-radius: 4px; padding: 10px; min-width: 0; }
+
+  .scanners { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .site { border: 1px dashed rgba(224, 194, 122, 0.5); border-radius: 4px; padding: 6px; }
+  .site-head { display: flex; justify-content: space-between; font: 12px var(--mono); color: var(--brass-2); margin-bottom: 4px; }
+  .link { font: 12px var(--mono); }
+  .link.down { color: #ff9d8f; font-weight: 700; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .scanner { display: inline-flex; gap: 6px; align-items: center; font: 13px var(--mono); background: var(--tape); color: var(--ink); padding: 3px 7px; border-radius: 3px; }
+  .scanner .lamp { width: 9px; height: 9px; border-radius: 50%; background: var(--tape-edge); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.3); }
+  .scanner.blink .lamp { background: var(--brass-2); box-shadow: 0 0 6px var(--brass-2); }
+  .scanner .held { color: var(--signal); font-size: 12px; }
+  .sw { width: 10px; height: 10px; display: inline-block; border-radius: 2px; }
+
+  .tapes { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .tape-row { min-width: 0; }
+  .tape-head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font: 12px var(--mono); color: var(--room-text); margin-bottom: 2px; }
+  .tape-head b { font-size: 14px; color: var(--brass-2); }
+  .tape-head .keys, .tape-head .owner { color: var(--tape-edge); }
+  @media (prefers-color-scheme: dark) { .tape-head .keys, .tape-head .owner { color: var(--muted); } }
+  .lagnum { margin-left: auto; }
+  .lagnum.high { color: #ff9d8f; font-weight: 700; }
+  .tape {
+    display: flex; align-items: center; gap: 1px; min-height: 34px; overflow: hidden; min-width: 0;
+    background:
+      radial-gradient(circle, var(--tape-edge) 1.3px, transparent 1.6px) 0 3px / 8px 6px repeat-x,
+      var(--tape);
+    padding: 9px 4px 4px; border-radius: 2px;
+  }
+  .cell {
+    flex: 0 0 24px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
+    font: 10px var(--mono); color: #fff; border-radius: 2px; position: relative;
+  }
+  .cell.sc1 { background: var(--sc1); } .cell.sc2 { background: var(--sc2); color: #10233d; }
+  .cell.sc3 { background: var(--sc3); } .cell.sc4 { background: var(--sc4); color: #172b10; }
+  .cell.committed { background: var(--tape-edge) !important; color: var(--ink) !important; }
+  .cell.unread { background: transparent !important; color: var(--ink); border: 1.5px solid; }
+  .cell.unread.sc1 { border-color: var(--sc1); } .cell.unread.sc2 { border-color: var(--sc2); }
+  .cell.unread.sc3 { border-color: var(--sc3); } .cell.unread.sc4 { border-color: var(--sc4); }
+  .cell.mark-commit::before, .cell.mark-read::after {
+    content: ""; position: absolute; left: -2px; width: 3px; border-radius: 1px;
+  }
+  .cell.mark-commit::before { top: -8px; height: 12px; background: var(--brass); }
+  .cell.mark-read::after { bottom: -5px; height: 30px; background: var(--signal); }
+  .more { font: 11px var(--mono); color: var(--muted); padding: 0 4px; white-space: nowrap; }
+  .tapekey { display: flex; flex-wrap: wrap; gap: 4px 14px; font: 12px var(--mono); color: var(--tape-edge); margin-top: 8px; }
+  @media (prefers-color-scheme: dark) { .tapekey { color: var(--muted); } }
+  .tapekey i { display: inline-block; width: 12px; height: 12px; vertical-align: -2px; margin-right: 4px; border-radius: 2px; }
+
+  .consumers { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 8px; }
+  .consumer { font: 13px var(--mono); background: var(--tape); color: var(--ink); border-left: 4px solid var(--signal); padding: 4px 8px; display: flex; gap: 8px; }
+  .consumer.idle { border-left-color: var(--muted); opacity: 0.8; }
+  .btnrow { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .tally { width: 100%; height: auto; display: block; background: var(--tape); border-radius: 3px; }
+  .tally .grid { stroke: var(--tape-edge); stroke-width: 0.6; }
+  .tally .axis { font: 10.5px var(--mono); fill: var(--muted); }
+  .tally .truth { fill: none; stroke: var(--truth); stroke-width: 1.2; stroke-dasharray: 3 2; }
+  .tally .stream.final { fill: var(--sc1); }
+  .tally .stream.open { fill: url(#hatch); }
+  .tally .late { fill: var(--late); }
+  .tally .batch { stroke: var(--brass); stroke-width: 3; }
+  .tally .val { font: 10px var(--mono); fill: var(--ink); }
+  .tally .wm { stroke: var(--signal); stroke-width: 1.5; stroke-dasharray: 4 3; }
+  .tally .wmtext { font: 10.5px var(--mono); fill: var(--signal); }
+  .tallykey { display: flex; flex-wrap: wrap; gap: 4px 12px; font: 12px var(--mono); color: var(--tape-edge); margin: 6px 0; }
+  @media (prefers-color-scheme: dark) { .tallykey { color: var(--muted); } }
+  .tallykey i { display: inline-block; width: 14px; height: 10px; vertical-align: -1px; margin-right: 4px; }
+  .readout { width: 100%; border-collapse: collapse; font: 13px var(--mono); color: var(--room-text); }
+  .readout td { padding: 3px 0; border-bottom: 1px dotted rgba(224, 194, 122, 0.35); vertical-align: top; }
+  .readout td:last-child { text-align: right; color: var(--brass-2); padding-left: 8px; }
+
+  .settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px 18px; margin-top: 12px; }
+  .settings label { font: 13px var(--mono); color: var(--room-text); display: block; }
+  .settings output { color: var(--brass-2); float: right; }
+  .settings input[type=range] { width: 100%; accent-color: var(--brass); }
+  .settings .hint { font: 12px/1.4 var(--mono); color: var(--tape-edge); margin: 2px 0 0; }
+  @media (prefers-color-scheme: dark) { .settings .hint { color: var(--muted); } }
+  .check { display: flex !important; gap: 8px; align-items: flex-start; }
+  .check input { margin-top: 1px; accent-color: var(--brass); width: 20px; height: 20px; flex: none; }
+
+  .log { list-style: none; margin: 0; padding: 0; font: 12.5px/1.45 var(--mono); color: var(--room-text); max-height: 13.5em; overflow-y: auto; }
+  .log li { padding: 3px 0; border-bottom: 1px dotted rgba(224, 194, 122, 0.25); }
+  .log time { color: var(--brass-2); }
+
+  .try { counter-reset: t; list-style: none; padding: 0; }
+  .try li { counter-increment: t; position: relative; padding-left: 2.2em; margin-bottom: 10px; max-width: 72ch; }
+  .try li::before { content: counter(t); position: absolute; left: 0; top: 0; font: 700 14px/1.6em var(--mono); width: 1.6em; text-align: center; background: var(--ink); color: var(--bg); border-radius: 50%; }
+  .sources { font-size: 15px; padding-left: 20px; }
+  .sources li { margin-bottom: 6px; }
+  footer { margin-top: 36px; padding-top: 10px; border-top: 2px dotted var(--rule); font: 13px var(--mono); color: var(--muted); }
+
+  @media (max-width: 820px) {
+    .grid2 { grid-template-columns: minmax(0, 1fr); }
+    .dayhint { min-width: 0; }
+  }
+  @media (max-width: 820px) { button { min-height: 40px; } input[type=range] { min-height: 28px; } }
+  @media (max-width: 420px) {
+    .scanners { grid-template-columns: minmax(0, 1fr); }
+    .clockface { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home" href="../">tidepool</a>
+  <header class="mast">
+    <div class="tapehead">
+      <h1>Tape and Tally</h1>
+      <p class="sub">one day of scanner events, read live and read nightly</p>
+    </div>
+  </header>
+
+  <p class="lede">Every time a slide scanner finishes a slide, it can send a small message: this slide, this scanner, this time. A batch job collects a whole day of those messages and counts them once, overnight. A streaming job counts them as they come in. This page runs one made-up day of those messages through both, so you can watch what the stream has to handle that the batch job mostly does not: partitions, readers that fall behind or crash, messages that turn up late, and messages that get read twice.</p>
+
+  <h2 id="room-h">The wire room</h2>
+  <p class="small">Press Play. The clock runs from 06:00 to 02:30 the next morning. Four scanners at two made-up sites send events into a log split into <span id="parts">3</span> partitions (the tapes). Consumers read the tapes and keep an hourly tally. At 02:00 a nightly batch job counts the whole day from the same log. Things to try, and what the words mean, are below the wire room.</p>
+
+  <section class="room" aria-labelledby="room-h">
+    <div class="bar">
+      <span class="clockface" id="clock" aria-live="off">06:00</span>
+      <button type="button" class="primary" id="play">Play</button>
+      <span class="speeds" role="group" aria-label="Speed">
+        <button type="button" data-speed="2" aria-pressed="false">slow</button>
+        <button type="button" data-speed="8" aria-pressed="true">normal</button>
+        <button type="button" data-speed="40" aria-pressed="false">fast</button>
+      </span>
+      <button type="button" id="step">+10 min</button>
+      <button type="button" id="skip">Skip to the 02:00 batch</button>
+      <button type="button" id="reset">Reset day</button>
+      <span class="dayhint" id="dayhint"></span>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <p class="label">Scanners</p>
+        <div class="scanners">
+          <div class="site">
+            <div class="site-head"><span>Site A</span><span class="link">link up</span></div>
+            <div class="chips">
+              <span class="scanner" id="sc-SC-1"><span class="lamp"></span><i class="sw" style="background:var(--sc1)"></i>SC-1<span class="held"></span></span>
+              <span class="scanner" id="sc-SC-2"><span class="lamp"></span><i class="sw" style="background:var(--sc2)"></i>SC-2<span class="held"></span></span>
+            </div>
+          </div>
+          <div class="site">
+            <div class="site-head"><span>Site B</span><span class="link" id="linkB">link up</span></div>
+            <div class="chips">
+              <span class="scanner" id="sc-SC-3"><span class="lamp"></span><i class="sw" style="background:var(--sc3)"></i>SC-3<span class="held"></span></span>
+              <span class="scanner" id="sc-SC-4"><span class="lamp"></span><i class="sw" style="background:var(--sc4)"></i>SC-4<span class="held"></span></span>
+            </div>
+          </div>
+        </div>
+
+        <p class="label">The log: one tape per partition</p>
+        <div class="tapes" id="tapes"></div>
+        <div class="tapekey" aria-hidden="true">
+          <span><i style="border:1.5px solid var(--sc1)"></i>not read yet</span>
+          <span><i style="background:var(--sc1)"></i>read, not committed</span>
+          <span><i style="background:var(--tape-edge)"></i>read and committed</span>
+          <span><i style="background:var(--signal);width:3px"></i>next to read</span>
+          <span><i style="background:var(--brass);width:3px"></i>committed offset</span>
+        </div>
+
+        <p class="label" style="margin-top:12px">Consumer group</p>
+        <div class="consumers" id="consumers"></div>
+        <div class="btnrow">
+          <button type="button" id="addC">Add a consumer</button>
+          <button type="button" id="remC">Remove one</button>
+          <button type="button" id="crashC">Crash one</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <p class="label">Hourly tally, by when each slide was scanned</p>
+        <svg class="tally" id="tally" viewBox="0 0 480 230" role="img" aria-label="Hourly counts: true count, streaming count, late events dropped, and the batch count">
+          <defs>
+            <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="6" height="6" fill="none"></rect>
+              <line x1="0" y1="0" x2="0" y2="6" stroke="var(--sc2)" stroke-width="3"></line>
+            </pattern>
+          </defs>
+        </svg>
+        <div class="tallykey" aria-hidden="true">
+          <span><i style="border:1.2px dashed var(--truth)"></i>scans made</span>
+          <span><i style="background:var(--sc1)"></i>stream, published</span>
+          <span><i style="background:repeating-linear-gradient(45deg,var(--sc2) 0 3px,transparent 3px 6px)"></i>stream, still open</span>
+          <span><i style="background:var(--late)"></i>arrived too late</span>
+          <span><i style="background:var(--brass);height:3px"></i>batch at 02:00</span>
+        </div>
+        <table class="readout">
+          <tr><td>Scans made so far</td><td id="r-truth"></td></tr>
+          <tr><td>Counted by the stream</td><td id="r-stream"></td></tr>
+          <tr><td>Dropped as too late</td><td id="r-late"></td></tr>
+          <tr><td>Events read twice</td><td id="r-dupes"></td></tr>
+          <tr><td>Watermark</td><td id="r-wm"></td></tr>
+          <tr><td>Last window published</td><td id="r-pub"></td></tr>
+          <tr><td>Events waiting (total lag)</td><td id="r-lag"></td></tr>
+          <tr><td>Nightly batch</td><td id="r-batch"></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="settings">
+      <div>
+        <label for="rate">Scan rate <output id="ratev" for="rate"></output></label>
+        <input type="range" id="rate" min="4" max="40" step="1" value="12">
+        <p class="hint">Each consumer handles 1 event a minute, a made-up figure. Above 15 per scanner per hour, a single consumer falls behind.</p>
+      </div>
+      <div>
+        <label for="delay">Watermark delay <output id="delayv" for="delay"></output></label>
+        <input type="range" id="delay" min="0" max="120" step="5" value="15">
+        <p class="hint">How long the stream waits for stragglers before it publishes an hour and stops accepting events for it.</p>
+      </div>
+      <div>
+        <label class="check"><input type="checkbox" id="dedupe"><span>Skip event_ids already seen (an idempotent write)</span></label>
+        <p class="hint">Off: every message read is counted. On: a message read a second time is recognised by its id and skipped.</p>
+      </div>
+      <div class="btnrow" style="align-content:flex-start">
+        <button type="button" id="cutBtn">Cut site B's link for 90 minutes</button>
+        <button type="button" id="rushBtn">Rush: triple the scan rate for an hour</button>
+      </div>
+    </div>
+
+    <p class="label" style="margin-top:14px">Wire log</p>
+    <ul class="log" id="log" aria-live="off"></ul>
+  </section>
+  <p class="small">Simplified: four scanners, three partitions, consumers that each handle a fixed 1 event a minute, offsets committed every 15 minutes, a rebalance that stops everyone for 2 minutes, and one global watermark taken from the newest event time seen. Real systems tune all of these. "Crash one" always picks the consumer with the most uncommitted work, the worst case for replays. The batch job here reads the complete log and removes repeats, so it is always right; real batch jobs have their own bugs. The scan counts are random but repeatable: Reset gives the same day again.</p>
+
+  <h2>Things to try</h2>
+  <ol class="try">
+    <li><b>Let a normal day run.</b> The hatched bar for the current hour fills up, then turns solid about 15 minutes after the hour ends, once the watermark passes. That delay is the price of waiting for stragglers. Compare the batch's answer: exact, but not until 02:00, seven hours after the last scan.</li>
+    <li><b>Cut site B's link around 11:00.</b> Site B keeps scanning and holds its events. When the link comes back 90 minutes later, they all arrive at once with event times up to 90 minutes old. The 11:00 window was already published, so its site B scans land in red: dropped as too late. Reset, set the watermark delay to 90 minutes, and try again: nothing is dropped, but every hour is published 90 minutes after it ends (and the last two hours never publish, since no later events arrive to move the watermark). The batch job counts them all either way, because it waits for the whole day.</li>
+    <li><b>Crash a consumer mid-morning.</b> It had read some events since its last commit. Its partitions go back to the committed offset and another consumer reads those events again, so the stream counts them twice. Reset, tick "skip event_ids already seen", and crash it again: the repeats are recognised and skipped. (With one consumer left doing all the work, a few events may also come out late; item 5 shows why.)</li>
+    <li><b>Add consumers.</b> With three partitions, a fourth consumer has nothing to read and sits idle. Each partition is read by exactly one consumer in the group, so the partition count caps how many can share the work. Raise the scan rate to 40 first: P0 still falls behind with three consumers, because one partition cannot be split between readers.</li>
+    <li><b>Push the scan rate up and remove a consumer</b> (or press Rush, which triples the rate for an hour). Lag grows on the busiest tape (P0 carries two scanners). A reader that is behind on one partition but up to date on the others makes events from the slow partition look late to the watermark, and some get dropped even though no network link failed.</li>
+    <li><b>Let the day end.</b> The 18:00 window never gets published, because the watermark only moves when newer events arrive, and after 19:00 none do. Real streams handle a quiet input in their own ways; this toy just waits.</li>
+  </ol>
+
+  <h2>What the words mean</h2>
+  <h3>Topic, partition, offset, key</h3>
+  <p>The log here works like Apache Kafka's. A topic is a named log of events, split into partitions so several machines can share it. Each event in a partition gets the next number, its offset. Events with the same key (here, the scanner id) always go to the same partition, and a partition is read in the order it was written; there is no order across partitions.<sup><a href="#s1">1</a></sup> Three partitions and four scanners means one tape carries two scanners, so the load is uneven.</p>
+  <h3>Consumer group, lag, rebalance</h3>
+  <p>Consumers that share a group id split the partitions between them: each partition goes to exactly one consumer in the group, and one consumer may hold several. A consumer beyond the partition count gets nothing. When a consumer joins, leaves, or dies, the group reassigns partitions, and in the classic version of this rebalance nobody reads while it happens.<sup><a href="#s2">2</a></sup> Lag is how far a reader is behind the newest offset in its partition; some tools measure it from the last committed offset instead.<sup><a href="#s7">7</a></sup></p>
+  <h3>Commits and reading twice</h3>
+  <p>A consumer records how far it has got by committing an offset. Committing after the work is done means a crash between the work and the commit causes the same events to be processed again: at-least-once delivery. The usual answer is to make the write idempotent, for example by keying it on a stable event id so a repeat changes nothing.<sup><a href="#s3">3</a></sup></p>
+  <h3>Event time, windows, watermarks</h3>
+  <p>Event time is when the slide was scanned; processing time is when the message got read. Hourly windows here are by event time, so a late message still belongs to its own hour. A watermark tells the engine how late data may be: Spark's Structured Streaming, for one, takes the newest event time seen minus a delay you choose, keeps a window open until the watermark passes its end, and can drop data older than that.<sup><a href="#s4">4</a></sup> A longer delay drops less and publishes later. This page uses that idea in simplified form.</p>
+  <h3>Where batch fits</h3>
+  <p>Structured Streaming runs a stream as a series of small batch jobs by default, with latency down to about 100 milliseconds, using the same query you would write for a batch.<sup><a href="#s5">5</a></sup> The nightly job is the other end of the same idea: one big batch, run by a scheduler. Airflow, a common choice for scheduling such jobs, describes itself in its documentation (here version 2.3.3) as a workflow tool and says plainly that it is not a streaming system.<sup><a href="#s6">6</a></sup> Many setups use both: a stream for the dashboard during the day, and a nightly batch that recounts from the log and corrects whatever the stream got wrong, a pattern often called the lambda architecture.<sup><a href="#s8">8</a></sup></p>
+
+  <h2>Already out there</h2>
+  <ul>
+    <li><a href="https://aiven.io/tools/kafka-visualization">Aiven's Kafka Visualization</a> simulates a replicated topic in the browser, with partitions, brokers, and replication.</li>
+    <li><a href="https://github.com/pedromazala/kafka-traffic-visualizer">kafka-traffic-visualizer</a> simulates producers, partitions, and consumers with live metrics, and lets you pick among several partition assignment strategies.</li>
+  </ul>
+  <p>Both look closely at the log itself. This page tries putting a nightly batch beside the stream, with event-time windows, late data, and replays, on a day of made-up scanner traffic.</p>
+
+  <h2>Sources</h2>
+  <ol class="sources">
+    <li id="s1">Topics, partitions, keys, and per-partition order: Apache Kafka, <a href="https://kafka.apache.org/42/getting-started/introduction/">Introduction</a>; Confluent Developer, <a href="https://developer.confluent.io/courses/apache-kafka/partitions/">Kafka partitions</a>.</li>
+    <li id="s2">One consumer per partition within a group, idle extra consumers, and rebalances pausing consumption: O'Reilly, <a href="https://oreilly.com/library/view/kafka-the-definitive/9781492043072/ch04.html"><i>Kafka: The Definitive Guide</i>, chapter 4</a>.</li>
+    <li id="s3">At-least-once delivery from committing after processing, and idempotent consumers: Conduktor, <a href="https://www.conduktor.io/kafka/delivery-semantics-for-kafka-consumers">Delivery semantics for Kafka consumers</a>.</li>
+    <li id="s4">Watermarks in Structured Streaming: Apache Spark, <a href="https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.withWatermark.html">DataFrame.withWatermark</a>; Databricks, <a href="https://databricks.com/blog/2017/05/08/event-time-aggregation-watermarking-apache-sparks-structured-streaming.html">Event-time aggregation and watermarking in Structured Streaming</a> (2017).</li>
+    <li id="s5">Micro-batch processing and latency down to about 100 ms: Apache Spark, <a href="https://spark.apache.org/docs/latest/streaming/">Structured Streaming Programming Guide</a>.</li>
+    <li id="s6">"Airflow is not a data streaming solution": Apache Airflow <a href="https://airflow.apache.org/docs/apache-airflow/2.3.3/">documentation, version 2.3.3</a>.</li>
+    <li id="s7">Consumer lag: Conduktor, <a href="https://www.conduktor.io/glossary/consumer-lag-monitoring">Consumer lag monitoring</a>.</li>
+    <li id="s8">The lambda architecture: Databricks, <a href="https://databricks.com/glossary/lambda-architecture">Lambda architecture glossary</a>.</li>
+  </ol>
+
+  <footer><a href="../">tidepool</a>: small, odd things washed up for a look.</footer>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

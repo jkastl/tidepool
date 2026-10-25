@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rows in the Drawer: SQL on a Made-Up Pathology Lab, One Clause at a Time</title>
+<!-- site:head -->
+<meta name="description" content="Six SQL queries run clause by clause on a made-up lab&#x27;s cases, slides, and scans, each in a first-written and a fixed version, with a SQLite scratchpad for trying more.">
+<link rel="canonical" href="https://jkastl.github.io/tidepool/2026-10-25-rows-in-the-drawer/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="tidepool">
+<meta property="og:title" content="Rows in the Drawer: SQL on a Made-Up Pathology Lab, One Clause at a Time">
+<meta property="og:description" content="Six SQL queries run clause by clause on a made-up lab&#x27;s cases, slides, and scans, each in a first-written and a fixed version, with a SQLite scratchpad for trying more.">
+<meta property="og:url" content="https://jkastl.github.io/tidepool/2026-10-25-rows-in-the-drawer/">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{
+ "@context": "https://schema.org",
+ "@type": "CreativeWork",
+ "name": "Rows in the Drawer: SQL on a Made-Up Pathology Lab, One Clause at a Time",
+ "description": "Six SQL queries run clause by clause on a made-up lab's cases, slides, and scans, each in a first-written and a fixed version, with a SQLite scratchpad for trying more.",
+ "url": "https://jkastl.github.io/tidepool/2026-10-25-rows-in-the-drawer/",
+ "datePublished": "2026-10-25",
+ "inLanguage": "en",
+ "isPartOf": {
+  "@type": "WebSite",
+  "name": "tidepool",
+  "url": "https://jkastl.github.io/tidepool/"
+ }
+}</script>
+<script src="../stats.js" defer></script>
+<!-- /site:head -->
+<style>
+  :root {
+    --page: #e9e1cf;
+    --wood: #9a6634;
+    --wood-dark: #6e4521;
+    --wood-light: #c08a52;
+    --brass: #c9a24a;
+    --brass-dark: #8a6a22;
+    --card: #fbf7ea;
+    --card-line: rgba(70, 110, 170, 0.18);
+    --card-red: #c4473a;
+    --ink: #24201a;
+    --ink-soft: #4b4338;
+    --muted: #776c5c;
+    --rule: #cdbf9f;
+    --true: #2e6b3a;
+    --false: #a3302a;
+    --unknown: #a06a0c;
+    --mark: #f3d36b;
+    --c: #2f5d8a;
+    --s: #7a3f86;
+    --sc: #2f6f5b;
+    --pile0: #d9e4ee;
+    --pile1: #ecdcea;
+    --pile2: #dcebdf;
+    --pile3: #f1e5cd;
+    --type: "Courier Prime", "Courier New", Courier, "Nimbus Mono PS", "Liberation Mono", monospace;
+    --serif: Georgia, "Times New Roman", "Liberation Serif", serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page: #17130f;
+      --wood: #4a321c;
+      --wood-dark: #2c1d10;
+      --wood-light: #6a4828;
+      --brass: #b38f3d;
+      --brass-dark: #6f5520;
+      --card: #2a251d;
+      --card-line: rgba(140, 170, 220, 0.12);
+      --card-red: #d36b5e;
+      --ink: #efe6d3;
+      --ink-soft: #d6cab3;
+      --muted: #a89a83;
+      --rule: #4a4033;
+      --true: #7cc48a;
+      --false: #ef8a80;
+      --unknown: #e8b04d;
+      --mark: #7a6418;
+      --c: #8db8e4;
+      --s: #d29ce0;
+      --sc: #82d1b5;
+      --pile0: #1f2a35;
+      --pile1: #31232f;
+      --pile2: #1f3125;
+      --pile3: #352b1b;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font: 17px/1.55 var(--serif);
+  }
+  a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, button:focus-visible, summary:focus-visible, textarea:focus-visible, label:focus-within {
+    outline: 3px solid var(--brass); outline-offset: 2px;
+  }
+  code, pre, kbd { font-family: var(--type); }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 16px; }
+  .home { font: 13px var(--type); color: var(--muted); display: inline-block; margin-top: 14px; }
+
+  /* masthead: a drawer front */
+  header.front {
+    margin: 14px 0 26px;
+    padding: 26px 20px 30px;
+    background:
+      repeating-linear-gradient(92deg, rgba(0,0,0,0.05) 0 2px, transparent 2px 9px),
+      linear-gradient(180deg, var(--wood-light), var(--wood) 60%, var(--wood-dark));
+    border-radius: 4px;
+    box-shadow: inset 0 -6px 0 rgba(0,0,0,0.18), 0 2px 0 rgba(0,0,0,0.2);
+    text-align: center;
+  }
+  .holder {
+    display: inline-block;
+    padding: 6px;
+    background: linear-gradient(180deg, #e7cc7f, var(--brass) 45%, var(--brass-dark));
+    border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    max-width: 100%;
+  }
+  .holder-card {
+    background: var(--card);
+    padding: 14px 22px 12px;
+    border: 1px solid rgba(0,0,0,0.15);
+  }
+  h1 {
+    font: 700 clamp(28px, 6vw, 46px)/1.05 var(--type);
+    margin: 0;
+    letter-spacing: -0.5px;
+  }
+  .sub { font: 15px/1.4 var(--type); color: var(--ink-soft); margin: 8px 0 0; }
+  .handle {
+    display: block; width: 110px; height: 16px; margin: 18px auto 0;
+    border-radius: 0 0 40px 40px;
+    background: linear-gradient(180deg, var(--brass-dark), var(--brass) 40%, #e7cc7f);
+    box-shadow: 0 2px 2px rgba(0,0,0,0.35);
+  }
+
+  h2 {
+    font: 700 22px/1.2 var(--type);
+    margin: 42px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--rule);
+  }
+  h3 { font: 700 17px var(--type); margin: 22px 0 6px; }
+  p { margin: 0 0 12px; max-width: 70ch; }
+  .lede { font-size: 19px; }
+  .small { font-size: 15px; color: var(--ink-soft); }
+
+  /* cards */
+  .card {
+    position: relative;
+    background:
+      linear-gradient(var(--card-red), var(--card-red)) 0 22px / 100% 1px no-repeat,
+      repeating-linear-gradient(180deg, transparent 0 21px, var(--card-line) 21px 22px),
+      var(--card);
+    color: var(--ink);
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 2px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.18);
+    padding: 4px 10px 18px;
+    font: 13px/22px var(--type);
+    min-width: 0;
+  }
+  .card::after {
+    content: ""; position: absolute; left: 50%; bottom: 4px; width: 8px; height: 8px; margin-left: -4px;
+    border-radius: 50%; background: var(--page); box-shadow: inset 0 1px 1px rgba(0,0,0,0.35);
+  }
+  .f { display: flex; flex-wrap: wrap; justify-content: space-between; column-gap: 8px; }
+  .f .k { color: var(--muted); white-space: nowrap; }
+  .f .v { text-align: right; white-space: nowrap; margin-left: auto; }
+  .f .v.null { color: var(--muted); font-style: italic; }
+  .f-added { background: var(--mark); margin: 0 -6px; padding: 0 6px; }
+  .alias {
+    display: inline-block; font-size: 11px; line-height: 15px; padding: 0 4px; margin-right: 3px;
+    border-radius: 2px; color: var(--card); vertical-align: 1px;
+  }
+  .alias-c { background: var(--c); }
+  .alias-s { background: var(--s); }
+  .alias-sc { background: var(--sc); }
+  .badge { font-size: 11px; line-height: 18px; color: var(--card-red); }
+  .badge-null { color: var(--muted); }
+  .card.nullfill { border-style: dashed; }
+  .card.v-false, .card.v-unknown { opacity: 0.72; }
+  .card .stamp {
+    position: absolute; top: 2px; right: 6px;
+    font: 700 12px var(--type); letter-spacing: 1px;
+    border: 2px solid currentColor; padding: 0 5px; transform: rotate(-4deg);
+    background: var(--card);
+  }
+  .v-true .stamp { color: var(--true); }
+  .v-false .stamp { color: var(--false); }
+  .v-unknown .stamp { color: var(--unknown); }
+  .card .why { font-size: 11.5px; line-height: 16px; color: var(--ink-soft); border-top: 1px dotted var(--rule); margin-top: 4px; padding-top: 3px; }
+  .v-true, .v-false, .v-unknown { padding-top: 26px; }
+  .card.summary { border: 2px solid var(--ink); }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+
+  /* drawers */
+  .drawers { display: grid; gap: 10px; }
+  .drawer { border-radius: 4px; background: var(--wood-dark); }
+  .drawer-front {
+    list-style: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 10px 14px;
+    background:
+      repeating-linear-gradient(92deg, rgba(0,0,0,0.05) 0 2px, transparent 2px 9px),
+      linear-gradient(180deg, var(--wood-light), var(--wood));
+    border-radius: 4px;
+  }
+  .drawer-front::-webkit-details-marker { display: none; }
+  .plate {
+    display: inline-flex; gap: 12px; align-items: baseline;
+    padding: 4px 12px; background: var(--card); color: var(--ink);
+    border: 4px solid var(--brass); border-radius: 2px; font: 700 15px var(--type);
+  }
+  .plate-count { font-weight: 400; font-size: 12px; color: var(--muted); }
+  .pull { width: 54px; height: 12px; border-radius: 0 0 20px 20px; background: linear-gradient(180deg, var(--brass-dark), var(--brass)); }
+  .drawer[open] .pull { transform: rotate(180deg); }
+  .drawer-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; padding: 12px; }
+  .label-key { font: 14px/1.5 var(--type); background: var(--card); color: var(--ink); border: 1px solid var(--rule); padding: 10px 12px; margin: 14px 0; max-width: 70ch; }
+  .label-key b { color: var(--card-red); }
+
+  /* stepper */
+  .stepper { background: rgba(0,0,0,0.04); border: 1px solid var(--rule); border-radius: 4px; padding: 14px; }
+  @media (prefers-color-scheme: dark) { .stepper { background: rgba(255,255,255,0.03); } }
+  .qtabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .qtab, .vbtn, .ctl, .padbtn {
+    font: 14px var(--type); color: var(--ink); background: var(--card);
+    border: 1px solid var(--rule); border-radius: 3px; padding: 7px 10px; cursor: pointer;
+  }
+  .qtab[aria-pressed="true"] { background: var(--ink); color: var(--card); border-color: var(--ink); }
+  .ask { font: 700 18px/1.35 var(--type); margin: 6px 0 10px; }
+  .variants { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .vbtn { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; }
+  .vbtn .vletter { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .vbtn[aria-pressed="true"] { border: 2px solid var(--card-red); box-shadow: inset 0 0 0 1px var(--card-red); }
+  .vbtn code { font-size: 13px; }
+  .split { display: grid; grid-template-columns: minmax(0, 410px) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .sqlcard {
+    background: var(--card); color: var(--ink); border: 1px solid var(--rule);
+    padding: 10px 12px; font: 12.5px/1.5 var(--type); white-space: pre; overflow-x: auto; margin: 0;
+  }
+  .sqlcard mark { background: var(--mark); color: inherit; padding: 1px 0; }
+  .rail { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; counter-reset: c; }
+  .rail li { counter-increment: c; }
+  .rail button {
+    font: 12px var(--type); color: var(--muted); background: transparent;
+    border: 1px dashed var(--rule); border-radius: 14px; padding: 7px 11px; cursor: pointer;
+  }
+  .rail button::before { content: counter(c) ". "; }
+  .rail li.done button { color: var(--ink-soft); border-style: solid; }
+  .rail li.on button { color: var(--card); background: var(--card-red); border: 1px solid var(--card-red); }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0 0; }
+  .ctl:disabled, .padbtn:disabled { opacity: 0.45; cursor: default; }
+  .ctl.primary { background: var(--ink); color: var(--card); border-color: var(--ink); }
+  .stepno { font: 13px var(--type); color: var(--muted); margin-left: auto; }
+  .note { font: 14px/1.5 var(--type); background: var(--card); color: var(--ink); border-left: 4px solid var(--card-red); padding: 8px 12px; margin: 12px 0 0; max-width: none; min-height: 3em; }
+  .view-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; font-family: var(--type); }
+  .view-clause { font-weight: 700; font-size: 15px; }
+  .view-count { font-size: 13px; color: var(--muted); }
+  .piles { display: grid; gap: 12px; }
+  .pile { padding: 10px; border-radius: 3px; }
+  .pile-0 { background: var(--pile0); } .pile-1 { background: var(--pile1); }
+  .pile-2 { background: var(--pile2); } .pile-3 { background: var(--pile3); }
+  .pile-key { font: 700 13px var(--type); margin-bottom: 6px; }
+  .pile > .card.summary { max-width: 260px; margin-bottom: 8px; }
+  .cards.under .card { opacity: 0.8; }
+  .cards.line { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .chip { font: 14px var(--type); background: var(--card); border: 1px solid var(--rule); padding: 2px 8px; }
+  .chip.null { color: var(--unknown); border: 2px solid var(--unknown); font-weight: 700; }
+  .aside-label, .aside-keep { font: 14px var(--type); }
+  .error-slip { background: var(--card); border: 2px solid var(--false); padding: 12px; font-family: var(--type); }
+  .error-slip strong { display: block; color: var(--false); }
+  .empty { font: italic 14px var(--type); color: var(--muted); }
+
+  .order { font: 14px/1.6 var(--type); background: var(--card); border: 1px solid var(--rule); padding: 10px 12px 10px 36px; max-width: 70ch; }
+
+  /* scratchpad */
+  .pad { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .filebtn:focus-within { outline: 3px solid var(--brass); outline-offset: 2px; }
+  textarea {
+    width: 100%; min-height: 190px; resize: vertical;
+    font: 14px/1.5 var(--type); color: var(--ink);
+    background:
+      repeating-linear-gradient(180deg, transparent 0 20px, var(--card-line) 20px 21px),
+      var(--card);
+    border: 1px solid var(--rule); padding: 8px 10px;
+  }
+  .padrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .padstatus { font: 13px var(--type); color: var(--muted); margin: 0; }
+  .padstatus.bad { color: var(--false); }
+  .filebtn { position: relative; overflow: hidden; display: inline-block; }
+  .filebtn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .tablewrap { overflow-x: auto; }
+  table { border-collapse: collapse; font: 13px var(--type); background: var(--card); }
+  th, td { border: 1px solid var(--rule); padding: 3px 8px; text-align: left; }
+  td.null { color: var(--muted); font-style: italic; }
+  .rowcount { font: 12px var(--type); color: var(--muted); margin-top: 4px; }
+  .padError { font: 14px var(--type); color: var(--false); }
+
+  .sources { font-size: 15px; padding-left: 20px; }
+  .sources li { margin-bottom: 6px; }
+  footer { margin: 40px 0 30px; padding-top: 12px; border-top: 2px solid var(--rule); font: 13px var(--type); color: var(--muted); }
+
+  @media (max-width: 760px) {
+    body { font-size: 16px; }
+    .split { grid-template-columns: minmax(0, 1fr); }
+    .cards, .drawer-body { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    .stepno { margin-left: 0; width: 100%; }
+  }
+  @media (max-width: 380px) {
+    .cards, .drawer-body, .cards.line { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home" href="../">tidepool</a>
+
+  <header class="front">
+    <div class="holder"><div class="holder-card">
+      <h1>Rows in the Drawer</h1>
+      <p class="sub">SQL on a made-up pathology lab, one clause at a time</p>
+    </div></div>
+    <span class="handle" aria-hidden="true"></span>
+  </header>
+
+  <p class="lede">Lab data comes nested: a case holds parts, a part holds blocks, a block gives slides, and a slide can be scanned more than once. A lot of SQL mistakes happen right at those joins. This page runs six small queries over a tiny made-up lab, one clause at a time, so you can watch the rows (drawn as index cards) get copied, crossed out, piled up, and numbered. Each query comes in two versions that differ by a keyword or a line. Version A is the one often written first; version B is the fix (or, in the last query, the other way to count).</p>
+
+  <h2 id="drawers-h">The drawers</h2>
+  <p>Three tables, small enough to read card by card. Open a drawer to see what is in it.</p>
+  <div class="drawers" id="drawers"></div>
+  <div class="label-key">
+    A slide label like <b>A1-2</b> on case <b>S26-101</b> reads: part <b>A</b>, block <b>1</b>, slide <b>2</b> cut from that block. A real lab system usually keeps parts and blocks as their own records; here they are folded into the label to keep the drawers small. Labs format their labels in their own ways.
+  </div>
+  <p class="small">A few words used below: <b>NULL</b> means no value recorded. A <b>CTE</b> (the <code>WITH … AS</code> part) is a named sub-query written first. <b>LAG</b> reads a value from the previous row. <b>H&amp;E</b> and <b>IHC</b> are kinds of stain; <b>QC</b> is quality control.</p>
+  <p class="small">Three details are planted on purpose, because real data has them: slide 1 and slide 5 were rescanned, after a blurred scan and a scan that cut off part of the tissue; scan 7's barcode did not read, so it has no <code>slide_id</code>; and slide 7 has not been scanned yet, while slide 8's scan is still waiting on QC.</p>
+
+  <h2 id="stepper-h">Six queries, clause by clause</h2>
+  <p>A database reads a query in a different order than it is written. FROM and the joins come first, then WHERE, GROUP BY, HAVING (none of the six needs it), window functions, SELECT, and ORDER BY last. Window functions are really worked out as part of SELECT, after HAVING; this page gives them their own step so you can watch them. Pick a query, pick a version, and step through. The highlighted part of the SQL is the clause doing the work.</p>
+
+  <section class="stepper" id="stepper" aria-labelledby="stepper-h">
+    <div class="qtabs" id="qtabs" role="group" aria-label="Pick a query"></div>
+    <p class="ask" id="ask"></p>
+    <div class="variants" id="variants" role="group" aria-label="Pick a version"></div>
+    <div class="split">
+      <div>
+        <pre class="sqlcard" id="sql" tabindex="0" aria-label="The query, with the current clause highlighted"></pre>
+        <ol class="rail" id="rail" aria-label="Clauses in the order they run"></ol>
+      </div>
+      <div class="view" id="view" aria-live="polite"></div>
+    </div>
+    <p class="note" id="note"></p>
+    <div class="controls">
+      <button type="button" class="ctl" id="back">Back</button>
+      <button type="button" class="ctl primary" id="next">Next clause</button>
+      <button type="button" class="ctl" id="end">Run to the end</button>
+      <span class="stepno" id="stepno"></span>
+    </div>
+  </section>
+  <p class="small">The arrow keys step back and forward while the stepper has focus. These steps are the logical order, the order a query's meaning is defined in. A real database plans its own physical order and may filter, join, or sort in a different sequence, as long as the answer comes out the same.</p>
+
+  <h3>What the six show</h3>
+  <ul>
+    <li><b>The join that doubled.</b> Joining a parent to two child tables copies the parent once per child row. Counting after that counts copies. <code>COUNT(DISTINCT …)</code> is one fix; counting each child table in its own subquery before joining is another.</li>
+    <li><b>The LEFT JOIN that went missing.</b> A LEFT JOIN keeps unmatched rows with NULLs, and a WHERE test such as <code>=</code> on the right-hand table then throws them away, because NULL = 'pass' is not TRUE. Moving the test into <code>ON</code> keeps them.</li>
+    <li><b>NOT IN and the unread barcode.</b> <code>x NOT IN (…)</code> is never TRUE if the list holds a NULL, so the query quietly returns nothing. <code>NOT EXISTS</code> does not have this problem.</li>
+    <li><b>The latest rescan.</b> Window functions are worked out after WHERE, so they cannot be filtered there. Compute the row number in a CTE or subquery and filter outside it.</li>
+    <li><b>The previous scan.</b> Leaving out <code>PARTITION BY</code> makes <code>LAG</code> reach back across scanners, so a scan that follows the other scanner's work borrows its time (scans 4, 7 and 10 here).</li>
+    <li><b>Piles or notes in the margin.</b> GROUP BY turns each group into one row. A window function writes the group's total on every row and keeps them all.</li>
+  </ul>
+
+  <h2 id="pad-h">Scratchpad</h2>
+  <p>Try your own queries against the same three tables. The scratchpad runs SQLite inside this page using <a href="https://github.com/sql-js/sql.js">sql.js</a>, SQLite compiled to WebAssembly. It is fetched from the jsDelivr CDN only when you ask for it (well under a megabyte), and nothing you type leaves the page. SQLite is one dialect among several, so a few functions are spelled differently elsewhere.</p>
+  <div class="pad">
+    <div class="padrow">
+      <button type="button" class="padbtn" id="load">Load SQLite</button>
+      <button type="button" class="padbtn" id="run" disabled>Run (Ctrl+Enter)</button>
+      <button type="button" class="padbtn" id="copyq">Copy the stepper's query here</button>
+      <button type="button" class="padbtn" id="reset" disabled>Reset tables</button>
+    </div>
+    <p class="padstatus" id="padstatus" role="status">SQLite is not loaded yet.</p>
+    <label for="pad" class="small">Query</label>
+    <textarea id="pad" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+    <div class="padrow">
+      <button type="button" class="padbtn" id="dl">Download the tables and this query (.sql)</button>
+      <span class="padbtn filebtn">Open a .sql file<input type="file" id="openfile" accept=".sql,.txt,text/plain" aria-label="Open a .sql file into the scratchpad"></span>
+    </div>
+    <p class="small">The query box is kept in this browser between visits. The download is a plain SQL script that sets up the tables in any SQLite, with the query at the end.</p>
+    <div id="padout"></div>
+  </div>
+
+  <h2>Already out there</h2>
+  <ul>
+    <li><a href="https://www.dpriver.com/blog/sql-visualizer/">SQL Visualizer</a> from DPriver turns a pasted query into a diagram laid out in execution order, from sources through joins, filters, aggregates, and window functions.</li>
+    <li><a href="https://www.ntnu.no/ojs/index.php/nikt/article/view/5477">viSQLizer</a> was a research prototype that broke queries into animated steps for students; a 2016 study found it helped about as much as an online tutorial.</li>
+    <li><a href="https://www.sql-practice.com/">sql-practice.com</a> sets graded practice questions on a small hospital database of patients, admissions, and doctors.</li>
+  </ul>
+  <p>This page tries something narrower: a few known mistakes, on nested lab-style data, with every row shown at every clause and the fix one click away.</p>
+
+  <h2>Sources</h2>
+  <ol class="sources">
+    <li>Logical processing order of SELECT, and that the physical order can differ: Microsoft Learn, <a href="https://learn.microsoft.com/sql/t-sql/queries/select-transact-sql">SELECT (Transact-SQL)</a>.</li>
+    <li>Window functions run after WHERE, GROUP BY, and HAVING, and are not allowed in them; filter in a sub-select instead: PostgreSQL documentation, <a href="https://www.postgresql.org/docs/current/tutorial-window.html">Window Functions tutorial</a>.</li>
+    <li>SQLite's window functions, including <code>ROW_NUMBER</code> and <code>LAG</code>, added in version 3.25.0: <a href="https://www.sqlite.org/windowfunctions.html">SQLite window functions</a>.</li>
+    <li>Why <code>NOT IN</code> against a list with a NULL filters every row: a worked example on <a href="https://learn.microsoft.com/en-us/answers/questions/657695/how-works-not-in-with-nulls-value">Microsoft Q&amp;A</a>, and the jOOQ manual's <a href="https://www.jooq.org/doc/dev/manual/reference/dont-do-this/dont-do-this-sql-not-in/">note on NOT IN</a>, which suggests NOT EXISTS. Why a WHERE test can undo a LEFT JOIN: jOOQ blog, <a href="https://blog.jooq.org/the-difference-between-sqls-join-on-clause-and-the-where-clause">The difference between SQL's JOIN .. ON clause and the WHERE clause</a>.</li>
+    <li>Join fan-out and its fixes: Google Cloud community, <a href="https://discuss.google.dev/t/the-problem-of-sql-fanouts/119220">The problem of SQL fanouts</a>.</li>
+    <li>Case (accession), part, block, and slide as the usual levels of a surgical pathology specimen: DICOM PS3.17, <a href="https://dicom.nema.org/medical/dicom/2024c/output/chtml/part17/chapter_NN.html">Annex NN, Specimen Identification and Management</a>; LibrePathology, <a href="https://librepathology.org/wiki/Anatomical_pathology_laboratory_process">Anatomical pathology laboratory process</a>. Labels like S14-9999 A1: College of American Pathologists, <a href="https://cap.org/protocols-and-guidelines/cap-guidelines/current-cap-guidelines/uniform-labeling-of-blocks-and-slides-in-surgical-pathology">Uniform Labeling of Blocks and Slides in Surgical Pathology</a>.</li>
+    <li>sql.js: <a href="https://github.com/sql-js/sql.js">project page</a>.</li>
+  </ol>
+  <p class="small">The lab, its cases, patients, and scanners are made up. Every result the stepper shows was checked against SQLite running the same SQL on the same tables.</p>
+
+  <footer><a href="../">tidepool</a>: small, odd things washed up for a look.</footer>
+</div>
+<script type="module" src="ui.js"></script>
+</body>
+</html>

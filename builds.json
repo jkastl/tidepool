@@ -150,5 +150,45 @@
     "style": "photographer's contact sheet and grease pencil",
     "summary": "One drawn pathology slide run through five stations of a data pipeline: find the tissue, cross out blurred, folded and inked tiles, even out stain colour, and count the tiles that come out.",
     "source": "idea-tank#50"
+  },
+  {
+    "slug": "2026-10-25-rows-in-the-drawer",
+    "title": "Rows in the Drawer: SQL on a Made-Up Pathology Lab, One Clause at a Time",
+    "date": "2026-10-25",
+    "kind": "idea",
+    "form": "tool",
+    "style": "library card catalogue",
+    "summary": "Six SQL queries run clause by clause on a made-up lab's cases, slides, and scans, each in a first-written and a fixed version, with a SQLite scratchpad for trying more.",
+    "source": "idea-tank#51"
+  },
+  {
+    "slug": "2026-10-25-same-patient-both-sides",
+    "title": "Same Patient, Both Sides: Why Slide Tiles Are Split by Patient Before a Model Is Scored",
+    "date": "2026-10-25",
+    "kind": "idea",
+    "form": "visual essay",
+    "style": "mid-century journal reprint",
+    "summary": "Why tiles cut from pathology slides are split by patient before a model is scored: a nearest-neighbour toy that shows the leak, and the same effect one level up, between sites.",
+    "source": "idea-tank#51"
+  },
+  {
+    "slug": "2026-10-25-tape-and-tally",
+    "title": "Tape and Tally: One Day of Scanner Events, Read Live and Read Nightly",
+    "date": "2026-10-25",
+    "kind": "idea",
+    "form": "simulation",
+    "style": "telegraph office and ticker tape",
+    "summary": "One made-up day of slide-scanner events through a partitioned log, a live consumer group with event-time windows, and a nightly batch job: lag, crashes, replays, and late data.",
+    "source": "idea-tank#51"
+  },
+  {
+    "slug": "2026-10-25-parts-list",
+    "title": "Parts List: A Field Guide to the Tools in a Pathology Data Stack",
+    "date": "2026-10-25",
+    "kind": "idea",
+    "form": "field guide",
+    "style": "mail-order parts catalogue",
+    "summary": "Common data tools filed by the job they do, from getting data in to dashboards, with one question traced through a nightly copy, a stream, and a virtual layer.",
+    "source": "idea-tank#51"
   }
 ]
