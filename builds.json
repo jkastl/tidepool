@@ -1,15 +1,5 @@
 [
   {
-    "slug": "2026-10-12-ai-psychosis-loop",
-    "title": "The Agreement Loop",
-    "date": "2026-10-12",
-    "kind": "question",
-    "form": "interactive lab",
-    "style": "vintage manual",
-    "summary": "What \"AI psychosis\" means, and a toy model of how chatbot agreement and isolation can feed a belief loop.",
-    "source": "idea-tank#17"
-  },
-  {
     "slug": "2026-10-12-slopcore-field-guide",
     "title": "A Field Guide to Slop",
     "date": "2026-10-12",
@@ -30,37 +20,6 @@
     "source": "idea-tank#19"
   },
   {
-    "slug": "2026-10-13-catharsis-playbill",
-    "title": "Catharsis: A Drama in Five Acts",
-    "date": "2026-10-13",
-    "kind": "musing",
-    "form": "visual essay",
-    "style": "theatre playbill",
-    "summary": "The word catharsis from Aristotle's stage to the psychology lab, and why letting feelings out doesn't drain them the way the steam-valve picture says.",
-    "source": "idea-tank#25"
-  },
-  {
-    "slug": "2026-10-14-slide-to-screen",
-    "title": "Slide to Screen: Digital Pathology",
-    "date": "2026-10-14",
-    "kind": "idea",
-    "form": "interactive explainer",
-    "style": "H&E stain and glass slide",
-    "summary": "Digital pathology from tissue to pixels: the lab pipeline step by step, a zoomable whole-slide image pyramid, a file-size calculator, and a glossary of the key terms.",
-    "source": "idea-tank#27",
-    "revised": "2026-10-14"
-  },
-  {
-    "slug": "2026-10-15-podracer-pit-program",
-    "title": "Pit Program: How a Podracer Works",
-    "date": "2026-10-15",
-    "kind": "question",
-    "form": "interactive lab",
-    "style": "vintage motorsport race program",
-    "summary": "A film podracer taken apart: a cutaway sorting each part into real engineering or movie magic, a test track where differential thrust steers and tow cables go slack, and the g-forces a pilot would face.",
-    "source": "idea-tank#30"
-  },
-  {
     "slug": "2026-10-16-wled-strip-planner",
     "title": "WLED Strip Planner",
     "date": "2026-10-16",
@@ -69,16 +28,6 @@
     "style": "PCB silkscreen",
     "summary": "What WLED is and how to plan the power side of an LED strip: a planner for pixel count, supply size, power feeds, wire drop, and frame rate, a wiring diagram drawn to match, and the firmware's vocabulary.",
     "source": "idea-tank#32"
-  },
-  {
-    "slug": "2026-10-17-arm-operators-manual",
-    "title": "Operator's Manual: How a Robot Arm Reaches",
-    "date": "2026-10-17",
-    "kind": "question",
-    "form": "visual essay",
-    "style": "vintage operator's manual",
-    "summary": "Robot arm basics as an old operator's manual: joints and degrees of freedom, a drag-the-hand inverse kinematics figure with elbow-up, elbow-down, and redundancy, a singularity you can run into, and the motors, grippers, and arm families.",
-    "source": "idea-tank#33"
   },
   {
     "slug": "2026-10-18-pull-the-stops",
@@ -109,26 +58,6 @@
     "style": "green-bar tractor-feed printout",
     "summary": "The common blood panels and what each looks at, where a reference range comes from, and a printer that runs panels on made-up healthy people to show how often they get flagged anyway.",
     "source": "idea-tank#39"
-  },
-  {
-    "slug": "2026-10-21-touch-bench",
-    "title": "Touch Bench: Switch Off a Worm's Neurons and Tap",
-    "date": "2026-10-21",
-    "kind": "idea",
-    "form": "puzzle game",
-    "style": "darkfield microscope",
-    "summary": "A small model of the roundworm's touch reflex: switch off neurons with a pretend laser, tap the head or tail, and check each result against what the lab ablation studies reported.",
-    "source": "idea-tank#44"
-  },
-  {
-    "slug": "2026-10-22-up-and-down",
-    "title": "Up and Down Only: Flying a Hot Air Balloon",
-    "date": "2026-10-22",
-    "kind": "question",
-    "form": "toy",
-    "style": "copperplate engraving broadside",
-    "summary": "How a hot air balloon is flown with only a burner and a vent: a flight toy where you steer by picking the height whose wind goes your way, and a sum for how hot the envelope has to be to float.",
-    "source": "idea-tank#47"
   },
   {
     "slug": "2026-10-23-pipeline-grows",
@@ -179,16 +108,6 @@
     "form": "simulation",
     "style": "telegraph office and ticker tape",
     "summary": "One made-up day of slide-scanner events through a partitioned log, a live consumer group with event-time windows, and a nightly batch job: lag, crashes, replays, and late data.",
-    "source": "idea-tank#51"
-  },
-  {
-    "slug": "2026-10-25-parts-list",
-    "title": "Parts List: A Field Guide to the Tools in a Pathology Data Stack",
-    "date": "2026-10-25",
-    "kind": "idea",
-    "form": "field guide",
-    "style": "mail-order parts catalogue",
-    "summary": "Common data tools filed by the job they do, from getting data in to dashboards, with one question traced through a nightly copy, a stream, and a virtual layer.",
     "source": "idea-tank#51"
   }
 ]
